@@ -25,5 +25,17 @@
   "validation_password_too_short": "Kata laluan mesti sekurang-kurangnya 8 aksara",
   "validation_password_mismatch": "Kata laluan tidak sepadan",
   "validation_ic_invalid": "Masukkan IC dalam format 900101-14-5555",
-  "validation_phone_invalid": "Masukkan telefon dalam format 012-3456789"
+  "validation_phone_invalid": "Masukkan telefon dalam format 012-3456789",
+  "registration_step2_title": "Sahkan status anda",
+  "registration_step2_subtitle": "Sila berikan butiran negotiator hartanah anda untuk teruskan.",
+  "registration_professional_details_label": "Professional Details",
+  "registration_step2_progress": "Langkah 2 daripada 2",
+  "field_ren_number": "Nombor REN",
+  "field_agency_name": "Nama Agensi",
+  "registration_tag_photo_label": "REN Tag Photo",
+  "registration_tag_photo_hint": "Gambar jelas, menghadap depan, Tag REN fizikal anda",
+  "registration_choose_file": "Pilih Fail",
+  "registration_complete": "Lengkapkan Pendaftaran",
+  "home_placeholder_title": "Anda telah disahkan",
+  "home_placeholder_body": "Papan pemuka akan datang tidak lama lagi."
 }

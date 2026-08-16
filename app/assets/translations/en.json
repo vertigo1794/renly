@@ -25,5 +25,17 @@
   "validation_password_too_short": "Password must be at least 8 characters",
   "validation_password_mismatch": "Passwords do not match",
   "validation_ic_invalid": "Enter IC in format 900101-14-5555",
-  "validation_phone_invalid": "Enter phone in format 012-3456789"
+  "validation_phone_invalid": "Enter phone in format 012-3456789",
+  "registration_step2_title": "Verify your status",
+  "registration_step2_subtitle": "Please provide your real estate negotiator details to continue.",
+  "registration_professional_details_label": "Professional Details",
+  "registration_step2_progress": "Step 2 of 2",
+  "field_ren_number": "Nombor REN",
+  "field_agency_name": "Nama Agensi",
+  "registration_tag_photo_label": "REN Tag Photo",
+  "registration_tag_photo_hint": "Clear, front-facing photo of your physical REN Tag",
+  "registration_choose_file": "Choose File",
+  "registration_complete": "Complete Registration",
+  "home_placeholder_title": "You're verified",
+  "home_placeholder_body": "Dashboard coming soon."
 }
