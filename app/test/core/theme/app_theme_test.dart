@@ -28,6 +28,10 @@ void main() {
     });
   });
 
+  // NOTE: These tests use testWidgets() and call AppTheme.light fresh inside each
+  // test body because AppTheme.light triggers GoogleFonts calls that schedule async
+  // font-loads; these throw in bare test() zones but are tolerated in testWidgets() zones.
+  // Hoisting at declaration time fails with "Binding has not yet been initialized".
   group('AppTheme.light', () {
     testWidgets('colorScheme.primary matches AppColors.primary', (WidgetTester tester) async {
       expect(AppTheme.light.colorScheme.primary, AppColors.primary);
