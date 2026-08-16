@@ -22,6 +22,13 @@ revoke update on negotiator from authenticated;
 grant update (full_name, ic_number, phone_number, ren_number, agency_id, territory)
   on negotiator to authenticated;
 
+-- Column-scoped INSERT on negotiator: verification_status and
+-- subscription_tier must only ever be set via their table defaults
+-- ('pending', 'free') on insert -- never client-supplied, or a user could
+-- self-approve their own verification on their first write.
+revoke insert on negotiator from authenticated;
+grant insert (negotiator_id, full_name, ic_number, phone_number) on negotiator to authenticated;
+
 -- Column-scoped INSERT on verification_record: outcome, reviewed_at and
 -- submitted_at stay at their column defaults and cannot be forged.
 revoke insert on verification_record from authenticated;
@@ -33,6 +40,7 @@ create policy agency_select_all on agency for select to authenticated using (tru
 
 -- uploadTagPhoto() uses FileOptions(upsert: true); without an UPDATE policy
 -- every retry after the first successful upload fails with an RLS 403.
+drop policy if exists ren_tags_update_own on storage.objects;
 create policy ren_tags_update_own on storage.objects for update to authenticated
   using (bucket_id = 'ren-tags' and (storage.foldername(name))[1] = auth.uid()::text)
   with check (bucket_id = 'ren-tags' and (storage.foldername(name))[1] = auth.uid()::text);

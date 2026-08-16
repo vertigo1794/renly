@@ -43,15 +43,17 @@ class AuthRepository {
   /// to retry, which is an acceptable rare-edge-case for this milestone.
   Future<String> findOrCreateAgency(String firmName) async {
     final normalized = firmName.trim();
-    // `ilike` treats % and _ as wildcards, so an agency name like "IQI%"
-    // would match any agency starting with "IQI" (silently linking the
-    // wrong one) and a bare "%" would match everything (making
+    // `ilike` treats %, _ as wildcards, and PostgREST also treats * as an
+    // alias for % in ilike patterns, so an agency name like "IQI%" or
+    // "IQI*" would match any agency starting with "IQI" (silently linking
+    // the wrong one) and a bare "%"/"*" would match everything (making
     // maybeSingle() throw). Escape them for the FILTER only -- the
     // unescaped `normalized` is what gets stored.
     final escapedForIlike = normalized
         .replaceAll('\\', '\\\\')
         .replaceAll('%', '\\%')
-        .replaceAll('_', '\\_');
+        .replaceAll('_', '\\_')
+        .replaceAll('*', '\\*');
     final existing = await _client
         .from('agency')
         .select('agency_id')
