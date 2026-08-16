@@ -29,18 +29,19 @@ Future<void> main() async {
   );
 }
 
-class RenlyApp extends StatelessWidget {
+class RenlyApp extends ConsumerWidget {
   const RenlyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final router = ref.watch(appRouterProvider);
     return MaterialApp.router(
       title: 'renly',
       theme: AppTheme.light,
       localizationsDelegates: context.localizationDelegates,
       supportedLocales: context.supportedLocales,
       locale: context.locale,
-      routerConfig: appRouter,
+      routerConfig: router,
     );
   }
 }
