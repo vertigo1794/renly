@@ -45,7 +45,11 @@ flutter run    # run the app
 
 Two one-time steps in the Supabase dashboard, in addition to the `.env` setup above:
 
-1. **Run the migration.** Open the Supabase dashboard for this project -> SQL Editor -> New query. Paste the entire contents of `supabase/migrations/0001_auth_verification.sql` (repo root, not inside `app/`) and click Run. This creates the `negotiator`, `agency`, and `verification_record` tables, their Row-Level Security policies, and the `ren-tags` storage bucket.
+1. **Run both migrations, in order.** Open the Supabase dashboard for this project -> SQL Editor -> New query. The migrations live at the repo root, not inside `app/`:
+   1. Paste the entire contents of `supabase/migrations/0001_auth_verification.sql` and click Run. This creates the `negotiator`, `agency`, and `verification_record` tables, their Row-Level Security policies, and the `ren-tags` storage bucket.
+   2. Then, in a new query, paste the entire contents of `supabase/migrations/0002_rls_hardening.sql` and click Run. This adds the column-level `GRANT`/`REVOKE` hardening that RLS alone can't express — without it any signed-up user can PATCH their own `verification_status` to `approved` and their `subscription_tier` to `professional`, bypassing the verification gate entirely. It also adds the storage `UPDATE` policy that re-uploads (`upsert: true`) need, plus size/MIME limits on the `ren-tags` bucket.
+
+   If you already ran `0001` before `0002` existed, just run `0002` on top — it is written to apply cleanly against an existing `0001` database.
 2. **Disable email confirmation.** Dashboard -> Authentication -> Sign In / Providers -> Email -> turn off "Confirm email". Without this, `signUp()` requires the user to click a confirmation link in their inbox before a session is active, which would strand Step 1 of registration before Step 2 can run. This is fine for development; revisit before any real production launch.
 
 Registration won't work (Postgrest errors on every insert) until step 1 is done. Login will hang waiting for email confirmation until step 2 is done.
