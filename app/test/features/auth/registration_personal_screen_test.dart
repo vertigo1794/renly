@@ -74,7 +74,7 @@ void main() {
     // Scroll down to ensure button is visible before tapping
     await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -300));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('reg_next_step_button')));
+    await tester.tap(find.widgetWithText(ElevatedButton, 'Next Step'));
     await tester.pumpAndSettle();
 
     expect(find.text('Passwords do not match'), findsOneWidget);
@@ -99,7 +99,7 @@ void main() {
     // Scroll down to ensure button is visible before tapping
     await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -300));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('reg_next_step_button')));
+    await tester.tap(find.widgetWithText(ElevatedButton, 'Next Step'));
     await tester.pumpAndSettle();
 
     expect(find.text('Enter IC in format 900101-14-5555'), findsOneWidget);

@@ -173,7 +173,6 @@ class _RegistrationPersonalScreenState extends ConsumerState<RegistrationPersona
                     TextButton(onPressed: () => context.pop(), child: Text('registration_cancel'.tr())),
                     const SizedBox(width: 8),
                     ElevatedButton(
-                      key: const Key('reg_next_step_button'),
                       onPressed: _submitting ? null : _submit,
                       child: Text('registration_next_step'.tr()),
                     ),
