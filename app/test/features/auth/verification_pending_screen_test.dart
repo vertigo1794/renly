@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:renly/core/theme/app_theme.dart';
-import 'package:renly/features/verification/verification_pending_screen.dart';
+import 'package:renly/features/auth/verification_pending_screen.dart';
 
 void main() {
   setUpAll(() async {
