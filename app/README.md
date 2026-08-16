@@ -1,17 +1,42 @@
 # renly
 
-A new Flutter project.
+Verified co-broking platform for Malaysian real estate negotiators.
 
-## Getting Started
+## Setup
 
-This project is a starting point for a Flutter application.
+### 1. Get Flutter on your PATH
 
-A few resources to get you started if this is your first Flutter project:
+The Flutter SDK lives at `~/development/flutter/bin` and is not on `PATH` by default. For the current terminal session:
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+```bash
+export PATH="$HOME/development/flutter/bin:$PATH"
+```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+To persist it, add that line to `~/.zshrc`, then restart your terminal (or run `source ~/.zshrc`).
+
+Verify with `flutter --version`.
+
+### 2. Install dependencies
+
+From the `app/` directory:
+
+```bash
+flutter pub get
+```
+
+### 3. Configure environment variables
+
+```bash
+cp .env.example .env
+```
+
+Then open `.env` and fill in your real Supabase project URL and anon key, found in the Supabase dashboard under **Project Settings → API**.
+
+> **Trap:** `.env` is registered as a pubspec asset (required at runtime by `flutter_dotenv`). If it doesn't exist, `flutter test` fails with `No file or variants found for asset: .env`. An **empty** `.env` file is enough to satisfy the asset bundler and run tests without real credentials — but `flutter run` needs real Supabase credentials in it to actually work.
+
+### 4. Run tests and the app
+
+```bash
+flutter test   # run the test suite
+flutter run    # run the app
+```
