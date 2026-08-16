@@ -11,5 +11,19 @@
   "auth_login_error_no_profile": "Registration incomplete. Contact support to finish setup.",
   "auth_login_error_invalid": "Invalid email or password.",
   "validation_required": "This field is required",
-  "validation_email_invalid": "Enter a valid email address"
+  "validation_email_invalid": "Enter a valid email address",
+  "registration_step1_title": "Create Account",
+  "registration_step1_subtitle": "Join Renly to collaborate and manage your properties seamlessly.",
+  "registration_personal_details_label": "Personal Details",
+  "registration_step1_progress": "Step 1 of 2",
+  "registration_next_step": "Next Step",
+  "registration_cancel": "Cancel",
+  "field_full_name": "Nama Penuh",
+  "field_ic_number": "Nombor Kad Pengenalan (IC)",
+  "field_phone_number": "Nombor Telefon",
+  "field_confirm_password": "Confirm Password",
+  "validation_password_too_short": "Password must be at least 8 characters",
+  "validation_password_mismatch": "Passwords do not match",
+  "validation_ic_invalid": "Enter IC in format 900101-14-5555",
+  "validation_phone_invalid": "Enter phone in format 012-3456789"
 }

@@ -11,5 +11,19 @@
   "auth_login_error_no_profile": "Pendaftaran belum lengkap. Hubungi sokongan untuk selesaikan.",
   "auth_login_error_invalid": "E-mel atau kata laluan tidak sah.",
   "validation_required": "Ruangan ini wajib diisi",
-  "validation_email_invalid": "Masukkan alamat e-mel yang sah"
+  "validation_email_invalid": "Masukkan alamat e-mel yang sah",
+  "registration_step1_title": "Cipta Akaun",
+  "registration_step1_subtitle": "Sertai Renly untuk berkolaborasi dan urus hartanah anda dengan lancar.",
+  "registration_personal_details_label": "Personal Details",
+  "registration_step1_progress": "Langkah 1 daripada 2",
+  "registration_next_step": "Langkah Seterusnya",
+  "registration_cancel": "Batal",
+  "field_full_name": "Nama Penuh",
+  "field_ic_number": "Nombor Kad Pengenalan (IC)",
+  "field_phone_number": "Nombor Telefon",
+  "field_confirm_password": "Sahkan Kata Laluan",
+  "validation_password_too_short": "Kata laluan mesti sekurang-kurangnya 8 aksara",
+  "validation_password_mismatch": "Kata laluan tidak sepadan",
+  "validation_ic_invalid": "Masukkan IC dalam format 900101-14-5555",
+  "validation_phone_invalid": "Masukkan telefon dalam format 012-3456789"
 }
