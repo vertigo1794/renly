@@ -29,7 +29,7 @@ class AppTheme {
       onErrorContainer: AppColors.onErrorContainer,
       surface: AppColors.surface,
       onSurface: AppColors.onSurface,
-      surfaceVariant: AppColors.surfaceVariant,
+      surfaceContainerHighest: AppColors.surfaceVariant,
       outline: AppColors.outline,
     );
 
