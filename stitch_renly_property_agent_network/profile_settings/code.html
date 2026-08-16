@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Renly - Profile &amp; Settings</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700&amp;family=JetBrains+Mono:wght@500&amp;family=Syne:wght@700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary-container": "#8140f2",
+                        "inverse-surface": "#2e312f",
+                        "on-error-container": "#93000a",
+                        "tertiary-container": "#f4eaff",
+                        "secondary-fixed-dim": "#c8c6c5",
+                        "on-secondary-container": "#656464",
+                        "surface-tint": "#536600",
+                        "secondary-container": "#e5e2e1",
+                        "primary-fixed": "#caf300",
+                        "primary-fixed-dim": "#b0d500",
+                        "on-primary-container": "#5f7400",
+                        "surface-variant": "#e2e3e0",
+                        "on-surface": "#191c1b",
+                        "tertiary": "#732ee4",
+                        "surface-container-highest": "#e2e3e0",
+                        "on-primary-fixed-variant": "#3e4c00",
+                        "on-secondary-fixed-variant": "#474646",
+                        "inverse-primary": "#b0d500",
+                        "on-tertiary-fixed": "#25005a",
+                        "inverse-on-surface": "#f0f1ee",
+                        "on-primary-fixed": "#171e00",
+                        "secondary": "#5f5e5e",
+                        "primary": "#536600",
+                        "surface-container": "#edeeeb",
+                        "surface-container-lowest": "#ffffff",
+                        "on-background": "#191c1b",
+                        "surface-container-high": "#e7e8e6",
+                        "on-secondary": "#ffffff",
+                        "error": "#ba1a1a",
+                        "on-tertiary-fixed-variant": "#5a00c6",
+                        "on-error": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "secondary-fixed": "#e5e2e1",
+                        "error-container": "#ffdad6",
+                        "primary-container": "#d4ff00",
+                        "outline-variant": "#c5c9ac",
+                        "background": "#f9faf7",
+                        "surface-bright": "#f9faf7",
+                        "tertiary-fixed": "#eaddff",
+                        "tertiary-fixed-dim": "#d2bbff",
+                        "surface-dim": "#d9dad7",
+                        "on-surface-variant": "#444932",
+                        "on-tertiary": "#ffffff",
+                        "surface-container-low": "#f3f4f1",
+                        "on-secondary-fixed": "#1c1b1b",
+                        "outline": "#757a60",
+                        "surface": "#f9faf7"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "md": "24px",
+                        "lg": "40px",
+                        "sm": "12px",
+                        "gutter": "16px",
+                        "margin-mobile": "20px",
+                        "margin-desktop": "120px",
+                        "base": "8px",
+                        "xl": "64px",
+                        "xs": "4px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Hanken Grotesk"],
+                        "button-text": ["Hanken Grotesk"],
+                        "headline-xl": ["Syne"],
+                        "title-md": ["Hanken Grotesk"],
+                        "label-caps": ["JetBrains Mono"],
+                        "headline-lg": ["Syne"],
+                        "headline-lg-mobile": ["Syne"],
+                        "body-md": ["Hanken Grotesk"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["18px", { "lineHeight": "26px", "fontWeight": "400" }],
+                        "button-text": ["16px", { "lineHeight": "20px", "fontWeight": "700" }],
+                        "headline-xl": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "800" }],
+                        "title-md": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "34px", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: theme('colors.background');
+            color: theme('colors.on-background');
+            /* Hide scrollbar for a cleaner mobile look */
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+        body::-webkit-scrollbar {
+            display: none;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .icon-fill-0 {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="antialiased min-h-screen flex flex-col font-body-md text-body-md">
+<!-- TopAppBar -->
+<header class="bg-background dark:bg-on-background border-b border-outline-variant dark:border-on-surface-variant docked full-width top-0 sticky z-40 transition-shadow duration-300" id="top-app-bar">
+<div class="flex justify-between items-center px-margin-mobile h-16 w-full max-w-[1440px] mx-auto">
+<button aria-label="Menu" class="text-primary dark:text-primary-fixed scale-95 active:duration-100 hover:bg-surface-variant dark:hover:bg-on-surface-variant transition-colors rounded-full p-2">
+<span class="material-symbols-outlined icon-fill-0 text-2xl">menu</span>
+</button>
+<h1 class="font-headline-xl text-headline-xl text-on-background dark:text-surface-bright tracking-tighter hidden md:block">Renly</h1>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-on-background dark:text-surface-bright tracking-tighter md:hidden">Renly</h1>
+<button aria-label="Notifications" class="text-primary dark:text-primary-fixed scale-95 active:duration-100 hover:bg-surface-variant dark:hover:bg-on-surface-variant transition-colors rounded-full p-2">
+<span class="material-symbols-outlined icon-fill-0 text-2xl">notifications</span>
+</button>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-grow w-full max-w-[1440px] mx-auto pb-24 md:pb-8 pt-md px-margin-mobile md:px-margin-desktop grid grid-cols-1 md:grid-cols-12 gap-gutter md:gap-lg">
+<!-- Left Nav Rail (Desktop Only) -->
+<aside class="hidden md:flex md:col-span-3 flex-col bg-surface-container dark:bg-surface-container-highest h-[calc(100vh-64px)] rounded-r-xl sticky top-16 shadow-xl py-6 space-y-2">
+<div class="px-6 mb-8 flex items-center space-x-4 left_align">
+<div class="w-12 h-12 rounded-full overflow-hidden border-2 border-primary-fixed">
+<img alt="Agent Profile Picture" class="w-full h-full object-cover" data-alt="A highly detailed close-up portrait photograph of a professional real estate agent, Agent Smith. The agent has a confident, trustworthy smile. The lighting is high-key and studio-quality, emphasizing a bright, modern, and official aesthetic. The background is a stark, minimal white office setting. The overall mood conveys institutional trust and precision." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC_xbBsxrfgWC3-UrHLKMQDl-jG_KkYDc0MXOX1Uz9Y2zwlDXvs5CpUrnwOmicDoHPfIK4YQ3JF2O7olYBKa5cVSb6Mpf3zB9xXRKnKOgtxIq9bBXgOzlZoJ89IblRIN6ZeaFmu02sSxLf18Mp98mxYxBQc35Jx1WRvjeDVJGOWa9q7GpEOIRHGNIV8xpDeFR2C28HwLstO5Fo1efbGmDoOLL6EngHIkyGn8rS4txpYs61saXjMUzMoKw"/>
+</div>
+<div>
+<h2 class="text-primary font-headline-lg text-[24px] leading-tight">Agent Smith</h2>
+<p class="font-label-caps text-label-caps text-secondary">REN: 12345</p>
+</div>
+</div>
+<nav class="flex flex-col space-y-2 w-full px-2">
+<a class="flex items-center px-4 py-3 text-on-surface-variant hover:bg-surface-variant rounded-full mx-2 hover:bg-primary-fixed/20 transition-colors duration-300" href="#">
+<span class="material-symbols-outlined mr-4 icon-fill-0">list_alt</span>
+<span class="font-body-md text-body-md">My Listings</span>
+</a>
+<a class="flex items-center px-4 py-3 text-on-surface-variant hover:bg-surface-variant rounded-full mx-2 hover:bg-primary-fixed/20 transition-colors duration-300" href="#">
+<span class="material-symbols-outlined mr-4 icon-fill-0">handshake</span>
+<span class="font-body-md text-body-md">Collaborations</span>
+</a>
+<a class="flex items-center px-4 py-3 text-on-surface-variant hover:bg-surface-variant rounded-full mx-2 hover:bg-primary-fixed/20 transition-colors duration-300" href="#">
+<span class="material-symbols-outlined mr-4 icon-fill-0">description</span>
+<span class="font-body-md text-body-md">Documents</span>
+</a>
+<a class="flex items-center px-4 py-3 bg-primary-container text-on-primary-container font-bold rounded-full mx-2 hover:bg-primary-fixed/20 transition-colors duration-300" href="#">
+<span class="material-symbols-outlined mr-4">settings</span>
+<span class="font-body-md text-body-md">Settings</span>
+</a>
+</nav>
+</aside>
+<!-- Profile & Settings Content Canvas -->
+<section class="col-span-1 md:col-span-9 flex flex-col gap-gutter md:gap-lg mt-4 md:mt-0">
+<!-- Bento Box: Profile Header -->
+<div class="bg-surface-container-lowest shadow-[0px_4px_12px_rgba(0,0,0,0.05)] rounded-xl p-md border border-outline-variant/30 flex flex-col md:flex-row items-start md:items-center gap-md relative overflow-hidden group">
+<!-- Decorative accent -->
+<div class="absolute top-0 right-0 w-32 h-32 bg-primary-fixed opacity-10 rounded-full blur-3xl -mr-10 -mt-10 transition-transform duration-700 group-hover:scale-150"></div>
+<div class="w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden border-4 border-surface-container shadow-sm flex-shrink-0 z-10">
+<img alt="Agent Profile Photo" class="w-full h-full object-cover" data-alt="A striking, high-contrast, professional headshot of a real estate agent. The lighting is crisp and precise, highlighting sharp details. The agent wears a dark charcoal suit against an off-white background, embodying an official, premium aesthetic. A subtle, vibrant lime accent light catches the edge of their profile." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB6xvTrQHuu-YLszZNO4YKb1LnnqoNoJ3TOy-Te-zgO2hGbICP86c8zVUFKMF_Fp-IcChCLnn9dXir2LN-FO8bO995oMj3sxXXjeoorebIM7RfUAxv4sakCku6naezTiPshv9dS39bB-hQ9C1X-JLIDS3H6QQT9-27gChSzHUYL8kIKuFVMs5KsLec2pOUIvtv_mw8nnnw-5kcMfb7x20vC9rdobogn6JZQcFuHDw0rdJbNi6NdTm0xWg"/>
+</div>
+<div class="flex-grow flex flex-col gap-xs z-10">
+<div class="flex items-center gap-sm flex-wrap">
+<h2 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Agent Smith</h2>
+<span class="inline-flex items-center gap-1 bg-tertiary-container text-on-tertiary-container px-3 py-1 rounded-full font-label-caps text-label-caps border border-tertiary/20">
+<span class="w-2 h-2 rounded-full bg-tertiary animate-pulse"></span> Verified REN
+                        </span>
+</div>
+<p class="font-title-md text-title-md text-secondary">REN: 12345</p>
+<p class="font-body-md text-body-md text-on-surface-variant flex items-center gap-1 mt-2">
+<span class="material-symbols-outlined text-[18px]">domain</span> Prestige Property Group
+                    </p>
+</div>
+<div class="w-full md:w-auto mt-4 md:mt-0 z-10 flex md:flex-col gap-sm md:items-end">
+<button class="flex-1 md:flex-none bg-primary text-on-primary font-button-text text-button-text py-2 px-6 rounded-lg hover:bg-surface-tint transition-colors text-center">Edit Profile</button>
+<button class="flex-1 md:flex-none bg-surface-container text-on-surface font-button-text text-button-text py-2 px-6 rounded-lg border border-outline-variant hover:bg-surface-container-high transition-colors text-center">Share</button>
+</div>
+</div>
+<!-- Bento Box Grid: Stats & Actions -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-gutter">
+<!-- Stat Card 1 -->
+<div class="bg-surface-container-lowest shadow-[0px_4px_12px_rgba(0,0,0,0.05)] rounded-xl p-md border border-outline-variant/30 flex flex-col justify-center items-center text-center">
+<span class="material-symbols-outlined text-primary text-3xl mb-2 icon-fill-0">real_estate_agent</span>
+<p class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">42</p>
+<p class="font-label-caps text-label-caps text-secondary mt-1">Active Listings</p>
+</div>
+<!-- Stat Card 2 -->
+<div class="bg-surface-container-lowest shadow-[0px_4px_12px_rgba(0,0,0,0.05)] rounded-xl p-md border border-outline-variant/30 flex flex-col justify-center items-center text-center">
+<span class="material-symbols-outlined text-primary text-3xl mb-2 icon-fill-0">handshake</span>
+<p class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">156</p>
+<p class="font-label-caps text-label-caps text-secondary mt-1">Deals Closed</p>
+</div>
+<!-- Stat Card 3 -->
+<div class="bg-inverse-surface rounded-xl p-md flex flex-col justify-center items-center text-center relative overflow-hidden group">
+<div class="absolute inset-0 bg-primary-fixed/5 group-hover:bg-primary-fixed/10 transition-colors"></div>
+<span class="material-symbols-outlined text-primary-fixed text-3xl mb-2 icon-fill-0 z-10">star</span>
+<p class="font-headline-lg-mobile text-headline-lg-mobile text-surface-bright z-10">4.9</p>
+<p class="font-label-caps text-label-caps text-secondary-fixed-dim mt-1 z-10">Trust Score</p>
+</div>
+<!-- Stat Card 4 (Actionable) -->
+<button class="bg-primary-container hover:bg-primary-fixed transition-colors rounded-xl p-md flex flex-col justify-center items-center text-center border border-primary/20">
+<span class="material-symbols-outlined text-on-primary-container text-3xl mb-2 icon-fill-0">add_chart</span>
+<p class="font-title-md text-title-md text-on-primary-container">View</p>
+<p class="font-label-caps text-label-caps text-on-primary-container mt-1">Full Report</p>
+</button>
+</div>
+<!-- Settings List Container -->
+<div class="bg-surface-container-lowest shadow-[0px_4px_12px_rgba(0,0,0,0.05)] rounded-xl border border-outline-variant/30 overflow-hidden mt-sm">
+<h3 class="font-title-md text-title-md text-on-surface p-md border-b border-outline-variant/30 bg-surface-container-low/50">App Settings</h3>
+<ul class="flex flex-col">
+<!-- Setting Item: Notification -->
+<li>
+<button class="w-full flex items-center justify-between p-md hover:bg-surface-container-low transition-colors text-left border-b border-outline-variant/30">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined icon-fill-0">notifications_active</span>
+</div>
+<div>
+<p class="font-title-md text-title-md text-on-surface leading-none mb-1">Notification</p>
+<p class="font-body-md text-body-md text-secondary text-sm">Manage alerts and sounds</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-secondary">chevron_right</span>
+</button>
+</li>
+<!-- Setting Item: Account -->
+<li>
+<button class="w-full flex items-center justify-between p-md hover:bg-surface-container-low transition-colors text-left border-b border-outline-variant/30">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined icon-fill-0">manage_accounts</span>
+</div>
+<div>
+<p class="font-title-md text-title-md text-on-surface leading-none mb-1">Account</p>
+<p class="font-body-md text-body-md text-secondary text-sm">Security, password, and identity</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-secondary">chevron_right</span>
+</button>
+</li>
+<!-- Setting Item: Privacy -->
+<li>
+<button class="w-full flex items-center justify-between p-md hover:bg-surface-container-low transition-colors text-left border-b border-outline-variant/30">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined icon-fill-0">shield_lock</span>
+</div>
+<div>
+<p class="font-title-md text-title-md text-on-surface leading-none mb-1">Privacy</p>
+<p class="font-body-md text-body-md text-secondary text-sm">Data sharing and visibility</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-secondary">chevron_right</span>
+</button>
+</li>
+<!-- Setting Item: Help -->
+<li>
+<button class="w-full flex items-center justify-between p-md hover:bg-surface-container-low transition-colors text-left">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined icon-fill-0">help</span>
+</div>
+<div>
+<p class="font-title-md text-title-md text-on-surface leading-none mb-1">Help</p>
+<p class="font-body-md text-body-md text-secondary text-sm">Support, FAQ, and contact</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-secondary">chevron_right</span>
+</button>
+</li>
+</ul>
+</div>
+<!-- Log Out Action (Secondary Button Style) -->
+<div class="mt-sm mb-lg">
+<button class="w-full bg-inverse-surface text-on-secondary font-button-text text-button-text py-4 rounded-lg flex items-center justify-center gap-2 hover:bg-on-surface transition-colors shadow-[inset_0_0_0_1px_rgba(255,255,255,0.1)]">
+<span class="material-symbols-outlined text-[20px]">logout</span>
+                    Log Out
+                </button>
+</div>
+</section>
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden bg-surface dark:bg-inverse-surface border-t border-outline-variant dark:border-on-surface-variant docked full-width bottom-0 rounded-t-xl shadow-lg fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-2">
+<a class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed-dim p-2 hover:text-primary-fixed-dim transition-all group" href="#">
+<span class="material-symbols-outlined icon-fill-0 group-hover:scale-110 duration-200 ease-out">home</span>
+<span class="font-label-caps text-label-caps mt-1">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed-dim p-2 hover:text-primary-fixed-dim transition-all group" href="#">
+<span class="material-symbols-outlined icon-fill-0 group-hover:scale-110 duration-200 ease-out">storefront</span>
+<span class="font-label-caps text-label-caps mt-1">Market</span>
+</a>
+<a class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed-dim p-2 hover:text-primary-fixed-dim transition-all group" href="#">
+<span class="material-symbols-outlined icon-fill-0 group-hover:scale-110 duration-200 ease-out">add_circle</span>
+<span class="font-label-caps text-label-caps mt-1">Post</span>
+</a>
+<a class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed-dim p-2 hover:text-primary-fixed-dim transition-all group" href="#">
+<span class="material-symbols-outlined icon-fill-0 group-hover:scale-110 duration-200 ease-out">chat_bubble</span>
+<span class="font-label-caps text-label-caps mt-1">Chat</span>
+</a>
+<a class="flex flex-col items-center justify-center text-primary dark:text-primary-fixed font-bold bg-primary-container/10 rounded-xl p-2 scale-110 duration-200 ease-out" href="#">
+<span class="material-symbols-outlined text-primary dark:text-primary-fixed">person</span>
+<span class="font-label-caps text-label-caps mt-1 text-primary dark:text-primary-fixed">Profile</span>
+</a>
+</nav>
+<script>
+        // Simple script to handle TopAppBar shadow on scroll
+        window.addEventListener('scroll', () => {
+            const topBar = document.getElementById('top-app-bar');
+            if (window.scrollY > 10) {
+                topBar.classList.add('shadow-[0px_4px_12px_rgba(0,0,0,0.05)]');
+            } else {
+                topBar.classList.remove('shadow-[0px_4px_12px_rgba(0,0,0,0.05)]');
+            }
+        });
+    </script>
+</body></html>

@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Renly - Main Dashboard</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:ital,wght@0,100..900;1,100..900&amp;family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&amp;family=Syne:wght@400..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary-container": "#8140f2",
+                        "inverse-surface": "#2e312f",
+                        "on-error-container": "#93000a",
+                        "tertiary-container": "#f4eaff",
+                        "secondary-fixed-dim": "#c8c6c5",
+                        "on-secondary-container": "#656464",
+                        "surface-tint": "#536600",
+                        "secondary-container": "#e5e2e1",
+                        "primary-fixed": "#caf300",
+                        "primary-fixed-dim": "#b0d500",
+                        "on-primary-container": "#5f7400",
+                        "surface-variant": "#e2e3e0",
+                        "on-surface": "#191c1b",
+                        "tertiary": "#732ee4",
+                        "surface-container-highest": "#e2e3e0",
+                        "on-primary-fixed-variant": "#3e4c00",
+                        "on-secondary-fixed-variant": "#474646",
+                        "inverse-primary": "#b0d500",
+                        "on-tertiary-fixed": "#25005a",
+                        "inverse-on-surface": "#f0f1ee",
+                        "on-primary-fixed": "#171e00",
+                        "secondary": "#5f5e5e",
+                        "primary": "#536600",
+                        "surface-container": "#edeeeb",
+                        "surface-container-lowest": "#ffffff",
+                        "on-background": "#191c1b",
+                        "surface-container-high": "#e7e8e6",
+                        "on-secondary": "#ffffff",
+                        "error": "#ba1a1a",
+                        "on-tertiary-fixed-variant": "#5a00c6",
+                        "on-error": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "secondary-fixed": "#e5e2e1",
+                        "error-container": "#ffdad6",
+                        "primary-container": "#d4ff00",
+                        "outline-variant": "#c5c9ac",
+                        "background": "#f9faf7",
+                        "surface-bright": "#f9faf7",
+                        "tertiary-fixed": "#eaddff",
+                        "tertiary-fixed-dim": "#d2bbff",
+                        "surface-dim": "#d9dad7",
+                        "on-surface-variant": "#444932",
+                        "on-tertiary": "#ffffff",
+                        "surface-container-low": "#f3f4f1",
+                        "on-secondary-fixed": "#1c1b1b",
+                        "outline": "#757a60",
+                        "surface": "#f9faf7"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "md": "24px",
+                        "lg": "40px",
+                        "sm": "12px",
+                        "gutter": "16px",
+                        "margin-mobile": "20px",
+                        "margin-desktop": "120px",
+                        "base": "8px",
+                        "xl": "64px",
+                        "xs": "4px"
+                    },
+                    "fontFamily": {
+                        "body-lg": [
+                            "Hanken Grotesk"
+                        ],
+                        "button-text": [
+                            "Hanken Grotesk"
+                        ],
+                        "headline-xl": [
+                            "Syne"
+                        ],
+                        "title-md": [
+                            "Hanken Grotesk"
+                        ],
+                        "label-caps": [
+                            "JetBrains Mono"
+                        ],
+                        "headline-lg": [
+                            "Syne"
+                        ],
+                        "headline-lg-mobile": [
+                            "Syne"
+                        ],
+                        "body-md": [
+                            "Hanken Grotesk"
+                        ]
+                    },
+                    "fontSize": {
+                        "body-lg": [
+                            "18px",
+                            {
+                                "lineHeight": "26px",
+                                "fontWeight": "400"
+                            }
+                        ],
+                        "button-text": [
+                            "16px",
+                            {
+                                "lineHeight": "20px",
+                                "fontWeight": "700"
+                            }
+                        ],
+                        "headline-xl": [
+                            "40px",
+                            {
+                                "lineHeight": "48px",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "800"
+                            }
+                        ],
+                        "title-md": [
+                            "20px",
+                            {
+                                "lineHeight": "28px",
+                                "fontWeight": "600"
+                            }
+                        ],
+                        "label-caps": [
+                            "12px",
+                            {
+                                "lineHeight": "16px",
+                                "letterSpacing": "0.05em",
+                                "fontWeight": "500"
+                            }
+                        ],
+                        "headline-lg": [
+                            "32px",
+                            {
+                                "lineHeight": "40px",
+                                "letterSpacing": "-0.01em",
+                                "fontWeight": "700"
+                            }
+                        ],
+                        "headline-lg-mobile": [
+                            "28px",
+                            {
+                                "lineHeight": "34px",
+                                "fontWeight": "700"
+                            }
+                        ],
+                        "body-md": [
+                            "16px",
+                            {
+                                "lineHeight": "24px",
+                                "fontWeight": "400"
+                            }
+                        ]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.fill {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Custom scrollbar for horizontal scroll sections */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md antialiased min-h-screen flex flex-col pb-24">
+<!-- TopAppBar -->
+<header class="fixed top-0 left-0 right-0 z-40 bg-background border-b border-outline-variant flex justify-between items-center px-margin-mobile h-16 w-full">
+<div class="flex items-center space-x-4">
+<button class="text-primary hover:bg-surface-variant transition-colors p-2 rounded-full active:scale-95 duration-100">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<div class="flex items-center">
+<img alt="Renly Logo" class="h-8 w-8 mr-2 object-contain rounded-md" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC8rhnFoowK1nUay3tnq1KVmaQqkBXx-v-sHLUgrBxy00nO9b931vnZfyr5huOVrNwMa3ZvHAFEQ3wBdhokd0yWe-Y-SSICUN9yyifAxdVUy5RehLIxUlgLVgDujuP-dIFtz0YsxKGkGk0JOgtDq4ex2yETcVp9H1RW_GVOloNFQr8cRju_uzOHgZ5WRClpF0L0D2QxmEYksCWSTbU8YRH5B1k1NfmQd3HSfF9bsIs5NC2lfwu-JKc0gQ"/>
+<span class="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg text-on-background tracking-tighter">Renly</span>
+</div>
+</div>
+<button class="text-primary hover:bg-surface-variant transition-colors p-2 rounded-full active:scale-95 duration-100 relative">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full"></span>
+</button>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-grow pt-[80px] px-margin-mobile pb-6 md:max-w-[1440px] md:mx-auto w-full">
+<!-- Welcome Area -->
+<section class="mb-lg">
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg mb-xs">Welcome back, Agent.</h1>
+<p class="font-body-md text-body-md text-secondary">Market is moving. Here's your daily briefing.</p>
+</section>
+<!-- Quick Actions Bento Grid -->
+<section class="mb-lg">
+<h2 class="font-title-md text-title-md mb-md">Quick Actions</h2>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-gutter">
+<!-- Action 1 -->
+<button class="bg-surface-container-highest p-sm rounded-xl flex flex-col items-start justify-between h-24 hover:bg-primary-container hover:text-on-primary-container transition-colors group active:scale-95 border border-outline-variant/30 relative overflow-hidden">
+<span class="material-symbols-outlined text-on-surface group-hover:text-on-primary-container mb-2" data-icon="add_circle">add_circle</span>
+<span class="font-button-text text-button-text text-left">Post Listing</span>
+<!-- Decorative subtle accent -->
+<div class="absolute -bottom-4 -right-4 w-12 h-12 bg-primary/10 rounded-full group-hover:scale-150 transition-transform"></div>
+</button>
+<!-- Action 2 -->
+<button class="bg-surface-container-highest p-sm rounded-xl flex flex-col items-start justify-between h-24 hover:bg-primary-container hover:text-on-primary-container transition-colors group active:scale-95 border border-outline-variant/30">
+<span class="material-symbols-outlined text-on-surface group-hover:text-on-primary-container mb-2" data-icon="storefront">storefront</span>
+<span class="font-button-text text-button-text text-left">Market</span>
+</button>
+<!-- Action 3 -->
+<button class="bg-surface-container-highest p-sm rounded-xl flex flex-col items-start justify-between h-24 hover:bg-primary-container hover:text-on-primary-container transition-colors group active:scale-95 border border-outline-variant/30 col-span-2 md:col-span-1">
+<span class="material-symbols-outlined text-on-surface group-hover:text-on-primary-container mb-2" data-icon="list_alt">list_alt</span>
+<span class="font-button-text text-button-text text-left">My Inventory</span>
+</button>
+</div>
+</section>
+<!-- Matches for You - High Contrast Carousel -->
+<section>
+<div class="flex justify-between items-center mb-md">
+<h2 class="font-title-md text-title-md">Matches for You</h2>
+<button class="text-primary font-button-text text-button-text hover:underline">View All</button>
+</div>
+<div class="flex overflow-x-auto gap-gutter hide-scrollbar pb-4 snap-x">
+<!-- Property Card 1 -->
+<div class="min-w-[280px] w-[80vw] md:w-[320px] bg-surface-container-lowest rounded-xl shadow-[0px_4px_12px_rgba(0,0,0,0.05)] snap-center overflow-hidden flex flex-col">
+<div class="h-48 bg-surface-variant relative">
+<img class="w-full h-full object-cover" data-alt="A striking, modern architectural real estate exterior shot of a luxury villa during golden hour. The building features sleek geometric lines, expansive floor-to-ceiling glass windows, and a minimalist design. The lighting is bright and warm, creating a high-contrast, premium aesthetic that fits perfectly into a light-mode interface. The palette includes natural warm tones against crisp whites and deep blacks, embodying a professional, high-stakes property market mood." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBp2BS7LwCGBQtk_H38MGJRuQ9_iQwgdXErwri7k1et9Ra2Y5F5yrMjpRwpZm4mjW3lG2K7_nlGzm1TpoBzTI3783A-kzzd54TmF6sRnTqA8MDQ8YTAkZKfl-4z18pTKrVqDXuLsBUjD0DbdhQn0MKSLZeDFnC2-pe8R-0q-a_ClSL8QaFJlgwK0f39EW8WeL8SkgQTERDA3Q5I8vn4sqQPK-y_x0V6veYlvhvAh-TnU-Td4GPLy91SIg"/>
+<div class="absolute top-sm left-sm bg-surface-container-lowest px-2 py-1 rounded-full flex items-center shadow-sm">
+<span class="w-2 h-2 bg-primary rounded-full mr-1"></span>
+<span class="font-label-caps text-label-caps text-on-surface">Available</span>
+</div>
+</div>
+<div class="p-sm flex-grow flex flex-col justify-between">
+<div>
+<p class="font-title-md text-title-md text-on-surface">$2,450,000</p>
+<p class="font-label-caps text-label-caps text-secondary mt-1 uppercase">124 Maple St, Downtown</p>
+</div>
+<div class="flex items-center gap-4 mt-sm border-t border-surface-variant pt-sm">
+<div class="flex items-center text-secondary">
+<span class="material-symbols-outlined text-[16px] mr-1" data-icon="bed">bed</span>
+<span class="font-body-md text-sm">4</span>
+</div>
+<div class="flex items-center text-secondary">
+<span class="material-symbols-outlined text-[16px] mr-1" data-icon="bathtub">bathtub</span>
+<span class="font-body-md text-sm">3</span>
+</div>
+<div class="flex items-center text-secondary">
+<span class="material-symbols-outlined text-[16px] mr-1" data-icon="square_foot">square_foot</span>
+<span class="font-body-md text-sm">3,200</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Property Card 2 -->
+<div class="min-w-[280px] w-[80vw] md:w-[320px] bg-surface-container-lowest rounded-xl shadow-[0px_4px_12px_rgba(0,0,0,0.05)] snap-center overflow-hidden flex flex-col">
+<div class="h-48 bg-surface-variant relative">
+<img class="w-full h-full object-cover" data-alt="An interior shot of a highly modern, minimalist living room in a luxury penthouse. The space features stark white walls, deep charcoal structural elements, and a vibrant lime green accent chair acting as a focal point. Large windows let in bright, natural daylight, casting sharp, clean shadows. The aesthetic is extremely professional, engineered, and high-contrast, perfectly suited for an elite real estate platform." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAG7ylvIEy2K94kIB8e8FbeolzLD1fX7J-aRttmaKqRgdZtgMpICDtBVlxdEkiCDfaJYBFn_slD5YSWAifsuW7hYnCuSI-BcZCM5-Bz8-jJM9vMTd0w_N8Z4ENC91dcIbPowtrW4NeoPazWsdEqQZrIjseo2zoi5xYOzQa0TQI7vaohAIdu3c2RMLmDDo3ZIDiGJlvWBCjdGrwU_GmrxkDymrUs2J14p6AZmb48cjeP6Ye5jUsRuyduOw"/>
+<div class="absolute top-sm left-sm bg-surface-container-lowest px-2 py-1 rounded-full flex items-center shadow-sm">
+<span class="w-2 h-2 bg-primary rounded-full mr-1"></span>
+<span class="font-label-caps text-label-caps text-on-surface">Available</span>
+</div>
+</div>
+<div class="p-sm flex-grow flex flex-col justify-between">
+<div>
+<p class="font-title-md text-title-md text-on-surface">$1,850,000</p>
+<p class="font-label-caps text-label-caps text-secondary mt-1 uppercase">88 Skyline Ave, Penthouse</p>
+</div>
+<div class="flex items-center gap-4 mt-sm border-t border-surface-variant pt-sm">
+<div class="flex items-center text-secondary">
+<span class="material-symbols-outlined text-[16px] mr-1" data-icon="bed">bed</span>
+<span class="font-body-md text-sm">2</span>
+</div>
+<div class="flex items-center text-secondary">
+<span class="material-symbols-outlined text-[16px] mr-1" data-icon="bathtub">bathtub</span>
+<span class="font-body-md text-sm">2</span>
+</div>
+<div class="flex items-center text-secondary">
+<span class="material-symbols-outlined text-[16px] mr-1" data-icon="square_foot">square_foot</span>
+<span class="font-body-md text-sm">1,800</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-2 bg-surface border-t border-outline-variant shadow-lg rounded-t-xl pb-6">
+<!-- Home (Active) -->
+<button class="flex flex-col items-center justify-center text-primary font-bold bg-primary-container/10 rounded-xl p-2 scale-110 duration-200 ease-out transition-all group">
+<span class="material-symbols-outlined fill" data-icon="home" data-weight="fill">home</span>
+<span class="font-label-caps text-[10px] mt-1">Home</span>
+</button>
+<!-- Market -->
+<button class="flex flex-col items-center justify-center text-secondary p-2 hover:text-primary-fixed-dim transition-all group">
+<span class="material-symbols-outlined group-hover:fill" data-icon="storefront">storefront</span>
+<span class="font-label-caps text-[10px] mt-1">Market</span>
+</button>
+<!-- Post (FAB Style integration) -->
+<button class="flex flex-col items-center justify-center -mt-6 bg-primary text-on-primary rounded-full p-3 shadow-[0_4px_12px_rgba(83,102,0,0.4)] hover:bg-primary-fixed hover:text-on-primary-fixed transition-all active:scale-95 group border-2 border-surface">
+<span class="material-symbols-outlined" data-icon="add_circle">add_circle</span>
+<!-- Hidden label to match structure, visually hidden for FAB look -->
+<span class="sr-only">Post</span>
+</button>
+<!-- Chat -->
+<button class="flex flex-col items-center justify-center text-secondary p-2 hover:text-primary-fixed-dim transition-all group relative">
+<span class="material-symbols-outlined group-hover:fill" data-icon="chat_bubble">chat_bubble</span>
+<span class="font-label-caps text-[10px] mt-1">Chat</span>
+<!-- Badge -->
+<span class="absolute top-1 right-2 w-2 h-2 bg-error rounded-full border border-surface"></span>
+</button>
+<!-- Profile -->
+<button class="flex flex-col items-center justify-center text-secondary p-2 hover:text-primary-fixed-dim transition-all group">
+<span class="material-symbols-outlined group-hover:fill" data-icon="person">person</span>
+<span class="font-label-caps text-[10px] mt-1">Profile</span>
+</button>
+</nav>
+</body></html>

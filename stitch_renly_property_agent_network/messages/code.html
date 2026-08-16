@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Renly - Chat</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700&amp;family=JetBrains+Mono:wght@500&amp;family=Syne:wght@700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-tertiary-container": "#8140f2",
+                    "inverse-surface": "#2e312f",
+                    "on-error-container": "#93000a",
+                    "tertiary-container": "#f4eaff",
+                    "secondary-fixed-dim": "#c8c6c5",
+                    "on-secondary-container": "#656464",
+                    "surface-tint": "#536600",
+                    "secondary-container": "#e5e2e1",
+                    "primary-fixed": "#caf300",
+                    "primary-fixed-dim": "#b0d500",
+                    "on-primary-container": "#5f7400",
+                    "surface-variant": "#e2e3e0",
+                    "on-surface": "#191c1b",
+                    "tertiary": "#732ee4",
+                    "surface-container-highest": "#e2e3e0",
+                    "on-primary-fixed-variant": "#3e4c00",
+                    "on-secondary-fixed-variant": "#474646",
+                    "inverse-primary": "#b0d500",
+                    "on-tertiary-fixed": "#25005a",
+                    "inverse-on-surface": "#f0f1ee",
+                    "on-primary-fixed": "#171e00",
+                    "secondary": "#5f5e5e",
+                    "primary": "#536600",
+                    "surface-container": "#edeeeb",
+                    "surface-container-lowest": "#ffffff",
+                    "on-background": "#191c1b",
+                    "surface-container-high": "#e7e8e6",
+                    "on-secondary": "#ffffff",
+                    "error": "#ba1a1a",
+                    "on-tertiary-fixed-variant": "#5a00c6",
+                    "on-error": "#ffffff",
+                    "on-primary": "#ffffff",
+                    "secondary-fixed": "#e5e2e1",
+                    "error-container": "#ffdad6",
+                    "primary-container": "#d4ff00",
+                    "outline-variant": "#c5c9ac",
+                    "background": "#f9faf7",
+                    "surface-bright": "#f9faf7",
+                    "tertiary-fixed": "#eaddff",
+                    "tertiary-fixed-dim": "#d2bbff",
+                    "surface-dim": "#d9dad7",
+                    "on-surface-variant": "#444932",
+                    "on-tertiary": "#ffffff",
+                    "surface-container-low": "#f3f4f1",
+                    "on-secondary-fixed": "#1c1b1b",
+                    "outline": "#757a60",
+                    "surface": "#f9faf7"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "md": "24px",
+                    "lg": "40px",
+                    "sm": "12px",
+                    "gutter": "16px",
+                    "margin-mobile": "20px",
+                    "margin-desktop": "120px",
+                    "base": "8px",
+                    "xl": "64px",
+                    "xs": "4px"
+            },
+            "fontFamily": {
+                    "body-lg": [
+                            "Hanken Grotesk"
+                    ],
+                    "button-text": [
+                            "Hanken Grotesk"
+                    ],
+                    "headline-xl": [
+                            "Syne"
+                    ],
+                    "title-md": [
+                            "Hanken Grotesk"
+                    ],
+                    "label-caps": [
+                            "JetBrains Mono"
+                    ],
+                    "headline-lg": [
+                            "Syne"
+                    ],
+                    "headline-lg-mobile": [
+                            "Syne"
+                    ],
+                    "body-md": [
+                            "Hanken Grotesk"
+                    ]
+            },
+            "fontSize": {
+                    "body-lg": [
+                            "18px",
+                            {
+                                    "lineHeight": "26px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "button-text": [
+                            "16px",
+                            {
+                                    "lineHeight": "20px",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "headline-xl": [
+                            "40px",
+                            {
+                                    "lineHeight": "48px",
+                                    "letterSpacing": "-0.02em",
+                                    "fontWeight": "800"
+                            }
+                    ],
+                    "title-md": [
+                            "20px",
+                            {
+                                    "lineHeight": "28px",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "label-caps": [
+                            "12px",
+                            {
+                                    "lineHeight": "16px",
+                                    "letterSpacing": "0.05em",
+                                    "fontWeight": "500"
+                            }
+                    ],
+                    "headline-lg": [
+                            "32px",
+                            {
+                                    "lineHeight": "40px",
+                                    "letterSpacing": "-0.01em",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "headline-lg-mobile": [
+                            "28px",
+                            {
+                                    "lineHeight": "34px",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "body-md": [
+                            "16px",
+                            {
+                                    "lineHeight": "24px",
+                                    "fontWeight": "400"
+                            }
+                    ]
+            }
+    },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: theme('colors.background');
+            color: theme('colors.on-background');
+        }
+        /* Custom scrollbar for web if needed, though mobile focused */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: theme('colors.surface-variant'); 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: theme('colors.outline'); 
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="flex flex-col min-h-screen">
+<!-- TopAppBar -->
+<header class="bg-background dark:bg-on-background flex justify-between items-center px-margin-mobile h-16 w-full docked full-width top-0 border-b border-outline-variant dark:border-on-surface-variant flat no shadows sticky z-40">
+<button class="text-primary dark:text-primary-fixed scale-95 active:duration-100 hover:bg-surface-variant dark:hover:bg-on-surface-variant transition-colors p-2 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<div class="font-headline-xl text-headline-xl text-on-background dark:text-surface-bright tracking-tighter">Renly</div>
+<button class="text-primary dark:text-primary-fixed scale-95 active:duration-100 hover:bg-surface-variant dark:hover:bg-on-surface-variant transition-colors p-2 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-grow overflow-y-auto pb-[80px] md:pb-0 px-margin-mobile md:px-margin-desktop py-md">
+<!-- Search & Filter Area -->
+<div class="mb-md flex gap-sm">
+<div class="relative flex-grow">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-secondary" data-icon="search">search</span>
+</div>
+<input class="w-full pl-10 pr-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-lg font-body-md text-body-md focus:outline-none focus:border-on-surface focus:ring-1 focus:ring-on-surface transition-colors placeholder:text-secondary-fixed-dim" placeholder="Search conversations..." type="text"/>
+</div>
+<button class="bg-surface-container-lowest border border-outline-variant rounded-lg p-3 flex items-center justify-center hover:bg-surface-variant transition-colors">
+<span class="material-symbols-outlined text-on-surface" data-icon="tune">tune</span>
+</button>
+</div>
+<!-- Chat List -->
+<div class="flex flex-col gap-base">
+<!-- Chat Item 1 (Unread) -->
+<div class="bg-surface-container-lowest rounded-xl p-sm flex items-center gap-sm cursor-pointer hover:bg-surface-variant transition-colors relative overflow-hidden shadow-[0px_4px_12px_rgba(0,0,0,0.05)] border border-transparent hover:border-outline-variant">
+<!-- Unread Indicator -->
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-primary-fixed rounded-r-full"></div>
+<div class="relative w-12 h-12 flex-shrink-0">
+<img class="w-full h-full object-cover rounded-full border-2 border-surface-container-lowest shadow-sm" data-alt="A professional headshot of a female real estate agent with dark hair, wearing a sleek charcoal blazer against a bright, well-lit modern office background. High contrast, sharp focus, communicating trust and authority in a high-end property market context." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD5UqEBanDVJ5Kxk0xpu1HxoXZBqeEcvR5fSa-9GydMoFI4ANUoWcQDvg1TUXowTnMB6UKlUNU_344SetJsMqsVwR4hzQxoX5lA_2Oe_Ejl9SCsp8UzaprQXmEDwmuDor96Pk6reAGWgZAwoUo3sX-lbG8NpKvYABgpsfrKE_R7KUC39qe6VxuNQkGfTQKso49ztVe45FVjmg3WgzNAr7dJfKaxm_YHgliaRgafLga9ITeG2K1_nSdXPQ"/>
+<div class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-primary-fixed border-2 border-surface-container-lowest rounded-full"></div>
+</div>
+<div class="flex-grow min-w-0">
+<div class="flex justify-between items-baseline mb-xs">
+<h3 class="font-title-md text-title-md text-on-surface truncate pr-2">Sarah Jenkins</h3>
+<span class="font-label-caps text-label-caps text-primary-fixed-dim whitespace-nowrap">2m ago</span>
+</div>
+<div class="font-label-caps text-label-caps text-secondary mb-1">LUXE REALTY GROUP</div>
+<p class="font-body-md text-body-md text-on-surface font-semibold truncate">The client loved the property on 5th Ave. Can we expedite the paperwork?</p>
+</div>
+<div class="flex flex-col items-end gap-1 flex-shrink-0 ml-2">
+<div class="bg-primary-container text-on-primary-container font-label-caps text-[10px] leading-3 px-1.5 py-0.5 rounded-full font-bold">2</div>
+</div>
+</div>
+<!-- Chat Item 2 -->
+<div class="bg-surface-container-lowest rounded-xl p-sm flex items-center gap-sm cursor-pointer hover:bg-surface-variant transition-colors relative shadow-[0px_4px_12px_rgba(0,0,0,0.05)] border border-transparent hover:border-outline-variant opacity-90">
+<div class="relative w-12 h-12 flex-shrink-0">
+<img class="w-full h-full object-cover rounded-full border-2 border-surface-container-lowest shadow-sm" data-alt="A professional headshot of a male real estate agent with short blonde hair, wearing a dark suit without a tie, smiling confidently. The background is slightly blurred showing a high-end modern interior with deep charcoal and white tones. High contrast, premium official aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBlGwL4lSDlip42-OmjO1vLRY0z9OQX88S505_taxgiRTwleE9stbkySmt_X-TPLRvvHkrUfId8zac3PLiy2hxjUEnmltO0G7AaJBFKECwEq3-Ow6jt4dbHzjoXotcVBp12z7ODgcQGdA7W4Swt1y98oedLzjrG03Zh7JgUPNnqypix1IpiZMNJX8ZteRzc7EkuiHbiEs4O3dqpRuTCT4lkB2FgJBPIKVZT_uc8jFgAhOvgB23prDvScw"/>
+</div>
+<div class="flex-grow min-w-0">
+<div class="flex justify-between items-baseline mb-xs">
+<h3 class="font-title-md text-title-md text-on-surface truncate pr-2">Michael Chen</h3>
+<span class="font-label-caps text-label-caps text-secondary-fixed-dim whitespace-nowrap">1h ago</span>
+</div>
+<div class="font-label-caps text-label-caps text-secondary mb-1">ELEVATE PROPERTIES</div>
+<p class="font-body-md text-body-md text-secondary truncate">Sounds good, I'll send over the updated contract draft by EOD.</p>
+</div>
+</div>
+<!-- Chat Item 3 -->
+<div class="bg-surface-container-lowest rounded-xl p-sm flex items-center gap-sm cursor-pointer hover:bg-surface-variant transition-colors relative shadow-[0px_4px_12px_rgba(0,0,0,0.05)] border border-transparent hover:border-outline-variant opacity-90">
+<div class="relative w-12 h-12 flex-shrink-0">
+<img class="w-full h-full object-cover rounded-full border-2 border-surface-container-lowest shadow-sm" data-alt="A professional headshot of an older male real estate broker with grey hair and glasses, wearing a tailored navy suit. Background is a sleek, minimalist architectural setting with strong structural lines and off-white walls. High emphasis on trust and precision." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCY6zNVbEChAb3au67TwtFariF1VapNyF3fAh58H8XIwncWfUweMT4nZl07W8kYy7g4ro-TmWtT2cSMy4KyeyHPHggExRyTn1iEsDr9GVFmHrO0kuG7xew2JZuxkNY_0a2aoQjxZdgDOogRqrdrpxhxSOkRAqREQ5aKWZt01NIH1HlMpDe7nnyr0xOpgUlqIm2bxImsJzWg2d5fwXo_YHNzdu0IIWrq32UZllNW1BmYC78RcjzJk_0Hdg"/>
+</div>
+<div class="flex-grow min-w-0">
+<div class="flex justify-between items-baseline mb-xs">
+<h3 class="font-title-md text-title-md text-on-surface truncate pr-2">David Rossi</h3>
+<span class="font-label-caps text-label-caps text-secondary-fixed-dim whitespace-nowrap">Yesterday</span>
+</div>
+<div class="font-label-caps text-label-caps text-secondary mb-1">ROSSI &amp; CO COMMERCIAL</div>
+<p class="font-body-md text-body-md text-secondary truncate">Let's schedule a walkthrough for the warehouse space next Tuesday.</p>
+</div>
+<div class="flex flex-col items-end gap-1 flex-shrink-0 ml-2">
+<span class="material-symbols-outlined text-secondary-fixed-dim text-[16px]" data-icon="done_all">done_all</span>
+</div>
+</div>
+<!-- Chat Item 4 -->
+<div class="bg-surface-container-lowest rounded-xl p-sm flex items-center gap-sm cursor-pointer hover:bg-surface-variant transition-colors relative shadow-[0px_4px_12px_rgba(0,0,0,0.05)] border border-transparent hover:border-outline-variant opacity-90">
+<div class="relative w-12 h-12 flex-shrink-0">
+<div class="w-full h-full rounded-full bg-surface-variant flex items-center justify-center border-2 border-surface-container-lowest shadow-sm">
+<span class="font-title-md text-title-md text-on-surface-variant">EL</span>
+</div>
+<div class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-secondary-fixed-dim border-2 border-surface-container-lowest rounded-full"></div>
+</div>
+<div class="flex-grow min-w-0">
+<div class="flex justify-between items-baseline mb-xs">
+<h3 class="font-title-md text-title-md text-on-surface truncate pr-2">Elena Rostova</h3>
+<span class="font-label-caps text-label-caps text-secondary-fixed-dim whitespace-nowrap">Mon</span>
+</div>
+<div class="font-label-caps text-label-caps text-secondary mb-1">URBAN SANCTUARY</div>
+<p class="font-body-md text-body-md text-secondary truncate">Thanks for sharing those comps. Very helpful for our valuation.</p>
+</div>
+</div>
+</div>
+</main>
+<!-- Floating Action Button (New Chat) - Contextually Relevant here -->
+<button class="fixed bottom-[88px] right-margin-mobile md:right-margin-desktop w-14 h-14 bg-primary-fixed rounded-xl flex items-center justify-center shadow-lg hover:scale-105 transition-transform md:hidden z-40 text-on-primary-fixed">
+<span class="material-symbols-outlined" data-icon="add_comment" data-weight="fill" style="font-variation-settings: 'FILL' 1;">add_comment</span>
+</button>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-2 bg-surface dark:bg-inverse-surface docked full-width rounded-t-xl shadow-lg border-t-0">
+<a class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed-dim p-2 hover:text-primary-fixed-dim transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-label-caps text-label-caps mt-1">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed-dim p-2 hover:text-primary-fixed-dim transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="storefront">storefront</span>
+<span class="font-label-caps text-label-caps mt-1">Market</span>
+</a>
+<a class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed-dim p-2 hover:text-primary-fixed-dim transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="add_circle">add_circle</span>
+<span class="font-label-caps text-label-caps mt-1">Post</span>
+</a>
+<!-- Active Tab: Chat -->
+<a class="flex flex-col items-center justify-center text-primary dark:text-primary-fixed font-bold bg-primary-container/10 rounded-xl p-2 scale-110 duration-200 ease-out" href="#">
+<span class="material-symbols-outlined" data-icon="chat_bubble" data-weight="fill" style="font-variation-settings: 'FILL' 1;">chat_bubble</span>
+<span class="font-label-caps text-label-caps mt-1">Chat</span>
+</a>
+<a class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed-dim p-2 hover:text-primary-fixed-dim transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-label-caps text-label-caps mt-1">Profile</span>
+</a>
+</nav>
+</body></html>

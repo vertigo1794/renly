@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+
+<html class="h-full" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Verification Pending - Renly</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:ital,wght@0,100..900;1,100..900&amp;family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&amp;family=Syne:wght@400..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary-container": "#8140f2",
+                        "inverse-surface": "#2e312f",
+                        "on-error-container": "#93000a",
+                        "tertiary-container": "#f4eaff",
+                        "secondary-fixed-dim": "#c8c6c5",
+                        "on-secondary-container": "#656464",
+                        "surface-tint": "#536600",
+                        "secondary-container": "#e5e2e1",
+                        "primary-fixed": "#caf300",
+                        "primary-fixed-dim": "#b0d500",
+                        "on-primary-container": "#5f7400",
+                        "surface-variant": "#e2e3e0",
+                        "on-surface": "#191c1b",
+                        "tertiary": "#732ee4",
+                        "surface-container-highest": "#e2e3e0",
+                        "on-primary-fixed-variant": "#3e4c00",
+                        "on-secondary-fixed-variant": "#474646",
+                        "inverse-primary": "#b0d500",
+                        "on-tertiary-fixed": "#25005a",
+                        "inverse-on-surface": "#f0f1ee",
+                        "on-primary-fixed": "#171e00",
+                        "secondary": "#5f5e5e",
+                        "primary": "#536600",
+                        "surface-container": "#edeeeb",
+                        "surface-container-lowest": "#ffffff",
+                        "on-background": "#191c1b",
+                        "surface-container-high": "#e7e8e6",
+                        "on-secondary": "#ffffff",
+                        "error": "#ba1a1a",
+                        "on-tertiary-fixed-variant": "#5a00c6",
+                        "on-error": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "secondary-fixed": "#e5e2e1",
+                        "error-container": "#ffdad6",
+                        "primary-container": "#d4ff00",
+                        "outline-variant": "#c5c9ac",
+                        "background": "#f9faf7",
+                        "surface-bright": "#f9faf7",
+                        "tertiary-fixed": "#eaddff",
+                        "tertiary-fixed-dim": "#d2bbff",
+                        "surface-dim": "#d9dad7",
+                        "on-surface-variant": "#444932",
+                        "on-tertiary": "#ffffff",
+                        "surface-container-low": "#f3f4f1",
+                        "on-secondary-fixed": "#1c1b1b",
+                        "outline": "#757a60",
+                        "surface": "#f9faf7"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "md": "24px",
+                        "lg": "40px",
+                        "sm": "12px",
+                        "gutter": "16px",
+                        "margin-mobile": "20px",
+                        "margin-desktop": "120px",
+                        "base": "8px",
+                        "xl": "64px",
+                        "xs": "4px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Hanken Grotesk"],
+                        "button-text": ["Hanken Grotesk"],
+                        "headline-xl": ["Syne"],
+                        "title-md": ["Hanken Grotesk"],
+                        "label-caps": ["JetBrains Mono"],
+                        "headline-lg": ["Syne"],
+                        "headline-lg-mobile": ["Syne"],
+                        "body-md": ["Hanken Grotesk"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["18px", { "lineHeight": "26px", "fontWeight": "400" }],
+                        "button-text": ["16px", { "lineHeight": "20px", "fontWeight": "700" }],
+                        "headline-xl": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "800" }],
+                        "title-md": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "34px", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="h-full bg-background text-on-background flex flex-col antialiased selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopAppBar (Supressed per rules for transactional/linear screens, but user requested 'Verification Pending Screen'. As a pending screen, it's a dead end, so standard nav is suppressed. Will include a simplified header to maintain brand presence.) -->
+<header class="flex justify-center items-center px-margin-mobile h-16 w-full bg-background fixed top-0 z-50">
+<span class="font-headline-xl text-headline-xl text-on-background tracking-tighter">Renly</span>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-grow flex flex-col justify-center items-center px-margin-mobile md:px-margin-desktop pt-16 pb-md">
+<div class="w-full max-w-md flex flex-col items-center text-center space-y-md">
+<!-- Illustration Area -->
+<div class="relative w-48 h-48 mb-sm flex items-center justify-center">
+<!-- Outer Ring -->
+<div class="absolute inset-0 border-4 border-surface-variant rounded-full animate-[spin_10s_linear_infinite]"></div>
+<!-- Inner Element -->
+<div class="absolute inset-4 bg-primary-container rounded-full flex items-center justify-center animate-pulse">
+<span class="material-symbols-outlined text-6xl text-on-primary-container" style="font-variation-settings: 'FILL' 1;">
+                        hourglass_bottom
+                    </span>
+</div>
+<!-- Decorative Elements -->
+<div class="absolute top-0 right-0 w-8 h-8 bg-surface-lowest rounded-full border-2 border-primary-container shadow-sm flex items-center justify-center translate-x-1/2 -translate-y-1/4">
+<span class="material-symbols-outlined text-sm text-primary" style="font-variation-settings: 'FILL' 1;">
+                        fact_check
+                    </span>
+</div>
+</div>
+<!-- Typography Content -->
+<div class="space-y-sm">
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg text-on-background">
+                    Your Account is Being Verified
+                </h1>
+<p class="font-body-md text-body-md text-on-surface-variant px-md">
+                    The REN verification process takes 24-48 hours. We will notify you as soon as your profile is approved.
+                </p>
+</div>
+<!-- Status Indicator -->
+<div class="flex items-center space-x-xs bg-surface-container py-xs px-sm rounded-full border border-surface-variant">
+<div class="w-2 h-2 rounded-full bg-primary animate-ping relative">
+<div class="absolute inset-0 w-2 h-2 rounded-full bg-primary"></div>
+</div>
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest">
+                    IN PROGRESS
+                </span>
+</div>
+<!-- Action Area -->
+<div class="w-full pt-lg">
+<button class="w-full bg-primary-container text-black font-button-text text-button-text py-sm px-md rounded-lg hover:opacity-90 transition-opacity duration-200 shadow-[0px_4px_12px_rgba(0,0,0,0.05)] active:scale-95" type="button">
+                    Back to Home
+                </button>
+</div>
+</div>
+</main>
+</body></html>

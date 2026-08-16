@@ -1,0 +1,211 @@
+<!DOCTYPE html><html class="light" lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Renly App - Splash Screen</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700&amp;family=JetBrains+Mono:wght@500&amp;family=Syne:wght@700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<style>
+        .material-symbols-outlined {
+            font-family: 'Material Symbols Outlined';
+            font-weight: normal;
+            font-style: normal;
+            font-size: 24px;
+            line-height: 1;
+            letter-spacing: normal;
+            text-transform: none;
+            display: inline-block;
+            white-space: nowrap;
+            word-wrap: normal;
+            direction: ltr;
+            -webkit-font-feature-settings: 'liga';
+            -webkit-font-smoothing: antialiased;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary-container": "#8140f2",
+                        "inverse-surface": "#2e312f",
+                        "on-error-container": "#93000a",
+                        "tertiary-container": "#f4eaff",
+                        "secondary-fixed-dim": "#c8c6c5",
+                        "on-secondary-container": "#656464",
+                        "surface-tint": "#536600",
+                        "secondary-container": "#e5e2e1",
+                        "primary-fixed": "#caf300",
+                        "primary-fixed-dim": "#b0d500",
+                        "on-primary-container": "#5f7400",
+                        "surface-variant": "#e2e3e0",
+                        "on-surface": "#191c1b",
+                        "tertiary": "#732ee4",
+                        "surface-container-highest": "#e2e3e0",
+                        "on-primary-fixed-variant": "#3e4c00",
+                        "on-secondary-fixed-variant": "#474646",
+                        "inverse-primary": "#b0d500",
+                        "on-tertiary-fixed": "#25005a",
+                        "inverse-on-surface": "#f0f1ee",
+                        "on-primary-fixed": "#171e00",
+                        "secondary": "#5f5e5e",
+                        "primary": "#536600",
+                        "surface-container": "#edeeeb",
+                        "surface-container-lowest": "#ffffff",
+                        "on-background": "#191c1b",
+                        "surface-container-high": "#e7e8e6",
+                        "on-secondary": "#ffffff",
+                        "error": "#ba1a1a",
+                        "on-tertiary-fixed-variant": "#5a00c6",
+                        "on-error": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "secondary-fixed": "#e5e2e1",
+                        "error-container": "#ffdad6",
+                        "primary-container": "#d4ff00",
+                        "outline-variant": "#c5c9ac",
+                        "background": "#f9faf7",
+                        "surface-bright": "#f9faf7",
+                        "tertiary-fixed": "#eaddff",
+                        "tertiary-fixed-dim": "#d2bbff",
+                        "surface-dim": "#d9dad7",
+                        "on-surface-variant": "#444932",
+                        "on-tertiary": "#ffffff",
+                        "surface-container-low": "#f3f4f1",
+                        "on-secondary-fixed": "#1c1b1b",
+                        "outline": "#757a60",
+                        "surface": "#f9faf7"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "md": "24px",
+                        "lg": "40px",
+                        "sm": "12px",
+                        "gutter": "16px",
+                        "margin-mobile": "20px",
+                        "margin-desktop": "120px",
+                        "base": "8px",
+                        "xl": "64px",
+                        "xs": "4px"
+                    },
+                    "fontFamily": {
+                        "body-lg": [
+                            "Hanken Grotesk"
+                        ],
+                        "button-text": [
+                            "Hanken Grotesk"
+                        ],
+                        "headline-xl": [
+                            "Syne"
+                        ],
+                        "title-md": [
+                            "Hanken Grotesk"
+                        ],
+                        "label-caps": [
+                            "JetBrains Mono"
+                        ],
+                        "headline-lg": [
+                            "Syne"
+                        ],
+                        "headline-lg-mobile": [
+                            "Syne"
+                        ],
+                        "body-md": [
+                            "Hanken Grotesk"
+                        ]
+                    },
+                    "fontSize": {
+                        "body-lg": [
+                            "18px",
+                            {
+                                "lineHeight": "26px",
+                                "fontWeight": "400"
+                            }
+                        ],
+                        "button-text": [
+                            "16px",
+                            {
+                                "lineHeight": "20px",
+                                "fontWeight": "700"
+                            }
+                        ],
+                        "headline-xl": [
+                            "40px",
+                            {
+                                "lineHeight": "48px",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "800"
+                            }
+                        ],
+                        "title-md": [
+                            "20px",
+                            {
+                                "lineHeight": "28px",
+                                "fontWeight": "600"
+                            }
+                        ],
+                        "label-caps": [
+                            "12px",
+                            {
+                                "lineHeight": "16px",
+                                "letterSpacing": "0.05em",
+                                "fontWeight": "500"
+                            }
+                        ],
+                        "headline-lg": [
+                            "32px",
+                            {
+                                "lineHeight": "40px",
+                                "letterSpacing": "-0.01em",
+                                "fontWeight": "700"
+                            }
+                        ],
+                        "headline-lg-mobile": [
+                            "28px",
+                            {
+                                "lineHeight": "34px",
+                                "fontWeight": "700"
+                            }
+                        ],
+                        "body-md": [
+                            "16px",
+                            {
+                                "lineHeight": "24px",
+                                "fontWeight": "400"
+                            }
+                        ]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-primary-container h-screen w-screen flex flex-col items-center justify-center overflow-hidden">
+<div class="flex flex-col items-center justify-center animate-pulse">
+<img alt="Renly Logo" class="w-64 md:w-80 object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCPr60pgmN3F-3VJBnn7m8_Uh697K8jm-noRGuwoLRsckDRciTw_AvSTi_iqfEaoOaHQhEtDnzDSzocuhx-eGyw9tqb0qlqLwxKTJKJ1dMMlK9VVp9rU0uQOt_lm4PHiadNtjsG6j-zpaYM7qI2px9jyrWx3qVNNY0dnF8IgclZyp2A1EDqEuiGyPLmpbbvBBaGl145uHQkcHzdVpS0P0DgJdtGumubbJLjFUY5bfuOLgqxZpPxY4QCTjZq0ToEuuH5lxyBRykniH4tGmU" style="mix-blend-mode: multiply;">
+
+</div>
+<!-- Background decorative elements to enhance the high-contrast modern feel without clutter -->
+<div class="absolute inset-0 z-[-1] overflow-hidden pointer-events-none">
+<div class="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-primary blur-[120px] opacity-20"></div>
+<div class="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-surface-tint blur-[120px] opacity-20"></div>
+</div>
+
+
+<p class="absolute bottom-12 font-label-caps text-label-caps text-on-primary-fixed-variant opacity-80 text-center px-6 font-bold">PROPERTY COLLABORATION PLATFORM</p>
+
+
+
+
+
+
+
+
+
+</body></html>
