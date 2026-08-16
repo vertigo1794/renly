@@ -4,5 +4,12 @@
   "verification_pending_body": "Pendaftaran anda sedang disemak dengan daftar awam. Anda akan dimaklumkan sebaik sahaja ia diluluskan.",
   "auth_tagline": "Berkolaborasi lebih bijak, urus niaga lebih pantas.",
   "auth_create_account": "Cipta akaun",
-  "auth_log_in": "Log Masuk"
+  "auth_log_in": "Log Masuk",
+  "field_email": "E-mel",
+  "field_password": "Kata Laluan",
+  "auth_login_no_account": "Belum ada akaun? Cipta satu",
+  "auth_login_error_no_profile": "Pendaftaran belum lengkap. Hubungi sokongan untuk selesaikan.",
+  "auth_login_error_invalid": "E-mel atau kata laluan tidak sah.",
+  "validation_required": "Ruangan ini wajib diisi",
+  "validation_email_invalid": "Masukkan alamat e-mel yang sah"
 }
