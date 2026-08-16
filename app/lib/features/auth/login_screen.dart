@@ -51,10 +51,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         setState(() => _errorMessage = 'auth_login_error_no_profile'.tr());
         return;
       }
+      // Three explicit states -- a 'rejected' negotiator must NOT fall
+      // through to /home ("You're verified").
       if (negotiator.verificationStatus == 'pending') {
         context.go('/verification-pending');
-      } else {
+      } else if (negotiator.verificationStatus == 'approved') {
         context.go('/home');
+      } else {
+        setState(() => _errorMessage = 'auth_login_error_rejected'.tr());
       }
     } catch (_) {
       if (mounted) setState(() => _errorMessage = 'auth_login_error_invalid'.tr());

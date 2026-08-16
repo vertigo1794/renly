@@ -10,6 +10,8 @@
   "auth_login_no_account": "Don't have an account? Create one",
   "auth_login_error_no_profile": "Registration incomplete. Contact support to finish setup.",
   "auth_login_error_invalid": "Invalid email or password.",
+  "auth_login_error_rejected": "Your registration was not approved. Contact support for details.",
+  "registration_error_generic": "Something went wrong. Please check your details and try again.",
   "validation_required": "This field is required",
   "validation_email_invalid": "Enter a valid email address",
   "registration_step1_title": "Create Account",

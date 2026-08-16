@@ -61,8 +61,12 @@ class _RegistrationPersonalScreenState extends ConsumerState<RegistrationPersona
       );
       if (!mounted) return;
       context.push('/register/professional', extra: user.id);
-    } catch (e) {
-      if (mounted) setState(() => _submitError = e.toString());
+    } catch (_) {
+      // Never surface the raw exception: PostgrestException.toString() echoes
+      // constraint-violation details (the offending IC/phone number) and
+      // AuthException leaks account-enumeration info ("User already
+      // registered").
+      if (mounted) setState(() => _submitError = 'registration_error_generic'.tr());
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
@@ -72,7 +76,7 @@ class _RegistrationPersonalScreenState extends ConsumerState<RegistrationPersona
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: BackButton(onPressed: () => context.pop()),
+        leading: BackButton(onPressed: () => context.canPop() ? context.pop() : context.go('/')),
         title: Text('app_name'.tr()),
       ),
       body: SafeArea(
@@ -170,7 +174,10 @@ class _RegistrationPersonalScreenState extends ConsumerState<RegistrationPersona
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    TextButton(onPressed: () => context.pop(), child: Text('registration_cancel'.tr())),
+                    TextButton(
+                      onPressed: () => context.canPop() ? context.pop() : context.go('/'),
+                      child: Text('registration_cancel'.tr()),
+                    ),
                     const SizedBox(width: 8),
                     ElevatedButton(
                       onPressed: _submitting ? null : _submit,

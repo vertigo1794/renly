@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -62,7 +60,9 @@ class _RegistrationProfessionalScreenState extends ConsumerState<RegistrationPro
     final repository = ref.read(authRepositoryProvider);
     try {
       final agencyId = await repository.findOrCreateAgency(_agencyNameController.text.trim());
-      final bytes = await File(_tagPhoto!.path).readAsBytes();
+      // XFile.readAsBytes() works on every platform including web; going
+      // through dart:io's File(path) would break the web build.
+      final bytes = await _tagPhoto!.readAsBytes();
       final photoUrl = await repository.uploadTagPhoto(
         negotiatorId: widget.negotiatorId,
         bytes: bytes,
@@ -78,8 +78,10 @@ class _RegistrationProfessionalScreenState extends ConsumerState<RegistrationPro
       );
       if (!mounted) return;
       context.go('/verification-pending');
-    } catch (e) {
-      if (mounted) setState(() => _submitError = e.toString());
+    } catch (_) {
+      // Never surface the raw exception -- see the same guard in
+      // registration_personal_screen.dart for why.
+      if (mounted) setState(() => _submitError = 'registration_error_generic'.tr());
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
@@ -89,7 +91,7 @@ class _RegistrationProfessionalScreenState extends ConsumerState<RegistrationPro
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: BackButton(onPressed: () => context.pop()),
+        leading: BackButton(onPressed: () => context.canPop() ? context.pop() : context.go('/')),
         title: Text('app_name'.tr()),
       ),
       body: SafeArea(

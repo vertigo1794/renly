@@ -10,6 +10,8 @@
   "auth_login_no_account": "Belum ada akaun? Cipta satu",
   "auth_login_error_no_profile": "Pendaftaran belum lengkap. Hubungi sokongan untuk selesaikan.",
   "auth_login_error_invalid": "E-mel atau kata laluan tidak sah.",
+  "auth_login_error_rejected": "Pendaftaran anda tidak diluluskan. Hubungi sokongan untuk maklumat lanjut.",
+  "registration_error_generic": "Sesuatu tidak kena. Sila semak butiran anda dan cuba lagi.",
   "validation_required": "Ruangan ini wajib diisi",
   "validation_email_invalid": "Masukkan alamat e-mel yang sah",
   "registration_step1_title": "Cipta Akaun",
