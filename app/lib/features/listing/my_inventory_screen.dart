@@ -49,7 +49,7 @@ class _MyInventoryScreenState extends ConsumerState<MyInventoryScreen> {
                       final listingsAsync = ref.watch(myListingsProvider(negotiatorId));
                       return listingsAsync.when(
                         loading: () => const Center(child: CircularProgressIndicator()),
-                        error: (error, stack) => Center(child: Text(error.toString())),
+                        error: (error, stack) => Center(child: Text('listing_error_generic'.tr())),
                         data: (listings) {
                           final filtered = ListingStatusFilter.byStatus(listings, _selectedStatus);
                           if (filtered.isEmpty) {

@@ -20,8 +20,16 @@ class PropertyDetailScreen extends ConsumerStatefulWidget {
 class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
   Future<void> _changeStatus(String status) async {
     final repository = ref.read(listingRepositoryProvider);
-    await repository.updateListingStatus(listingId: widget.listingId, status: status);
-    ref.invalidate(listingDetailProvider(widget.listingId));
+    try {
+      await repository.updateListingStatus(listingId: widget.listingId, status: status);
+      ref.invalidate(listingDetailProvider(widget.listingId));
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('listing_error_generic'.tr())),
+        );
+      }
+    }
   }
 
   @override
@@ -32,7 +40,7 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
     return Scaffold(
       body: listingAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(child: Text(error.toString())),
+        error: (error, stack) => Center(child: Text('listing_error_generic'.tr())),
         data: (listing) {
           final isOwner = currentNegotiatorId != null && currentNegotiatorId == listing.negotiatorId;
 

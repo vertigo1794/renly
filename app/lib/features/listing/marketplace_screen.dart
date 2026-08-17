@@ -61,7 +61,7 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
           Expanded(
             child: listingsAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stack) => Center(child: Text(error.toString())),
+              error: (error, stack) => Center(child: Text('listing_error_generic'.tr())),
               data: (listings) {
                 final filtered = _filter(listings);
                 if (filtered.isEmpty) {
