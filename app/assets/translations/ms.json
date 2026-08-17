@@ -39,5 +39,8 @@
   "registration_choose_file": "Pilih Fail",
   "registration_complete": "Lengkapkan Pendaftaran",
   "home_placeholder_title": "Anda telah disahkan",
-  "home_placeholder_body": "Papan pemuka akan datang tidak lama lagi."
+  "home_placeholder_body": "Papan pemuka akan datang tidak lama lagi.",
+  "marketplace_title": "Pasaran",
+  "marketplace_search_hint": "Cari hartanah, kawasan...",
+  "marketplace_empty": "Tiada senarai lagi"
 }

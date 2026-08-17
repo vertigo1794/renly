@@ -1,0 +1,125 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../core/theme/app_colors.dart';
+import 'listing_formatting.dart';
+import 'listing_providers.dart';
+import 'models/listing.dart';
+
+/// Ports stitch_renly_property_agent_network/marketplace. Search is
+/// client-side only for this pass (filters the already-fetched active
+/// listings) -- no server-side full-text search yet.
+class MarketplaceScreen extends ConsumerStatefulWidget {
+  const MarketplaceScreen({super.key});
+
+  @override
+  ConsumerState<MarketplaceScreen> createState() => _MarketplaceScreenState();
+}
+
+class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
+  final _searchController = TextEditingController();
+  String _query = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  List<Listing> _filter(List<Listing> listings) {
+    if (_query.trim().isEmpty) return listings;
+    final q = _query.toLowerCase();
+    return listings
+        .where((l) =>
+            l.title.toLowerCase().contains(q) ||
+            l.area.toLowerCase().contains(q) ||
+            l.state.toLowerCase().contains(q))
+        .toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final listingsAsync = ref.watch(marketplaceListingsProvider);
+
+    return Scaffold(
+      appBar: AppBar(title: Text('marketplace_title'.tr())),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                hintText: 'marketplace_search_hint'.tr(),
+                prefixIcon: const Icon(Icons.search),
+              ),
+              onChanged: (value) => setState(() => _query = value),
+            ),
+          ),
+          Expanded(
+            child: listingsAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, stack) => Center(child: Text(error.toString())),
+              data: (listings) {
+                final filtered = _filter(listings);
+                if (filtered.isEmpty) {
+                  return Center(child: Text('marketplace_empty'.tr()));
+                }
+                return ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  itemCount: filtered.length,
+                  itemBuilder: (context, index) {
+                    final listing = filtered[index];
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 16),
+                      child: InkWell(
+                        onTap: () => context.push('/property/${listing.listingId}'),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(listing.title, style: Theme.of(context).textTheme.titleMedium),
+                              const SizedBox(height: 4),
+                              Text(
+                                ListingFormatting.formatPrice(listing.price, listing.transactionType),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleMedium
+                                    ?.copyWith(color: AppColors.primary),
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  if (listing.bedrooms != null) ...[
+                                    const Icon(Icons.bed, size: 16),
+                                    const SizedBox(width: 4),
+                                    Text('${listing.bedrooms}'),
+                                    const SizedBox(width: 12),
+                                  ],
+                                  if (listing.bathrooms != null) ...[
+                                    const Icon(Icons.bathtub, size: 16),
+                                    const SizedBox(width: 4),
+                                    Text('${listing.bathrooms}'),
+                                    const SizedBox(width: 12),
+                                  ],
+                                  Text(listing.area, style: Theme.of(context).textTheme.labelSmall),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
