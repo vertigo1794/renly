@@ -42,5 +42,11 @@
   "home_placeholder_body": "Papan pemuka akan datang tidak lama lagi.",
   "marketplace_title": "Pasaran",
   "marketplace_search_hint": "Cari hartanah, kawasan...",
-  "marketplace_empty": "Tiada senarai lagi"
+  "marketplace_empty": "Tiada senarai lagi",
+  "inventory_title": "Pengurusan Inventori",
+  "inventory_tab_active": "Aktif",
+  "inventory_tab_sold": "Terjual",
+  "inventory_tab_withdrawn": "Ditarik Balik",
+  "inventory_post_new": "Siarkan Senarai Baharu",
+  "inventory_empty": "Tiada senarai dalam tab ini lagi"
 }

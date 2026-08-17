@@ -42,5 +42,11 @@
   "home_placeholder_body": "Dashboard coming soon.",
   "marketplace_title": "Market",
   "marketplace_search_hint": "Search properties, neighbourhoods...",
-  "marketplace_empty": "No listings yet"
+  "marketplace_empty": "No listings yet",
+  "inventory_title": "Inventory Management",
+  "inventory_tab_active": "Active",
+  "inventory_tab_sold": "Sold",
+  "inventory_tab_withdrawn": "Withdrawn",
+  "inventory_post_new": "Post New Listing",
+  "inventory_empty": "No listings in this tab yet"
 }
