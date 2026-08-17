@@ -68,5 +68,6 @@
   "listing_property_type_commercial": "Ruang Komersial",
   "listing_property_type_land": "Tanah",
   "listing_transaction_type_sale": "Jual",
-  "listing_transaction_type_rent": "Sewa"
+  "listing_transaction_type_rent": "Sewa",
+  "listing_error_generic": "Sesuatu tidak kena. Sila semak butiran anda dan cuba lagi."
 }

@@ -68,5 +68,6 @@
   "listing_property_type_commercial": "Commercial Space",
   "listing_property_type_land": "Land",
   "listing_transaction_type_sale": "Sale",
-  "listing_transaction_type_rent": "Rent"
+  "listing_transaction_type_rent": "Rent",
+  "listing_error_generic": "Something went wrong. Please check your details and try again."
 }

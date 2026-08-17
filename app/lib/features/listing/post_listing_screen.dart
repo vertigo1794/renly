@@ -103,7 +103,7 @@ class _PostListingScreenState extends ConsumerState<PostListingScreen> {
       if (!mounted) return;
       context.go('/my-inventory');
     } catch (e) {
-      if (mounted) setState(() => _submitError = e.toString());
+      if (mounted) setState(() => _submitError = 'listing_error_generic'.tr());
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
