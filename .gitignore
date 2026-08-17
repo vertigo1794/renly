@@ -58,3 +58,6 @@ build/
 .env
 **/google-services.json
 **/GoogleService-Info.plist
+
+# graphify (local knowledge-graph tool output, regenerable)
+graphify-out/
