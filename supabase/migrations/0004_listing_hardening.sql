@@ -81,4 +81,5 @@ as $$
   select n.full_name, n.ren_number from negotiator n where n.negotiator_id = p_negotiator_id;
 $$;
 
+revoke execute on function get_listing_owner_info(uuid) from public;
 grant execute on function get_listing_owner_info(uuid) to authenticated;
