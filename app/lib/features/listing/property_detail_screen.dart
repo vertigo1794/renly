@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'listing_formatting.dart';
 import 'listing_providers.dart';
-import 'models/listing_owner.dart';
 
 /// Ports stitch_renly_property_agent_network/property_detail.
 class PropertyDetailScreen extends ConsumerStatefulWidget {

@@ -11,6 +11,10 @@ import '../../features/auth/login_screen.dart';
 import '../../features/auth/registration_personal_screen.dart';
 import '../../features/auth/registration_professional_screen.dart';
 import '../../features/auth/verification_pending_screen.dart';
+import '../../features/listing/marketplace_screen.dart';
+import '../../features/listing/my_inventory_screen.dart';
+import '../../features/listing/post_listing_screen.dart';
+import '../../features/listing/property_detail_screen.dart';
 
 const _publicRoutes = {'/', '/login', '/register/personal', '/register/professional'};
 
@@ -87,6 +91,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const VerificationPendingScreen(),
       ),
       GoRoute(path: '/home', builder: (context, state) => const HomePlaceholderScreen()),
+      GoRoute(path: '/marketplace', builder: (context, state) => const MarketplaceScreen()),
+      GoRoute(path: '/my-inventory', builder: (context, state) => const MyInventoryScreen()),
+      GoRoute(path: '/post-listing', builder: (context, state) => const PostListingScreen()),
+      GoRoute(
+        path: '/property/:listingId',
+        builder: (context, state) => PropertyDetailScreen(listingId: state.pathParameters['listingId']!),
+      ),
     ],
   );
 });

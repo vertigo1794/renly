@@ -32,5 +32,21 @@ void main() {
       expect(computeAuthRedirect(hasSession: true, location: '/home'), isNull);
       expect(computeAuthRedirect(hasSession: true, location: '/verification-pending'), isNull);
     });
+
+    test('unauthenticated user on /marketplace is redirected to /', () {
+      expect(computeAuthRedirect(hasSession: false, location: '/marketplace'), '/');
+    });
+
+    test('unauthenticated user on /my-inventory is redirected to /', () {
+      expect(computeAuthRedirect(hasSession: false, location: '/my-inventory'), '/');
+    });
+
+    test('unauthenticated user on /post-listing is redirected to /', () {
+      expect(computeAuthRedirect(hasSession: false, location: '/post-listing'), '/');
+    });
+
+    test('unauthenticated user on /property/l-1 is redirected to /', () {
+      expect(computeAuthRedirect(hasSession: false, location: '/property/l-1'), '/');
+    });
   });
 }
