@@ -53,3 +53,7 @@ Two one-time steps in the Supabase dashboard, in addition to the `.env` setup ab
 2. **Disable email confirmation.** Dashboard -> Authentication -> Sign In / Providers -> Email -> turn off "Confirm email". Without this, `signUp()` requires the user to click a confirmation link in their inbox before a session is active, which would strand Step 1 of registration before Step 2 can run. This is fine for development; revisit before any real production launch.
 
 Registration won't work (Postgrest errors on every insert) until step 1 is done. Login will hang waiting for email confirmation until step 2 is done.
+
+## Milestone 3 setup (listing)
+
+One more SQL file, same process as before: Supabase dashboard -> SQL Editor -> New query -> paste the entire contents of `supabase/migrations/0003_listing.sql` (repo root) -> Run. This creates the `listing` table, its RLS policies, and the `listing-photos` storage bucket. No Auth-dashboard changes needed this time.
