@@ -69,5 +69,10 @@
   "listing_property_type_land": "Land",
   "listing_transaction_type_sale": "Sale",
   "listing_transaction_type_rent": "Rent",
-  "listing_error_generic": "Something went wrong. Please check your details and try again."
+  "listing_error_generic": "Something went wrong. Please check your details and try again.",
+  "property_overview": "Property Overview",
+  "property_location": "Location",
+  "property_mark_sold": "Mark as Sold",
+  "property_withdraw": "Withdraw Listing",
+  "property_reactivate": "Reactivate Listing"
 }

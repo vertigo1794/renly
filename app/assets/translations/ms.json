@@ -69,5 +69,10 @@
   "listing_property_type_land": "Tanah",
   "listing_transaction_type_sale": "Jual",
   "listing_transaction_type_rent": "Sewa",
-  "listing_error_generic": "Sesuatu tidak kena. Sila semak butiran anda dan cuba lagi."
+  "listing_error_generic": "Sesuatu tidak kena. Sila semak butiran anda dan cuba lagi.",
+  "property_overview": "Gambaran Hartanah",
+  "property_location": "Lokasi",
+  "property_mark_sold": "Tanda Terjual",
+  "property_withdraw": "Tarik Balik Senarai",
+  "property_reactivate": "Aktifkan Semula Senarai"
 }
