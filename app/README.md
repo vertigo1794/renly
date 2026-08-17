@@ -57,3 +57,12 @@ Registration won't work (Postgrest errors on every insert) until step 1 is done.
 ## Milestone 3 setup (listing)
 
 One more SQL file, same process as before: Supabase dashboard -> SQL Editor -> New query -> paste the entire contents of `supabase/migrations/0003_listing.sql` (repo root) -> Run. This creates the `listing` table, its RLS policies, and the `listing-photos` storage bucket. No Auth-dashboard changes needed this time.
+
+**Then run a second file:** in a new query, paste the entire contents of `supabase/migrations/0004_listing_hardening.sql` and Run. It must go **after** `0003_listing.sql`. This one:
+
+- scopes the `listing` policies to `authenticated` (as shipped in `0003` they were also readable by the `anon` role — the key baked into the app — so anyone could read every active listing straight from the REST API);
+- adds the column-level `GRANT`/`REVOKE` hardening so `created_at`, `listing_id` and `negotiator_id` can't be rewritten by their owner;
+- adds non-negative `CHECK`s on `bedrooms`/`bathrooms`;
+- creates the `get_listing_owner_info()` function that the property detail screen calls to show a listing's negotiator name + REN number. Without it that section renders blank for every listing you don't own.
+
+Like `0002`, this file is written to be re-runnable — running it twice is harmless.

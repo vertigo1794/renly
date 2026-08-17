@@ -36,13 +36,27 @@ class ListingRepository {
     return Listing.fromJson(row);
   }
 
+  /// Goes through the `get_listing_owner_info` security-definer RPC
+  /// (0004_listing_hardening.sql) rather than selecting from `negotiator`
+  /// directly: negotiator_select_own only lets a user read their OWN row,
+  /// so a plain select here returned zero rows for every listing you don't
+  /// own. The RPC returns only full_name/ren_number, so this doesn't widen
+  /// access to ic_number, phone_number or verification_status.
   Future<ListingOwner> fetchListingOwner(String negotiatorId) async {
-    final row = await _client
-        .from('negotiator')
-        .select('full_name, ren_number')
-        .eq('negotiator_id', negotiatorId)
-        .single();
-    return ListingOwner.fromJson(row);
+    final rows = await _client.rpc(
+      'get_listing_owner_info',
+      params: {'p_negotiator_id': negotiatorId},
+    ) as List;
+    if (rows.isEmpty) {
+      throw StateError('Negotiator not found: $negotiatorId');
+    }
+    return ListingOwner.fromJson(rows.first as Map<String, dynamic>);
+  }
+
+  /// The `listing-photos` bucket is private, so photos can only be rendered
+  /// through a short-lived signed URL (1 hour).
+  Future<String> createSignedUrl(String path) {
+    return _client.storage.from('listing-photos').createSignedUrl(path, 3600);
   }
 
   Future<String> uploadListingPhoto({
