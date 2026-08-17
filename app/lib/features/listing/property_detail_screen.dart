@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'listing_formatting.dart';
+import 'listing_photo.dart';
 import 'listing_providers.dart';
+import 'models/listing.dart';
 
 /// Ports stitch_renly_property_agent_network/property_detail.
 class PropertyDetailScreen extends ConsumerStatefulWidget {
@@ -17,11 +19,16 @@ class PropertyDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
-  Future<void> _changeStatus(String status) async {
+  /// Takes the listing (not just the new status) so the two list providers
+  /// can be invalidated too -- otherwise a listing marked sold here stays
+  /// in the marketplace and in My Inventory's Active tab until restart.
+  Future<void> _changeStatus(Listing listing, String status) async {
     final repository = ref.read(listingRepositoryProvider);
     try {
       await repository.updateListingStatus(listingId: widget.listingId, status: status);
       ref.invalidate(listingDetailProvider(widget.listingId));
+      ref.invalidate(marketplaceListingsProvider);
+      ref.invalidate(myListingsProvider(listing.negotiatorId));
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -37,6 +44,7 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
     final currentNegotiatorId = ref.watch(currentNegotiatorIdProvider);
 
     return Scaffold(
+      appBar: AppBar(),
       body: listingAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) => Center(child: Text('listing_error_generic'.tr())),
@@ -54,12 +62,12 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
                       height: 220,
                       child: PageView(
                         children: [
-                          for (final _ in listing.photoUrls)
-                            Container(
-                              margin: const EdgeInsets.symmetric(horizontal: 4),
-                              decoration: BoxDecoration(
-                                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                          for (final photoPath in listing.photoUrls)
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 4),
+                              child: ClipRRect(
                                 borderRadius: BorderRadius.circular(16),
+                                child: ListingPhoto(path: photoPath),
                               ),
                             ),
                         ],
@@ -95,7 +103,8 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
                   const SizedBox(height: 16),
                   Text('property_location'.tr(), style: Theme.of(context).textTheme.titleMedium),
                   const SizedBox(height: 4),
-                  Text(listing.area, style: Theme.of(context).textTheme.bodyMedium),
+                  Text('${listing.area}, ${listing.state}',
+                      style: Theme.of(context).textTheme.bodyMedium),
                   const SizedBox(height: 16),
                   Builder(builder: (context) {
                     final ownerAsync = ref.watch(listingOwnerProvider(listing.negotiatorId));
@@ -115,17 +124,17 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
                   if (isOwner) ...[
                     if (listing.status != 'sold')
                       OutlinedButton(
-                        onPressed: () => _changeStatus('sold'),
+                        onPressed: () => _changeStatus(listing, 'sold'),
                         child: Text('property_mark_sold'.tr()),
                       ),
                     if (listing.status != 'withdrawn')
                       OutlinedButton(
-                        onPressed: () => _changeStatus('withdrawn'),
+                        onPressed: () => _changeStatus(listing, 'withdrawn'),
                         child: Text('property_withdraw'.tr()),
                       ),
                     if (listing.status != 'active')
                       OutlinedButton(
-                        onPressed: () => _changeStatus('active'),
+                        onPressed: () => _changeStatus(listing, 'active'),
                         child: Text('property_reactivate'.tr()),
                       ),
                   ],

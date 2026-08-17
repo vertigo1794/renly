@@ -42,8 +42,11 @@ class _MyInventoryScreenState extends ConsumerState<MyInventoryScreen> {
             ),
           ),
           Expanded(
+            // A null negotiatorId here is a brief startup race (the auth
+            // redirect already guarantees a session reaches this route),
+            // so it reads as "still loading", not as an error state.
             child: negotiatorId == null
-                ? const SizedBox.shrink()
+                ? const Center(child: CircularProgressIndicator())
                 : Consumer(
                     builder: (context, ref, _) {
                       final listingsAsync = ref.watch(myListingsProvider(negotiatorId));
@@ -55,22 +58,27 @@ class _MyInventoryScreenState extends ConsumerState<MyInventoryScreen> {
                           if (filtered.isEmpty) {
                             return Center(child: Text('inventory_empty'.tr()));
                           }
-                          return ListView.builder(
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
-                            itemCount: filtered.length,
-                            itemBuilder: (context, index) {
-                              final listing = filtered[index];
-                              return Card(
-                                margin: const EdgeInsets.only(bottom: 16),
-                                child: ListTile(
-                                  onTap: () => context.push('/property/${listing.listingId}'),
-                                  title: Text(listing.title),
-                                  subtitle: Text(
-                                    ListingFormatting.formatPrice(listing.price, listing.transactionType),
+                          return RefreshIndicator(
+                            onRefresh: () async =>
+                                ref.invalidate(myListingsProvider(negotiatorId)),
+                            child: ListView.builder(
+                              padding: const EdgeInsets.symmetric(horizontal: 20),
+                              itemCount: filtered.length,
+                              itemBuilder: (context, index) {
+                                final listing = filtered[index];
+                                return Card(
+                                  margin: const EdgeInsets.only(bottom: 16),
+                                  child: ListTile(
+                                    onTap: () => context.push('/property/${listing.listingId}'),
+                                    title: Text(listing.title),
+                                    subtitle: Text(
+                                      ListingFormatting.formatPrice(
+                                          listing.price, listing.transactionType),
+                                    ),
                                   ),
-                                ),
-                              );
-                            },
+                                );
+                              },
+                            ),
                           );
                         },
                       );

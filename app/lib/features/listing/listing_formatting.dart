@@ -3,6 +3,11 @@ class ListingFormatting {
   ListingFormatting._();
 
   static String formatPrice(num price, String transactionType) {
+    // num.round() throws on NaN/Infinity, and Postgres' `price > 0` CHECK
+    // does NOT reject 'NaN'::numeric (Postgres orders NaN above every other
+    // numeric), so one malformed row would otherwise crash every client
+    // rendering the marketplace list.
+    if (!price.isFinite) return 'RM —';
     final rounded = price.round();
     final digits = rounded.toString();
     final buffer = StringBuffer();

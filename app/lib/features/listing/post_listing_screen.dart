@@ -1,5 +1,5 @@
 // app/lib/features/listing/post_listing_screen.dart
-import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -35,6 +35,13 @@ class _PostListingScreenState extends ConsumerState<PostListingScreen> {
   bool _submitting = false;
   String? _submitError;
 
+  /// Set as soon as createListing() succeeds. _submit() is three separate
+  /// network calls (create -> upload photos -> attach urls); if it fails
+  /// partway, the natural user response is to tap "Post Now" again, which
+  /// without this would insert a SECOND listing row. Remembering the id
+  /// makes the retry resume from the upload step instead.
+  String? _createdListingId;
+
   @override
   void dispose() {
     _titleController.dispose();
@@ -57,7 +64,20 @@ class _PostListingScreenState extends ConsumerState<PostListingScreen> {
   }
 
   void _removePhoto(int index) {
+    final removed = _photos[index];
     setState(() => _photos.removeAt(index));
+    _photoBytesCache.remove(removed.path);
+  }
+
+  /// Keyed on XFile.path rather than the list index so that removing a
+  /// photo doesn't shift every later thumbnail onto the wrong bytes. Cached
+  /// because a FutureBuilder re-runs its future on every rebuild otherwise,
+  /// re-reading the whole image each frame.
+  final Map<String, Future<Uint8List>> _photoBytesCache = {};
+
+  Future<Uint8List> _photoBytes(int index) {
+    final photo = _photos[index];
+    return _photoBytesCache.putIfAbsent(photo.path, photo.readAsBytes);
   }
 
   Future<void> _submit() async {
@@ -72,33 +92,42 @@ class _PostListingScreenState extends ConsumerState<PostListingScreen> {
 
     final repository = ref.read(listingRepositoryProvider);
     try {
-      final listing = await repository.createListing(
-        negotiatorId: negotiatorId,
-        title: _titleController.text.trim(),
-        description: _descriptionController.text.trim(),
-        propertyType: _propertyType,
-        transactionType: _transactionType,
-        state: _state,
-        area: _areaController.text.trim(),
-        price: double.parse(_priceController.text.trim()),
-        bedrooms: _bedroomsController.text.trim().isEmpty ? null : int.parse(_bedroomsController.text.trim()),
-        bathrooms: _bathroomsController.text.trim().isEmpty ? null : int.parse(_bathroomsController.text.trim()),
-      );
+      // Only create the row on the first attempt -- a retry after a failed
+      // photo upload reuses the id created last time.
+      if (_createdListingId == null) {
+        final listing = await repository.createListing(
+          negotiatorId: negotiatorId,
+          title: _titleController.text.trim(),
+          description: _descriptionController.text.trim(),
+          propertyType: _propertyType,
+          transactionType: _transactionType,
+          state: _state,
+          area: _areaController.text.trim(),
+          price: double.parse(_priceController.text.trim()),
+          bedrooms: _bedroomsController.text.trim().isEmpty ? null : int.parse(_bedroomsController.text.trim()),
+          bathrooms: _bathroomsController.text.trim().isEmpty ? null : int.parse(_bathroomsController.text.trim()),
+        );
+        _createdListingId = listing.listingId;
+      }
+      final listingId = _createdListingId!;
 
       final photoUrls = <String>[];
       for (var i = 0; i < _photos.length; i++) {
         final bytes = await _photos[i].readAsBytes();
         final path = await repository.uploadListingPhoto(
           negotiatorId: negotiatorId,
-          listingId: listing.listingId,
+          listingId: listingId,
           index: i,
           bytes: bytes,
         );
         photoUrls.add(path);
       }
       if (photoUrls.isNotEmpty) {
-        await repository.updateListingPhotos(listingId: listing.listingId, photoUrls: photoUrls);
+        await repository.updateListingPhotos(listingId: listingId, photoUrls: photoUrls);
       }
+
+      ref.invalidate(marketplaceListingsProvider);
+      ref.invalidate(myListingsProvider(negotiatorId));
 
       if (!mounted) return;
       context.go('/my-inventory');
@@ -233,10 +262,25 @@ class _PostListingScreenState extends ConsumerState<PostListingScreen> {
                     ...List.generate(_photos.length, (index) {
                       return Stack(
                         children: [
+                          // XFile.readAsBytes() works on every platform
+                          // including web; going through dart:io's
+                          // File(path) would break the web build. Same
+                          // reason as registration_professional_screen.
                           Positioned.fill(
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(8),
-                              child: Image.file(File(_photos[index].path), fit: BoxFit.cover),
+                              child: FutureBuilder<Uint8List>(
+                                future: _photoBytes(index),
+                                builder: (context, snapshot) {
+                                  final bytes = snapshot.data;
+                                  if (bytes == null) {
+                                    return Container(
+                                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                                    );
+                                  }
+                                  return Image.memory(bytes, fit: BoxFit.cover);
+                                },
+                              ),
                             ),
                           ),
                           Positioned(

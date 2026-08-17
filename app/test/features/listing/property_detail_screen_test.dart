@@ -68,7 +68,7 @@ void main() {
     rootBundle.clear();
   });
 
-  testWidgets('renders title, price, description, and area', (tester) async {
+  testWidgets('renders title, price, description, and location', (tester) async {
     final router = GoRouter(routes: [
       GoRoute(path: '/', builder: (context, state) => const PropertyDetailScreen(listingId: 'l-1')),
     ]);
@@ -79,7 +79,8 @@ void main() {
     expect(find.text('The Vertex Residency'), findsOneWidget);
     expect(find.text('RM 1,250,000'), findsOneWidget);
     expect(find.text('A modern apartment with lots of light.'), findsOneWidget);
-    expect(find.text('Petaling Jaya'), findsOneWidget);
+    // Location shows area AND state, not area alone.
+    expect(find.text('Petaling Jaya, Selangor'), findsOneWidget);
     expect(find.text('Aiman Yusof'), findsOneWidget);
     expect(find.text('REN: 12345'), findsOneWidget);
   });

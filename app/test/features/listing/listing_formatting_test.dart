@@ -19,5 +19,16 @@ void main() {
     test('formats a price of exactly 1000', () {
       expect(ListingFormatting.formatPrice(1000, 'sale'), 'RM 1,000');
     });
+
+    // Postgres' `price > 0` CHECK does not reject 'NaN'::numeric, so a
+    // malformed row can reach the client. num.round() throws on it.
+    test('returns a fallback for NaN instead of throwing', () {
+      expect(ListingFormatting.formatPrice(double.nan, 'sale'), 'RM —');
+    });
+
+    test('returns a fallback for infinity instead of throwing', () {
+      expect(ListingFormatting.formatPrice(double.infinity, 'rent'), 'RM —');
+      expect(ListingFormatting.formatPrice(double.negativeInfinity, 'sale'), 'RM —');
+    });
   });
 }
