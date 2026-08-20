@@ -67,9 +67,11 @@ grant insert (
 revoke update on requirement from authenticated;
 grant update (
   property_type, transaction_type, state, area, budget_min, budget_max,
-  bedrooms, status
+  bedrooms, status, photo_urls
 ) on requirement to authenticated;
 ```
+
+`photo_urls` is in the UPDATE grant (not INSERT) for the same reason as Listing: the row must exist before its `requirement_id` is available for the Storage path, so photos are attached via a follow-up UPDATE after creation, not on the initial INSERT.
 
 ## Storage
 
