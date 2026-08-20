@@ -66,3 +66,7 @@ One more SQL file, same process as before: Supabase dashboard -> SQL Editor -> N
 - creates the `get_listing_owner_info()` function that the property detail screen calls to show a listing's negotiator name + REN number. Without it that section renders blank for every listing you don't own.
 
 Like `0002`, this file is written to be re-runnable — running it twice is harmless.
+
+## Milestone 4 setup (requirement)
+
+One more SQL file, same process as before: Supabase dashboard -> SQL Editor -> New query -> paste the entire contents of `supabase/migrations/0005_requirement.sql` (repo root) -> Run. This creates the `requirement` table, its RLS policies (scoped to `authenticated` and column-grant hardened from the start this time), and the `requirement-photos` storage bucket. No Auth-dashboard changes needed. Unlike Milestone 3, there's no separate hardening file to run afterwards -- everything is in this one file.
