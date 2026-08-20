@@ -88,6 +88,7 @@ create policy requirement_photos_delete_own on storage.objects for delete
   to authenticated using (bucket_id = 'requirement-photos' and (storage.foldername(name))[1] = auth.uid()::text);
 
 update storage.buckets
-set file_size_limit = 5242880,
+set public = false,
+    file_size_limit = 5242880,
     allowed_mime_types = array['image/jpeg', 'image/png']
 where id = 'requirement-photos';
