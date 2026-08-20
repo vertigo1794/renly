@@ -90,5 +90,8 @@
   "requirement_field_budget_max": "Maximum Budget (RM)",
   "requirement_budget_max_below_min": "Maximum budget must be at least the minimum",
   "requirement_photos_max": "Max 3",
-  "requirement_post_now": "Post Requirement"
+  "requirement_post_now": "Post Requirement",
+  "requirement_mark_fulfilled": "Mark as Fulfilled",
+  "requirement_withdraw": "Withdraw Requirement",
+  "requirement_reactivate": "Reactivate Requirement"
 }

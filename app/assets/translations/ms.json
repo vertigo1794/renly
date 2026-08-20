@@ -90,5 +90,8 @@
   "requirement_field_budget_max": "Bajet Maksimum (RM)",
   "requirement_budget_max_below_min": "Bajet maksimum mestilah sekurang-kurangnya sama dengan minimum",
   "requirement_photos_max": "Maksimum 3",
-  "requirement_post_now": "Siarkan Keperluan"
+  "requirement_post_now": "Siarkan Keperluan",
+  "requirement_mark_fulfilled": "Tanda Dipenuhi",
+  "requirement_withdraw": "Tarik Balik Keperluan",
+  "requirement_reactivate": "Aktifkan Semula Keperluan"
 }
