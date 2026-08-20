@@ -84,5 +84,11 @@
   "requirement_tab_open": "Terbuka",
   "requirement_tab_fulfilled": "Dipenuhi",
   "requirement_post_new": "Siarkan Keperluan Baharu",
-  "requirement_my_empty": "Tiada keperluan dalam tab ini lagi"
+  "requirement_my_empty": "Tiada keperluan dalam tab ini lagi",
+  "requirement_post_title": "Siarkan Keperluan",
+  "requirement_field_budget_min": "Bajet Minimum (RM)",
+  "requirement_field_budget_max": "Bajet Maksimum (RM)",
+  "requirement_budget_max_below_min": "Bajet maksimum mestilah sekurang-kurangnya sama dengan minimum",
+  "requirement_photos_max": "Maksimum 3",
+  "requirement_post_now": "Siarkan Keperluan"
 }

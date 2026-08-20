@@ -84,5 +84,11 @@
   "requirement_tab_open": "Open",
   "requirement_tab_fulfilled": "Fulfilled",
   "requirement_post_new": "Post New Requirement",
-  "requirement_my_empty": "No requirements in this tab yet"
+  "requirement_my_empty": "No requirements in this tab yet",
+  "requirement_post_title": "Post a Requirement",
+  "requirement_field_budget_min": "Minimum Budget (RM)",
+  "requirement_field_budget_max": "Maximum Budget (RM)",
+  "requirement_budget_max_below_min": "Maximum budget must be at least the minimum",
+  "requirement_photos_max": "Max 3",
+  "requirement_post_now": "Post Requirement"
 }
