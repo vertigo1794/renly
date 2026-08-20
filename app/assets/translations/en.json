@@ -79,5 +79,10 @@
   "property_reactivate": "Reactivate Listing",
   "requirement_board_title": "Requirement Board",
   "requirement_board_search_hint": "Search location...",
-  "requirement_board_empty": "No requirements yet"
+  "requirement_board_empty": "No requirements yet",
+  "requirement_my_title": "My Requirements",
+  "requirement_tab_open": "Open",
+  "requirement_tab_fulfilled": "Fulfilled",
+  "requirement_post_new": "Post New Requirement",
+  "requirement_my_empty": "No requirements in this tab yet"
 }

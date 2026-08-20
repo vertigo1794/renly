@@ -79,5 +79,10 @@
   "property_reactivate": "Aktifkan Semula Senarai",
   "requirement_board_title": "Papan Keperluan",
   "requirement_board_search_hint": "Cari lokasi...",
-  "requirement_board_empty": "Tiada keperluan lagi"
+  "requirement_board_empty": "Tiada keperluan lagi",
+  "requirement_my_title": "Keperluan Saya",
+  "requirement_tab_open": "Terbuka",
+  "requirement_tab_fulfilled": "Dipenuhi",
+  "requirement_post_new": "Siarkan Keperluan Baharu",
+  "requirement_my_empty": "Tiada keperluan dalam tab ini lagi"
 }
