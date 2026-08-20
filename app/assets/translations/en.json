@@ -76,5 +76,8 @@
   "property_location": "Location",
   "property_mark_sold": "Mark as Sold",
   "property_withdraw": "Withdraw Listing",
-  "property_reactivate": "Reactivate Listing"
+  "property_reactivate": "Reactivate Listing",
+  "requirement_board_title": "Requirement Board",
+  "requirement_board_search_hint": "Search location...",
+  "requirement_board_empty": "No requirements yet"
 }

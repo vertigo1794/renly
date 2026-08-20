@@ -76,5 +76,8 @@
   "property_location": "Lokasi",
   "property_mark_sold": "Tanda Terjual",
   "property_withdraw": "Tarik Balik Senarai",
-  "property_reactivate": "Aktifkan Semula Senarai"
+  "property_reactivate": "Aktifkan Semula Senarai",
+  "requirement_board_title": "Papan Keperluan",
+  "requirement_board_search_hint": "Cari lokasi...",
+  "requirement_board_empty": "Tiada keperluan lagi"
 }
