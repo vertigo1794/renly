@@ -15,6 +15,10 @@ import '../../features/listing/marketplace_screen.dart';
 import '../../features/listing/my_inventory_screen.dart';
 import '../../features/listing/post_listing_screen.dart';
 import '../../features/listing/property_detail_screen.dart';
+import '../../features/requirement/my_requirements_screen.dart';
+import '../../features/requirement/post_requirement_screen.dart';
+import '../../features/requirement/requirement_board_screen.dart';
+import '../../features/requirement/requirement_detail_screen.dart';
 
 const _publicRoutes = {'/', '/login', '/register/personal', '/register/professional'};
 
@@ -97,6 +101,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/property/:listingId',
         builder: (context, state) => PropertyDetailScreen(listingId: state.pathParameters['listingId']!),
+      ),
+      GoRoute(path: '/requirement-board', builder: (context, state) => const RequirementBoardScreen()),
+      GoRoute(path: '/my-requirements', builder: (context, state) => const MyRequirementsScreen()),
+      GoRoute(path: '/post-requirement', builder: (context, state) => const PostRequirementScreen()),
+      GoRoute(
+        path: '/requirement-board/:requirementId',
+        builder: (context, state) =>
+            RequirementDetailScreen(requirementId: state.pathParameters['requirementId']!),
       ),
     ],
   );

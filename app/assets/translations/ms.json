@@ -93,5 +93,7 @@
   "requirement_post_now": "Siarkan Keperluan",
   "requirement_mark_fulfilled": "Tanda Dipenuhi",
   "requirement_withdraw": "Tarik Balik Keperluan",
-  "requirement_reactivate": "Aktifkan Semula Keperluan"
+  "requirement_reactivate": "Aktifkan Semula Keperluan",
+  "requirement_board_title_placeholder_link": "Layari Keperluan",
+  "my_requirements_title_placeholder_link": "Keperluan Saya"
 }

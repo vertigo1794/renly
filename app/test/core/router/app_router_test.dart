@@ -48,5 +48,21 @@ void main() {
     test('unauthenticated user on /property/l-1 is redirected to /', () {
       expect(computeAuthRedirect(hasSession: false, location: '/property/l-1'), '/');
     });
+
+    test('unauthenticated user on /requirement-board is redirected to /', () {
+      expect(computeAuthRedirect(hasSession: false, location: '/requirement-board'), '/');
+    });
+
+    test('unauthenticated user on /my-requirements is redirected to /', () {
+      expect(computeAuthRedirect(hasSession: false, location: '/my-requirements'), '/');
+    });
+
+    test('unauthenticated user on /post-requirement is redirected to /', () {
+      expect(computeAuthRedirect(hasSession: false, location: '/post-requirement'), '/');
+    });
+
+    test('unauthenticated user on /requirement-board/r-1 is redirected to /', () {
+      expect(computeAuthRedirect(hasSession: false, location: '/requirement-board/r-1'), '/');
+    });
   });
 }
