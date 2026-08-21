@@ -95,5 +95,7 @@
   "requirement_withdraw": "Tarik Balik Keperluan",
   "requirement_reactivate": "Aktifkan Semula Keperluan",
   "requirement_board_title_placeholder_link": "Layari Keperluan",
-  "my_requirements_title_placeholder_link": "Keperluan Saya"
+  "my_requirements_title_placeholder_link": "Keperluan Saya",
+  "matching_matches_title": "Padanan",
+  "matching_empty": "Tiada padanan lagi"
 }
