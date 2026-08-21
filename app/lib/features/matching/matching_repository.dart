@@ -25,6 +25,7 @@ class MatchingRepository {
     final requirements = await _requirementRepository.fetchBoardRequirements();
     final rows = <Map<String, dynamic>>[];
     for (final requirement in requirements) {
+      if (requirement.negotiatorId == listing.negotiatorId) continue;
       final score = MatchingEngine.score(listing, requirement);
       if (score == null || score < MatchingEngine.qualifyingThreshold) continue;
       rows.add({
@@ -40,6 +41,7 @@ class MatchingRepository {
     final listings = await _listingRepository.fetchMarketplaceListings();
     final rows = <Map<String, dynamic>>[];
     for (final listing in listings) {
+      if (listing.negotiatorId == requirement.negotiatorId) continue;
       final score = MatchingEngine.score(listing, requirement);
       if (score == null || score < MatchingEngine.qualifyingThreshold) continue;
       rows.add({
@@ -89,29 +91,46 @@ class MatchingRepository {
   }
 
   Future<List<MatchCandidate>> _toCandidates(List rows) async {
-    // Cached as Futures (not resolved values) so concurrent lookups for the
-    // same negotiator id across multiple match rows share one in-flight
-    // request instead of firing the RPC once per row.
-    final ownerFutures = <String, Future<ListingOwner>>{};
-    Future<ListingOwner> ownerFor(String negotiatorId) {
-      return ownerFutures.putIfAbsent(negotiatorId, () => _listingRepository.fetchListingOwner(negotiatorId));
+    // Collect every distinct negotiator id up front and resolve them all
+    // concurrently with Future.wait, instead of awaiting ownerFor(...) once
+    // per row inside the loop -- that would serialize N distinct-negotiator
+    // lookups into N sequential round-trips even though fetchListingOwner
+    // is per-negotiator cacheable. All three call sites use `!inner` joins
+    // which should guarantee non-null embeds, but the null-guard below is
+    // defensive: skip a row rather than crash if that invariant is ever
+    // violated.
+    final negotiatorIds = <String>{};
+    for (final row in rows) {
+      final map = row as Map<String, dynamic>;
+      final listingJson = map['listing'] as Map<String, dynamic>?;
+      final requirementJson = map['requirement'] as Map<String, dynamic>?;
+      if (listingJson == null || requirementJson == null) continue;
+      negotiatorIds.add(listingJson['negotiator_id'] as String);
+      negotiatorIds.add(requirementJson['negotiator_id'] as String);
     }
+
+    final ownersById = Map<String, ListingOwner>.fromIterables(
+      negotiatorIds,
+      await Future.wait(negotiatorIds.map(_listingRepository.fetchListingOwner)),
+    );
 
     final candidates = <MatchCandidate>[];
     for (final row in rows) {
       final map = row as Map<String, dynamic>;
+      final listingJson = map['listing'] as Map<String, dynamic>?;
+      final requirementJson = map['requirement'] as Map<String, dynamic>?;
+      if (listingJson == null || requirementJson == null) continue;
+
       final match = Match.fromJson(map);
-      final listing = Listing.fromJson(map['listing'] as Map<String, dynamic>);
-      final requirement = Requirement.fromJson(map['requirement'] as Map<String, dynamic>);
-      final listingOwner = await ownerFor(listing.negotiatorId);
-      final requirementOwner = await ownerFor(requirement.negotiatorId);
+      final listing = Listing.fromJson(listingJson);
+      final requirement = Requirement.fromJson(requirementJson);
       candidates.add(MatchCandidate(
         matchId: match.matchId,
         score: match.score,
         listing: listing,
         requirement: requirement,
-        listingOwner: listingOwner,
-        requirementOwner: requirementOwner,
+        listingOwner: ownersById[listing.negotiatorId]!,
+        requirementOwner: ownersById[requirement.negotiatorId]!,
       ));
     }
     return candidates;

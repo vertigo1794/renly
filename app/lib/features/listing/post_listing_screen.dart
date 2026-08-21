@@ -133,6 +133,9 @@ class _PostListingScreenState extends ConsumerState<PostListingScreen> {
       try {
         final createdListing = await repository.fetchListingById(listingId);
         await ref.read(matchingRepositoryProvider).computeAndStoreMatchesForListing(createdListing);
+        ref.invalidate(myMatchesProvider);
+        ref.invalidate(matchesForListingProvider);
+        ref.invalidate(matchesForRequirementProvider);
       } catch (_) {
         // Best-effort: matching is an enhancement, not a requirement for
         // the listing itself to have been created successfully. A failure

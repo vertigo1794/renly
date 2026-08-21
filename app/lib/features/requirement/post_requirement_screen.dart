@@ -124,6 +124,9 @@ class _PostRequirementScreenState extends ConsumerState<PostRequirementScreen> {
       try {
         final createdRequirement = await repository.fetchRequirementById(requirementId);
         await ref.read(matchingRepositoryProvider).computeAndStoreMatchesForRequirement(createdRequirement);
+        ref.invalidate(myMatchesProvider);
+        ref.invalidate(matchesForListingProvider);
+        ref.invalidate(matchesForRequirementProvider);
       } catch (_) {
         // Best-effort, same reasoning as PostListingScreen.
       }
