@@ -695,12 +695,17 @@ git commit -m "feat: add matching Riverpod providers"
 
 This is the highest-regression-risk task in this plan, same class as the Requirement plan's `SignedPhoto` extraction — it edits two already-shipped, already-tested screens. No TDD (the change is inside an existing method, not a new testable unit) — instead, this task's own verification is re-running BOTH screens' full existing test suites to confirm zero regression, plus a manual read-through confirming the new call is placed after the existing invalidate calls and before `context.go(...)`.
 
+**Two things the original version of this task got wrong — both caught by a BLOCKED report from a real implementer run, fixed here, not by guessing:**
+
+1. **`listing`/`requirement` are not in scope at the injection point.** Both variables are declared *inside* the retry-safety `if (_created...Id == null) { ... }` block, so on a retried submit (row already created, only the photo upload failed the first time) that branch is skipped and the variable never exists. Fix: re-fetch the row by its id (already in scope either way) via the repository right before the compute call, instead of trying to reuse a local variable that doesn't reliably exist.
+2. **Provider name collision.** `matching_providers.dart` (Task 4) deliberately defines its own `currentNegotiatorIdProvider`, and both screens already import a same-named provider from their own feature's `*_providers.dart` — a plain `import '../matching/matching_providers.dart';` makes every existing `ref.read(currentNegotiatorIdProvider)` call in these files ambiguous. Fix: `import '../matching/matching_providers.dart' hide currentNegotiatorIdProvider;` — these two screens only ever need `matchingRepositoryProvider` from that file.
+
 - [ ] **Step 1: Edit PostListingScreen**
 
 Read the current `app/lib/features/listing/post_listing_screen.dart` first. Add the import alongside the existing ones:
 
 ```dart
-import '../matching/matching_providers.dart';
+import '../matching/matching_providers.dart' hide currentNegotiatorIdProvider;
 ```
 
 In `_submit()`, find this exact block:
@@ -720,24 +725,30 @@ Replace it with:
       ref.invalidate(myListingsProvider(negotiatorId));
 
       try {
-        await ref.read(matchingRepositoryProvider).computeAndStoreMatchesForListing(listing);
+        final createdListing = await repository.fetchListingById(listingId);
+        await ref.read(matchingRepositoryProvider).computeAndStoreMatchesForListing(createdListing);
       } catch (_) {
         // Best-effort: matching is an enhancement, not a requirement for
         // the listing itself to have been created successfully. A failure
         // here must not trap the user on a form whose real submission
-        // already succeeded.
+        // already succeeded. Re-fetched by id (rather than reusing the
+        // `listing` local from the retry-safety branch above) because that
+        // variable only exists inside `if (_createdListingId == null)` --
+        // a retried submit that skips re-creating the row wouldn't have it.
       }
 
       if (!mounted) return;
       context.go('/my-inventory');
 ```
 
+`repository` here is the existing `final repository = ref.read(listingRepositoryProvider);` already declared earlier in `_submit()` — do not redeclare it.
+
 - [ ] **Step 2: Edit PostRequirementScreen**
 
 Read the current `app/lib/features/requirement/post_requirement_screen.dart` first. Add the import alongside the existing ones:
 
 ```dart
-import '../matching/matching_providers.dart';
+import '../matching/matching_providers.dart' hide currentNegotiatorIdProvider;
 ```
 
 In `_submit()`, find this exact block:
@@ -757,7 +768,8 @@ Replace it with:
       ref.invalidate(myRequirementsProvider(negotiatorId));
 
       try {
-        await ref.read(matchingRepositoryProvider).computeAndStoreMatchesForRequirement(requirement);
+        final createdRequirement = await repository.fetchRequirementById(requirementId);
+        await ref.read(matchingRepositoryProvider).computeAndStoreMatchesForRequirement(createdRequirement);
       } catch (_) {
         // Best-effort, same reasoning as PostListingScreen.
       }
@@ -765,6 +777,8 @@ Replace it with:
       if (!mounted) return;
       context.go('/my-requirements');
 ```
+
+`repository` here is the existing `final repository = ref.read(requirementRepositoryProvider);` already declared earlier in `_submit()` — do not redeclare it.
 
 - [ ] **Step 3: Run both screens' full existing test suites to confirm zero regression**
 
