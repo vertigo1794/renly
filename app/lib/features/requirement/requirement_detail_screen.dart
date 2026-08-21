@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/widgets/signed_photo.dart';
 import 'models/requirement.dart';
@@ -124,6 +125,11 @@ class _RequirementDetailScreenState extends ConsumerState<RequirementDetailScree
                   }),
                   const SizedBox(height: 24),
                   if (isOwner) ...[
+                    OutlinedButton(
+                      onPressed: () => context.push('/requirement-board/${widget.requirementId}/matches'),
+                      child: Text('matching_view_matches'.tr()),
+                    ),
+                    const SizedBox(height: 8),
                     if (requirement.status != 'fulfilled')
                       OutlinedButton(
                         onPressed: () => _changeStatus(requirement, 'fulfilled'),

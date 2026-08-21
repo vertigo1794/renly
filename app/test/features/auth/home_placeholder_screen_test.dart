@@ -46,6 +46,7 @@ void main() {
       GoRoute(path: '/my-inventory', builder: (context, state) => const Placeholder()),
       GoRoute(path: '/requirement-board', builder: (context, state) => const Placeholder()),
       GoRoute(path: '/my-requirements', builder: (context, state) => const Placeholder()),
+      GoRoute(path: '/my-matches', builder: (context, state) => const Placeholder()),
     ]);
 
     await tester.pumpWidget(_wrap(router));
@@ -62,6 +63,7 @@ void main() {
       GoRoute(path: '/my-inventory', builder: (context, state) => const Placeholder()),
       GoRoute(path: '/requirement-board', builder: (context, state) => const Placeholder()),
       GoRoute(path: '/my-requirements', builder: (context, state) => const Placeholder()),
+      GoRoute(path: '/my-matches', builder: (context, state) => const Placeholder()),
     ]);
 
     await tester.pumpWidget(_wrap(router));
@@ -79,6 +81,7 @@ void main() {
       GoRoute(path: '/my-inventory', builder: (context, state) => const Text('inventory-screen')),
       GoRoute(path: '/requirement-board', builder: (context, state) => const Placeholder()),
       GoRoute(path: '/my-requirements', builder: (context, state) => const Placeholder()),
+      GoRoute(path: '/my-matches', builder: (context, state) => const Placeholder()),
     ]);
 
     await tester.pumpWidget(_wrap(router));
@@ -96,6 +99,7 @@ void main() {
       GoRoute(path: '/my-inventory', builder: (context, state) => const Placeholder()),
       GoRoute(path: '/requirement-board', builder: (context, state) => const Text('requirement-board-screen')),
       GoRoute(path: '/my-requirements', builder: (context, state) => const Placeholder()),
+      GoRoute(path: '/my-matches', builder: (context, state) => const Placeholder()),
     ]);
 
     await tester.pumpWidget(_wrap(router));
@@ -113,6 +117,7 @@ void main() {
       GoRoute(path: '/my-inventory', builder: (context, state) => const Placeholder()),
       GoRoute(path: '/requirement-board', builder: (context, state) => const Placeholder()),
       GoRoute(path: '/my-requirements', builder: (context, state) => const Text('my-requirements-screen')),
+      GoRoute(path: '/my-matches', builder: (context, state) => const Placeholder()),
     ]);
 
     await tester.pumpWidget(_wrap(router));
@@ -121,5 +126,23 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('my-requirements-screen'), findsOneWidget);
+  });
+
+  testWidgets('tapping the my matches link navigates to /my-matches', (tester) async {
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const HomePlaceholderScreen()),
+      GoRoute(path: '/marketplace', builder: (context, state) => const Placeholder()),
+      GoRoute(path: '/my-inventory', builder: (context, state) => const Placeholder()),
+      GoRoute(path: '/requirement-board', builder: (context, state) => const Placeholder()),
+      GoRoute(path: '/my-requirements', builder: (context, state) => const Placeholder()),
+      GoRoute(path: '/my-matches', builder: (context, state) => const Text('my-matches-screen')),
+    ]);
+
+    await tester.pumpWidget(_wrap(router));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('matching_my_matches_link'.tr()));
+    await tester.pumpAndSettle();
+
+    expect(find.text('my-matches-screen'), findsOneWidget);
   });
 }

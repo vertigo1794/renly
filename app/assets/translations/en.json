@@ -98,5 +98,7 @@
   "my_requirements_title_placeholder_link": "My Requirements",
   "matching_matches_title": "Matches",
   "matching_empty": "No matches yet",
-  "matching_my_matches_title": "My Matches"
+  "matching_my_matches_title": "My Matches",
+  "matching_view_matches": "View Matches",
+  "matching_my_matches_link": "My Matches"
 }

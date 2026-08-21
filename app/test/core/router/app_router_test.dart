@@ -64,5 +64,17 @@ void main() {
     test('unauthenticated user on /requirement-board/r-1 is redirected to /', () {
       expect(computeAuthRedirect(hasSession: false, location: '/requirement-board/r-1'), '/');
     });
+
+    test('unauthenticated user on /property/l-1/matches is redirected to /', () {
+      expect(computeAuthRedirect(hasSession: false, location: '/property/l-1/matches'), '/');
+    });
+
+    test('unauthenticated user on /requirement-board/r-1/matches is redirected to /', () {
+      expect(computeAuthRedirect(hasSession: false, location: '/requirement-board/r-1/matches'), '/');
+    });
+
+    test('unauthenticated user on /my-matches is redirected to /', () {
+      expect(computeAuthRedirect(hasSession: false, location: '/my-matches'), '/');
+    });
   });
 }

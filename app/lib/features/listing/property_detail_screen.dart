@@ -2,6 +2,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import 'listing_formatting.dart';
 import 'listing_photo.dart';
@@ -122,6 +123,11 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
                   }),
                   const SizedBox(height: 24),
                   if (isOwner) ...[
+                    OutlinedButton(
+                      onPressed: () => context.push('/property/${widget.listingId}/matches'),
+                      child: Text('matching_view_matches'.tr()),
+                    ),
+                    const SizedBox(height: 8),
                     if (listing.status != 'sold')
                       OutlinedButton(
                         onPressed: () => _changeStatus(listing, 'sold'),
