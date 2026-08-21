@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../core/constants/malaysian_states.dart';
+import '../matching/matching_providers.dart' hide currentNegotiatorIdProvider;
 import 'requirement_providers.dart';
 
 /// Separate screen from PostListingScreen -- see the design doc for why the
@@ -119,6 +120,13 @@ class _PostRequirementScreenState extends ConsumerState<PostRequirementScreen> {
 
       ref.invalidate(boardRequirementsProvider);
       ref.invalidate(myRequirementsProvider(negotiatorId));
+
+      try {
+        final createdRequirement = await repository.fetchRequirementById(requirementId);
+        await ref.read(matchingRepositoryProvider).computeAndStoreMatchesForRequirement(createdRequirement);
+      } catch (_) {
+        // Best-effort, same reasoning as PostListingScreen.
+      }
 
       if (!mounted) return;
       context.go('/my-requirements');

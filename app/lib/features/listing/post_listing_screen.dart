@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../core/constants/malaysian_states.dart';
+import '../matching/matching_providers.dart' hide currentNegotiatorIdProvider;
 import 'listing_providers.dart';
 
 /// Ports stitch_renly_property_agent_network/post_listing's "Sediakan
@@ -128,6 +129,19 @@ class _PostListingScreenState extends ConsumerState<PostListingScreen> {
 
       ref.invalidate(marketplaceListingsProvider);
       ref.invalidate(myListingsProvider(negotiatorId));
+
+      try {
+        final createdListing = await repository.fetchListingById(listingId);
+        await ref.read(matchingRepositoryProvider).computeAndStoreMatchesForListing(createdListing);
+      } catch (_) {
+        // Best-effort: matching is an enhancement, not a requirement for
+        // the listing itself to have been created successfully. A failure
+        // here must not trap the user on a form whose real submission
+        // already succeeded. Re-fetched by id (rather than reusing the
+        // `listing` local from the retry-safety branch above) because that
+        // variable only exists inside `if (_createdListingId == null)` --
+        // a retried submit that skips re-creating the row wouldn't have it.
+      }
 
       if (!mounted) return;
       context.go('/my-inventory');
