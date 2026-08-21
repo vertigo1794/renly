@@ -1,0 +1,183 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:renly/features/listing/models/listing.dart';
+import 'package:renly/features/matching/matching_engine.dart';
+import 'package:renly/features/requirement/models/requirement.dart';
+
+const _listing = Listing(
+  listingId: 'l-1',
+  negotiatorId: 'n-1',
+  title: 'The Vertex Residency',
+  description: 'd',
+  propertyType: 'apartment',
+  transactionType: 'sale',
+  state: 'Selangor',
+  area: 'Petaling Jaya',
+  price: 400000,
+  bedrooms: 3,
+  photoUrls: [],
+  status: 'active',
+);
+
+const _requirement = Requirement(
+  requirementId: 'r-1',
+  negotiatorId: 'n-2',
+  propertyType: 'apartment',
+  transactionType: 'sale',
+  state: 'Selangor',
+  area: 'Petaling Jaya',
+  budgetMin: 300000,
+  budgetMax: 500000,
+  bedrooms: 3,
+  photoUrls: [],
+  status: 'open',
+);
+
+void main() {
+  group('MatchingEngine.score', () {
+    test('full match on every dimension scores 100', () {
+      expect(MatchingEngine.score(_listing, _requirement), 100);
+    });
+
+    test('transaction type mismatch disqualifies the pair', () {
+      final requirement = Requirement(
+        requirementId: _requirement.requirementId,
+        negotiatorId: _requirement.negotiatorId,
+        propertyType: _requirement.propertyType,
+        transactionType: 'rent',
+        state: _requirement.state,
+        area: _requirement.area,
+        budgetMin: _requirement.budgetMin,
+        budgetMax: _requirement.budgetMax,
+        bedrooms: _requirement.bedrooms,
+        photoUrls: _requirement.photoUrls,
+        status: _requirement.status,
+      );
+      expect(MatchingEngine.score(_listing, requirement), isNull);
+    });
+
+    test('state mismatch disqualifies the pair', () {
+      final requirement = Requirement(
+        requirementId: _requirement.requirementId,
+        negotiatorId: _requirement.negotiatorId,
+        propertyType: _requirement.propertyType,
+        transactionType: _requirement.transactionType,
+        state: 'Johor',
+        area: _requirement.area,
+        budgetMin: _requirement.budgetMin,
+        budgetMax: _requirement.budgetMax,
+        bedrooms: _requirement.bedrooms,
+        photoUrls: _requirement.photoUrls,
+        status: _requirement.status,
+      );
+      expect(MatchingEngine.score(_listing, requirement), isNull);
+    });
+
+    test('area mismatch loses the 30 location points', () {
+      final requirement = Requirement(
+        requirementId: _requirement.requirementId,
+        negotiatorId: _requirement.negotiatorId,
+        propertyType: _requirement.propertyType,
+        transactionType: _requirement.transactionType,
+        state: _requirement.state,
+        area: 'Shah Alam',
+        budgetMin: _requirement.budgetMin,
+        budgetMax: _requirement.budgetMax,
+        bedrooms: _requirement.bedrooms,
+        photoUrls: _requirement.photoUrls,
+        status: _requirement.status,
+      );
+      expect(MatchingEngine.score(_listing, requirement), 70);
+    });
+
+    test('price 5 percent over max gets half the graduated band', () {
+      const listing = Listing(
+        listingId: 'l-2',
+        negotiatorId: 'n-1',
+        title: 't',
+        description: 'd',
+        propertyType: 'apartment',
+        transactionType: 'sale',
+        state: 'Selangor',
+        area: 'Petaling Jaya',
+        price: 525000,
+        bedrooms: 3,
+        photoUrls: [],
+        status: 'active',
+      );
+      expect(MatchingEngine.score(listing, _requirement), 83);
+    });
+
+    test('price beyond 10 percent over max scores zero for price', () {
+      const listing = Listing(
+        listingId: 'l-3',
+        negotiatorId: 'n-1',
+        title: 't',
+        description: 'd',
+        propertyType: 'apartment',
+        transactionType: 'sale',
+        state: 'Selangor',
+        area: 'Petaling Jaya',
+        price: 600000,
+        bedrooms: 3,
+        photoUrls: [],
+        status: 'active',
+      );
+      expect(MatchingEngine.score(listing, _requirement), 65);
+    });
+
+    test('price below budget minimum still scores full price weight', () {
+      const listing = Listing(
+        listingId: 'l-4',
+        negotiatorId: 'n-1',
+        title: 't',
+        description: 'd',
+        propertyType: 'apartment',
+        transactionType: 'sale',
+        state: 'Selangor',
+        area: 'Petaling Jaya',
+        price: 250000,
+        bedrooms: 3,
+        photoUrls: [],
+        status: 'active',
+      );
+      expect(MatchingEngine.score(listing, _requirement), 100);
+    });
+
+    test('unspecified requirement bedrooms scores full bedroom weight', () {
+      const requirement = Requirement(
+        requirementId: 'r-2',
+        negotiatorId: 'n-2',
+        propertyType: 'apartment',
+        transactionType: 'sale',
+        state: 'Selangor',
+        area: 'Petaling Jaya',
+        budgetMin: 300000,
+        budgetMax: 500000,
+        photoUrls: [],
+        status: 'open',
+      );
+      expect(MatchingEngine.score(_listing, requirement), 100);
+    });
+
+    test('mismatched bedroom count scores zero for bedrooms', () {
+      const requirement = Requirement(
+        requirementId: 'r-3',
+        negotiatorId: 'n-2',
+        propertyType: 'apartment',
+        transactionType: 'sale',
+        state: 'Selangor',
+        area: 'Petaling Jaya',
+        budgetMin: 300000,
+        budgetMax: 500000,
+        bedrooms: 2,
+        photoUrls: [],
+        status: 'open',
+      );
+      expect(MatchingEngine.score(_listing, requirement), 90);
+    });
+
+    test('qualifyingThreshold is 40', () {
+      expect(MatchingEngine.qualifyingThreshold, 40);
+    });
+  });
+}
