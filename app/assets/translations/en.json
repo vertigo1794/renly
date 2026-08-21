@@ -97,5 +97,6 @@
   "requirement_board_title_placeholder_link": "Browse Requirements",
   "my_requirements_title_placeholder_link": "My Requirements",
   "matching_matches_title": "Matches",
-  "matching_empty": "No matches yet"
+  "matching_empty": "No matches yet",
+  "matching_my_matches_title": "My Matches"
 }
