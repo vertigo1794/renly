@@ -70,3 +70,7 @@ Like `0002`, this file is written to be re-runnable — running it twice is harm
 ## Milestone 4 setup (requirement)
 
 One more SQL file, same process as before: Supabase dashboard -> SQL Editor -> New query -> paste the entire contents of `supabase/migrations/0005_requirement.sql` (repo root) -> Run. This creates the `requirement` table, its RLS policies (scoped to `authenticated` and column-grant hardened from the start this time), and the `requirement-photos` storage bucket. No Auth-dashboard changes needed. Unlike Milestone 3, there's no separate hardening file to run afterwards -- everything is in this one file.
+
+## Milestone 5 setup (matching)
+
+One more SQL file, same process as before: Supabase dashboard -> SQL Editor -> New query -> paste the entire contents of `supabase/migrations/0006_matching.sql` (repo root) -> Run. This creates the `match` table and its two RLS policies. No storage bucket, no Auth-dashboard changes.
