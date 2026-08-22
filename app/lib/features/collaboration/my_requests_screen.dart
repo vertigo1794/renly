@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'cobroke_request_providers.dart';
 import 'agreement_providers.dart' hide currentNegotiatorIdProvider;
+import 'cobroke_request_providers.dart';
 import 'propose_agreement_dialog.dart';
 import 'models/cobroke_request_candidate.dart';
 
@@ -163,7 +163,6 @@ class _RequestList extends ConsumerWidget {
                           onPressed: () => context.push('/messages/${candidate.request.requestId}'),
                           child: Text('cobroke_request_chat_button'.tr()),
                         ),
-                        const SizedBox(height: 8),
                         _AgreementSection(
                           requestId: candidate.request.requestId,
                           currentNegotiatorId: currentNegotiatorId,
@@ -181,6 +180,17 @@ class _RequestList extends ConsumerWidget {
   }
 }
 
+/// Formats a numeric(5,2) split percentage without lossy independent
+/// rounding -- e.g. a genuinely valid stored pair like 55.5 / 44.5 (sums to
+/// exactly 100) must never be displayed as 56% / 45% (reads as 101%).
+String _formatSplitPercent(double value) {
+  if (value == value.roundToDouble()) return value.toStringAsFixed(0);
+  var formatted = value.toStringAsFixed(2);
+  if (formatted.endsWith('0')) formatted = formatted.substring(0, formatted.length - 1);
+  if (formatted.endsWith('.')) formatted = formatted.substring(0, formatted.length - 1);
+  return formatted;
+}
+
 class _AgreementSection extends ConsumerWidget {
   const _AgreementSection({required this.requestId, required this.currentNegotiatorId});
 
@@ -194,30 +204,50 @@ class _AgreementSection extends ConsumerWidget {
 
     return agreementAsync.when(
       loading: () => const SizedBox.shrink(),
-      error: (error, stack) => const SizedBox.shrink(),
+      error: (error, stack) => Row(
+        children: [
+          Expanded(child: Text('listing_error_generic'.tr())),
+          TextButton(
+            onPressed: () => ref.invalidate(agreementForRequestProvider(requestId)),
+            child: Text('agreement_retry'.tr()),
+          ),
+        ],
+      ),
       data: (agreement) {
         if (agreement == null || agreement.status == 'declined') {
-          return OutlinedButton(
-            onPressed: () => showDialog<void>(
-              context: context,
-              builder: (_) => ProposeAgreementDialog(
-                requestId: requestId,
-                initiatorId: currentNegotiatorId!,
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 8),
+              OutlinedButton(
+                onPressed: () => showDialog<void>(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (_) => ProposeAgreementDialog(
+                    requestId: requestId,
+                    initiatorId: currentNegotiatorId!,
+                  ),
+                ),
+                child: Text('agreement_propose_button'.tr()),
               ),
-            ),
-            child: Text('agreement_propose_button'.tr()),
+            ],
           );
         }
 
         final splitText =
-            '${agreement.splitInitiator.toStringAsFixed(0)}% / ${agreement.splitCounterparty.toStringAsFixed(0)}%';
+            '${_formatSplitPercent(agreement.splitInitiator)}% / ${_formatSplitPercent(agreement.splitCounterparty)}%';
         final isRecipient = agreement.initiatorId != currentNegotiatorId;
 
         if (agreement.status == 'pending' && isRecipient) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const SizedBox(height: 8),
               Text(splitText),
+              if (agreement.terms != null && agreement.terms!.trim().isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(agreement.terms!),
+              ],
               const SizedBox(height: 8),
               Row(
                 children: [
@@ -262,7 +292,12 @@ class _AgreementSection extends ConsumerWidget {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const SizedBox(height: 8),
               Text(splitText),
+              if (agreement.terms != null && agreement.terms!.trim().isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(agreement.terms!),
+              ],
               const SizedBox(height: 4),
               Text('agreement_waiting_response'.tr()),
             ],
@@ -270,13 +305,20 @@ class _AgreementSection extends ConsumerWidget {
         }
 
         // status == 'accepted'
-        final acceptedAt = agreement.acceptedAt!;
+        final acceptedAt = agreement.acceptedAt;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const SizedBox(height: 8),
             Text(splitText),
+            if (agreement.terms != null && agreement.terms!.trim().isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Text(agreement.terms!),
+            ],
             const SizedBox(height: 4),
-            Text('${'agreement_accepted_on'.tr()} ${acceptedAt.day}/${acceptedAt.month}/${acceptedAt.year}'),
+            Text(acceptedAt == null
+                ? 'agreement_accepted_on'.tr()
+                : '${'agreement_accepted_on'.tr()} ${acceptedAt.day}/${acceptedAt.month}/${acceptedAt.year}'),
           ],
         );
       },

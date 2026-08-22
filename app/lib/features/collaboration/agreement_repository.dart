@@ -29,12 +29,26 @@ class AgreementRepository {
     });
   }
 
-  Future<void> acceptAgreement(String agreementId) {
-    return _client.from('agreement').update({'status': 'accepted'}).eq('agreement_id', agreementId);
+  Future<void> acceptAgreement(String agreementId) async {
+    final rows = await _client
+        .from('agreement')
+        .update({'status': 'accepted'})
+        .eq('agreement_id', agreementId)
+        .select();
+    if ((rows as List).isEmpty) {
+      throw StateError('Agreement update was rejected (not found or not permitted)');
+    }
   }
 
-  Future<void> declineAgreement(String agreementId) {
-    return _client.from('agreement').update({'status': 'declined'}).eq('agreement_id', agreementId);
+  Future<void> declineAgreement(String agreementId) async {
+    final rows = await _client
+        .from('agreement')
+        .update({'status': 'declined'})
+        .eq('agreement_id', agreementId)
+        .select();
+    if ((rows as List).isEmpty) {
+      throw StateError('Agreement update was rejected (not found or not permitted)');
+    }
   }
 
   /// The most recent agreement for a request, if any -- including a

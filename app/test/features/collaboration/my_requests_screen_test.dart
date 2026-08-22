@@ -206,7 +206,7 @@ void main() {
       ),
     ]);
 
-    await tester.pumpWidget(_wrap(router, received: accepted));
+    await tester.pumpWidget(_wrap(router, received: accepted, agreementRequestId: 'req-3', agreement: null));
     await tester.pumpAndSettle();
 
     expect(find.text('Chat'), findsOneWidget);
@@ -341,6 +341,7 @@ void main() {
     expect(find.text('Accepted on 25/8/2026'), findsOneWidget);
     expect(find.text('Accept'), findsNothing);
     expect(find.text('Decline'), findsNothing);
+    expect(find.text('Propose Agreement'), findsNothing);
   });
 
   testWidgets('propose dialog validates that shares sum to 100', (tester) async {
@@ -372,5 +373,46 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Shares must add up to 100'), findsOneWidget);
+
+    await tester.enterText(find.byType(TextFormField).at(0), '33.33');
+    await tester.enterText(find.byType(TextFormField).at(1), '66.67');
+    await tester.tap(find.text('Submit'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Shares must add up to 100'), findsNothing);
+  });
+
+  testWidgets('shows Propose Agreement button again when the latest agreement was declined', (tester) async {
+    final accepted = [
+      CobrokeRequestCandidate(
+        request: CobrokeRequest(
+          requestId: 'req-9',
+          matchId: 'm-9',
+          initiatorId: 'n-2',
+          status: 'accepted',
+          createdAt: DateTime(2026, 8, 24),
+        ),
+        match: _matchCandidate,
+      ),
+    ];
+    final declinedAgreement = Agreement(
+      agreementId: 'agr-4',
+      requestId: 'req-9',
+      initiatorId: 'n-2',
+      splitInitiator: 60,
+      splitCounterparty: 40,
+      status: 'declined',
+      createdAt: DateTime(2026, 8, 24),
+    );
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const MyRequestsScreen()),
+    ]);
+
+    await tester.pumpWidget(
+      _wrap(router, received: accepted, agreementRequestId: 'req-9', agreement: declinedAgreement),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Propose Agreement'), findsOneWidget);
   });
 }

@@ -130,5 +130,6 @@
   "agreement_accept": "Terima",
   "agreement_decline": "Tolak",
   "agreement_waiting_response": "Menunggu respons",
-  "agreement_accepted_on": "Diterima pada"
+  "agreement_accepted_on": "Diterima pada",
+  "agreement_retry": "Cuba lagi"
 }

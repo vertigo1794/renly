@@ -130,5 +130,6 @@
   "agreement_accept": "Accept",
   "agreement_decline": "Decline",
   "agreement_waiting_response": "Waiting for response",
-  "agreement_accepted_on": "Accepted on"
+  "agreement_accepted_on": "Accepted on",
+  "agreement_retry": "Retry"
 }
