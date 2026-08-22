@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../collaboration/send_cobroke_request_action.dart';
 import '../listing/listing_formatting.dart';
 import 'matching_providers.dart';
 
@@ -54,6 +55,11 @@ class MatchesForRequirementScreen extends ConsumerWidget {
                         Text(
                           '${candidate.listingOwner.fullName} (REN: ${candidate.listingOwner.renNumber})',
                           style: Theme.of(context).textTheme.labelSmall,
+                        ),
+                        const SizedBox(height: 8),
+                        ElevatedButton(
+                          onPressed: () => sendCobrokeRequest(context, ref, candidate.matchId),
+                          child: Text('cobroke_request_send'.tr()),
                         ),
                       ],
                     ),

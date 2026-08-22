@@ -100,5 +100,7 @@
   "matching_empty": "No matches yet",
   "matching_my_matches_title": "My Matches",
   "matching_view_matches": "View Matches",
-  "matching_my_matches_link": "My Matches"
+  "matching_my_matches_link": "My Matches",
+  "cobroke_request_send": "Request Co-Broke",
+  "cobroke_request_sent": "Request sent"
 }

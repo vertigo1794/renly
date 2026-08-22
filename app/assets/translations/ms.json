@@ -100,5 +100,7 @@
   "matching_empty": "Tiada padanan lagi",
   "matching_my_matches_title": "Padanan Saya",
   "matching_view_matches": "Lihat Padanan",
-  "matching_my_matches_link": "Padanan Saya"
+  "matching_my_matches_link": "Padanan Saya",
+  "cobroke_request_send": "Minta Co-Broke",
+  "cobroke_request_sent": "Permintaan dihantar"
 }
