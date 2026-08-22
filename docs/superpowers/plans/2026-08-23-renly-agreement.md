@@ -191,7 +191,7 @@ grep -c "^create table" supabase/migrations/0009_agreement.sql
 grep -c "^create policy" supabase/migrations/0009_agreement.sql
 grep -c "create trigger" supabase/migrations/0009_agreement.sql
 ```
-Expected: `1`, `2`, `1`.
+Expected: `1`, `3`, `1` (3 policies: `agreement_select`, `agreement_insert`, `agreement_update_by_recipient`).
 
 - [ ] **Step 4: Commit**
 
