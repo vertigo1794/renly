@@ -158,6 +158,20 @@ void main() {
   });
 
   testWidgets('accepted request shows a Chat button, pending does not', (tester) async {
+    final pendingRouter = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const MyRequestsScreen()),
+    ]);
+
+    // _fixtureReceived (the default when `received` is omitted) is a
+    // 'pending' request -- confirm no Chat button renders for it before
+    // testing the accepted case below.
+    await tester.pumpWidget(_wrap(pendingRouter));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Chat'), findsNothing);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+
     final accepted = [
       CobrokeRequestCandidate(
         request: CobrokeRequest(

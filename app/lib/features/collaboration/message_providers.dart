@@ -20,11 +20,18 @@ final currentNegotiatorIdProvider = Provider<String?>((ref) {
   return authState.valueOrNull?.session?.user.id;
 });
 
-/// Live-updating message list for one request. StreamProvider.family is
-/// autoDispose by default: when ChatScreen is popped, the underlying
-/// Realtime subscription is cancelled automatically, and reopening the
-/// screen establishes a fresh subscription (whose first emission is the
-/// full current history, per messagesStream's own contract).
-final messagesStreamProvider = StreamProvider.family<List<Message>, String>((ref, requestId) {
+/// Live-updating message list for one request. The .autoDispose HERE IS
+/// REQUIRED, not the default: in the Riverpod version this project is
+/// pinned to (2.6.1), `.family` alone does NOT default to autoDispose --
+/// that's a Riverpod 3.x behavior. Without the explicit modifier, popping
+/// ChatScreen would NOT cancel the underlying Realtime subscription --
+/// SupabaseStreamBuilder only tears down its channel when the Dart
+/// subscription is cancelled, which only happens on provider disposal --
+/// leaking one open Realtime channel per distinct requestId ever opened
+/// for the rest of the app's process lifetime. With .autoDispose, popping
+/// ChatScreen cancels the subscription, and reopening the screen
+/// establishes a fresh one (whose first emission is the full current
+/// history, per messagesStream's own contract).
+final messagesStreamProvider = StreamProvider.autoDispose.family<List<Message>, String>((ref, requestId) {
   return ref.watch(messageRepositoryProvider).messagesStream(requestId);
 });

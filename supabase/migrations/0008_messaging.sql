@@ -13,6 +13,11 @@ create table if not exists message (
   sent_at timestamptz not null default now()
 );
 
+-- Every .stream() open (and every Realtime re-evaluation of this table's
+-- RLS per subscriber) filters on request_id, then orders by sent_at --
+-- without this index every chat open is a sequential scan.
+create index if not exists message_request_id_sent_at_idx on message(request_id, sent_at);
+
 alter table message enable row level security;
 
 -- Select: viewer must be a party to the underlying cobroke_request (its

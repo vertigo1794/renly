@@ -6,7 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../listing/models/listing_owner.dart';
 import 'message_providers.dart';
 
-final _senderNameProvider = FutureProvider.family<ListingOwner, String>((ref, negotiatorId) {
+final _senderNameProvider = FutureProvider.autoDispose.family<ListingOwner, String>((ref, negotiatorId) {
   return ref.watch(messageRepositoryProvider).fetchSenderName(negotiatorId);
 });
 
@@ -39,7 +39,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             senderId: senderId,
             body: body,
           );
-      _controller.clear();
+      if (mounted) _controller.clear();
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -58,7 +58,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     return Scaffold(
       appBar: AppBar(title: Text('message_chat_title'.tr())),
-      body: Column(
+      body: SafeArea(
+        child: Column(
         children: [
           Expanded(
             child: messagesAsync.when(
@@ -68,11 +69,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 if (messages.isEmpty) {
                   return Center(child: Text('message_empty'.tr()));
                 }
+                // reverse: true keeps the viewport pinned to the newest
+                // message on open and on every new arrival, without a
+                // ScrollController. messages is already oldest-first (see
+                // MessageRepository.messagesStream), so the itemBuilder
+                // reads it back-to-front via reversedIndex.
                 return ListView.builder(
+                  reverse: true,
                   padding: const EdgeInsets.all(20),
                   itemCount: messages.length,
                   itemBuilder: (context, index) {
-                    final message = messages[index];
+                    final reversedIndex = messages.length - 1 - index;
+                    final message = messages[reversedIndex];
                     final isOwn = message.senderId == currentNegotiatorId;
                     return Align(
                       alignment: isOwn ? Alignment.centerRight : Alignment.centerLeft,
@@ -121,6 +129,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               ),
             ),
         ],
+        ),
       ),
     );
   }
