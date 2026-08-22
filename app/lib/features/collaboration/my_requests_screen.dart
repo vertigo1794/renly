@@ -61,7 +61,7 @@ class _MyRequestsScreenState extends ConsumerState<MyRequestsScreen> {
 class _RequestList extends ConsumerWidget {
   const _RequestList({required this.provider, required this.isReceived, required this.currentNegotiatorId});
 
-  final FutureProvider<List<CobrokeRequestCandidate>> provider;
+  final AutoDisposeFutureProvider<List<CobrokeRequestCandidate>> provider;
   final bool isReceived;
   final String? currentNegotiatorId;
 
@@ -87,60 +87,79 @@ class _RequestList extends ConsumerWidget {
         if (requests.isEmpty) {
           return Center(child: Text('cobroke_request_empty'.tr()));
         }
-        return ListView.builder(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          itemCount: requests.length,
-          itemBuilder: (context, index) {
-            final candidate = requests[index];
-            final isMyListing = candidate.match.listing.negotiatorId == currentNegotiatorId;
-            final counterpartyOwner = isMyListing ? candidate.match.requirementOwner : candidate.match.listingOwner;
+        return RefreshIndicator(
+          onRefresh: () async => ref.invalidate(provider),
+          child: ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            itemCount: requests.length,
+            itemBuilder: (context, index) {
+              final candidate = requests[index];
+              final isMyListing = candidate.match.listing.negotiatorId == currentNegotiatorId;
+              final counterpartyOwner = isMyListing ? candidate.match.requirementOwner : candidate.match.listingOwner;
 
-            return Card(
-              margin: const EdgeInsets.only(bottom: 16),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${counterpartyOwner.fullName} (REN: ${counterpartyOwner.renNumber})',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 4),
-                    Text('${candidate.match.score}/100'),
-                    const SizedBox(height: 4),
-                    Text(_statusLabel(candidate.request.status)),
-                    if (isReceived && candidate.request.status == 'pending') ...[
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          ElevatedButton(
-                            onPressed: () async {
-                              await ref
-                                  .read(cobrokeRequestRepositoryProvider)
-                                  .acceptRequest(candidate.request.requestId);
-                              ref.invalidate(receivedRequestsProvider);
-                            },
-                            child: Text('cobroke_request_accept'.tr()),
-                          ),
-                          const SizedBox(width: 12),
-                          OutlinedButton(
-                            onPressed: () async {
-                              await ref
-                                  .read(cobrokeRequestRepositoryProvider)
-                                  .declineRequest(candidate.request.requestId);
-                              ref.invalidate(receivedRequestsProvider);
-                            },
-                            child: Text('cobroke_request_decline'.tr()),
-                          ),
-                        ],
+              return Card(
+                margin: const EdgeInsets.only(bottom: 16),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${counterpartyOwner.fullName} (REN: ${counterpartyOwner.renNumber})',
+                        style: Theme.of(context).textTheme.titleMedium,
                       ),
+                      const SizedBox(height: 4),
+                      Text('${candidate.match.score}/100'),
+                      const SizedBox(height: 4),
+                      Text(_statusLabel(candidate.request.status)),
+                      if (isReceived && candidate.request.status == 'pending') ...[
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            ElevatedButton(
+                              onPressed: () async {
+                                try {
+                                  await ref
+                                      .read(cobrokeRequestRepositoryProvider)
+                                      .acceptRequest(candidate.request.requestId);
+                                  ref.invalidate(receivedRequestsProvider);
+                                } catch (_) {
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text('listing_error_generic'.tr())),
+                                    );
+                                  }
+                                }
+                              },
+                              child: Text('cobroke_request_accept'.tr()),
+                            ),
+                            const SizedBox(width: 12),
+                            OutlinedButton(
+                              onPressed: () async {
+                                try {
+                                  await ref
+                                      .read(cobrokeRequestRepositoryProvider)
+                                      .declineRequest(candidate.request.requestId);
+                                  ref.invalidate(receivedRequestsProvider);
+                                } catch (_) {
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text('listing_error_generic'.tr())),
+                                    );
+                                  }
+                                }
+                              },
+                              child: Text('cobroke_request_decline'.tr()),
+                            ),
+                          ],
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
-              ),
-            );
-          },
+              );
+            },
+          ),
         );
       },
     );

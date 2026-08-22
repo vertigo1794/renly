@@ -52,13 +52,20 @@ class CobrokeRequestRepository {
     return _toCandidates(rows as List);
   }
 
+  // `!inner` on match/listing/requirement should guarantee non-null embeds,
+  // but the null-guard below is defensive, same reasoning and pattern as
+  // MatchingRepository._toCandidates: a request whose counterparty's
+  // listing/requirement later becomes invisible under its own RLS (e.g.
+  // after being marked sold/fulfilled) can still surface a null embed here
+  // -- skip that one row rather than crash the entire list.
   Future<List<CobrokeRequestCandidate>> _toCandidates(List rows) async {
     final ownerIds = <String>{};
     for (final row in rows) {
       final map = row as Map<String, dynamic>;
-      final matchJson = map['match'] as Map<String, dynamic>;
-      final listingJson = matchJson['listing'] as Map<String, dynamic>;
-      final requirementJson = matchJson['requirement'] as Map<String, dynamic>;
+      final matchJson = map['match'] as Map<String, dynamic>?;
+      final listingJson = matchJson?['listing'] as Map<String, dynamic>?;
+      final requirementJson = matchJson?['requirement'] as Map<String, dynamic>?;
+      if (matchJson == null || listingJson == null || requirementJson == null) continue;
       ownerIds.add(listingJson['negotiator_id'] as String);
       ownerIds.add(requirementJson['negotiator_id'] as String);
     }
@@ -71,11 +78,15 @@ class CobrokeRequestRepository {
     final candidates = <CobrokeRequestCandidate>[];
     for (final row in rows) {
       final map = row as Map<String, dynamic>;
+      final matchJson = map['match'] as Map<String, dynamic>?;
+      final listingJson = matchJson?['listing'] as Map<String, dynamic>?;
+      final requirementJson = matchJson?['requirement'] as Map<String, dynamic>?;
+      if (matchJson == null || listingJson == null || requirementJson == null) continue;
+
       final request = CobrokeRequest.fromJson(map);
-      final matchJson = map['match'] as Map<String, dynamic>;
       final match = Match.fromJson(matchJson);
-      final listing = Listing.fromJson(matchJson['listing'] as Map<String, dynamic>);
-      final requirement = Requirement.fromJson(matchJson['requirement'] as Map<String, dynamic>);
+      final listing = Listing.fromJson(listingJson);
+      final requirement = Requirement.fromJson(requirementJson);
       candidates.add(CobrokeRequestCandidate(
         request: request,
         match: MatchCandidate(

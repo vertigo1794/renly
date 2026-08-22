@@ -22,14 +22,25 @@ final currentNegotiatorIdProvider = Provider<String?>((ref) {
 
 /// Requests where the current negotiator is NOT the initiator -- these are
 /// the ones they can act on (accept/decline).
-final receivedRequestsProvider = FutureProvider<List<CobrokeRequestCandidate>>((ref) {
+///
+/// autoDispose (unlike the sibling myMatchesProvider/matchesForListingProvider):
+/// a request's status can change from the OTHER party's action, and there's
+/// no client-side invalidation path available to the viewing party for that
+/// -- so refetch-on-screen-entry is the correct default here, unlike match
+/// data, which only ever changes from actions the SAME viewer takes.
+final receivedRequestsProvider = FutureProvider.autoDispose<List<CobrokeRequestCandidate>>((ref) {
   final negotiatorId = ref.watch(currentNegotiatorIdProvider);
   if (negotiatorId == null) return Future.value(const []);
   return ref.watch(cobrokeRequestRepositoryProvider).fetchReceivedRequests(negotiatorId);
 });
 
 /// Requests the current negotiator initiated -- read-only status view.
-final sentRequestsProvider = FutureProvider<List<CobrokeRequestCandidate>>((ref) {
+///
+/// autoDispose for the same reason as receivedRequestsProvider above: the
+/// counterparty's accept/decline is the OTHER party's action, so this
+/// provider has no client-side invalidation path when it happens and must
+/// refetch on screen entry instead of relying on a stale cached value.
+final sentRequestsProvider = FutureProvider.autoDispose<List<CobrokeRequestCandidate>>((ref) {
   final negotiatorId = ref.watch(currentNegotiatorIdProvider);
   if (negotiatorId == null) return Future.value(const []);
   return ref.watch(cobrokeRequestRepositoryProvider).fetchSentRequests(negotiatorId);
