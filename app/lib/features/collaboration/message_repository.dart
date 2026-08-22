@@ -33,11 +33,15 @@ class MessageRepository {
   /// delta -- so this single stream covers both the initial history load
   /// and every subsequent live insert, with no separate merge logic.
   Stream<List<Message>> messagesStream(String requestId) {
+    // SupabaseStreamBuilder.order() defaults to ascending: false (unlike
+    // the plain Postgrest query builder, which defaults to true) --
+    // explicit ascending: true is required here for oldest-first
+    // chronological chat order, or every message list renders reversed.
     return _client
         .from('message')
         .stream(primaryKey: ['message_id'])
         .eq('request_id', requestId)
-        .order('sent_at')
+        .order('sent_at', ascending: true)
         .map((rows) => rows.map(Message.fromJson).toList());
   }
 
