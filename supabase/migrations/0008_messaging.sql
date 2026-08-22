@@ -59,4 +59,12 @@ grant insert (request_id, sender_id, body) on message to authenticated;
 
 -- Enable Realtime delivery for this table. Without this, .stream()
 -- subscriptions receive the initial row set but never see live inserts.
-alter publication supabase_realtime add table message;
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'message'
+  ) then
+    alter publication supabase_realtime add table message;
+  end if;
+end $$;
