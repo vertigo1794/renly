@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'cobroke_request_providers.dart';
+import 'agreement_providers.dart' hide currentNegotiatorIdProvider;
+import 'propose_agreement_dialog.dart';
 import 'models/cobroke_request_candidate.dart';
 
 /// Both directions of cobroke_request in one screen -- Received (requests
@@ -161,6 +163,11 @@ class _RequestList extends ConsumerWidget {
                           onPressed: () => context.push('/messages/${candidate.request.requestId}'),
                           child: Text('cobroke_request_chat_button'.tr()),
                         ),
+                        const SizedBox(height: 8),
+                        _AgreementSection(
+                          requestId: candidate.request.requestId,
+                          currentNegotiatorId: currentNegotiatorId,
+                        ),
                       ],
                     ],
                   ),
@@ -168,6 +175,109 @@ class _RequestList extends ConsumerWidget {
               );
             },
           ),
+        );
+      },
+    );
+  }
+}
+
+class _AgreementSection extends ConsumerWidget {
+  const _AgreementSection({required this.requestId, required this.currentNegotiatorId});
+
+  final String requestId;
+  final String? currentNegotiatorId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (currentNegotiatorId == null) return const SizedBox.shrink();
+    final agreementAsync = ref.watch(agreementForRequestProvider(requestId));
+
+    return agreementAsync.when(
+      loading: () => const SizedBox.shrink(),
+      error: (error, stack) => const SizedBox.shrink(),
+      data: (agreement) {
+        if (agreement == null || agreement.status == 'declined') {
+          return OutlinedButton(
+            onPressed: () => showDialog<void>(
+              context: context,
+              builder: (_) => ProposeAgreementDialog(
+                requestId: requestId,
+                initiatorId: currentNegotiatorId!,
+              ),
+            ),
+            child: Text('agreement_propose_button'.tr()),
+          );
+        }
+
+        final splitText =
+            '${agreement.splitInitiator.toStringAsFixed(0)}% / ${agreement.splitCounterparty.toStringAsFixed(0)}%';
+        final isRecipient = agreement.initiatorId != currentNegotiatorId;
+
+        if (agreement.status == 'pending' && isRecipient) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(splitText),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  ElevatedButton(
+                    onPressed: () async {
+                      try {
+                        await ref.read(agreementRepositoryProvider).acceptAgreement(agreement.agreementId);
+                        ref.invalidate(agreementForRequestProvider(requestId));
+                      } catch (_) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('listing_error_generic'.tr())),
+                          );
+                        }
+                      }
+                    },
+                    child: Text('agreement_accept'.tr()),
+                  ),
+                  const SizedBox(width: 12),
+                  OutlinedButton(
+                    onPressed: () async {
+                      try {
+                        await ref.read(agreementRepositoryProvider).declineAgreement(agreement.agreementId);
+                        ref.invalidate(agreementForRequestProvider(requestId));
+                      } catch (_) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('listing_error_generic'.tr())),
+                          );
+                        }
+                      }
+                    },
+                    child: Text('agreement_decline'.tr()),
+                  ),
+                ],
+              ),
+            ],
+          );
+        }
+
+        if (agreement.status == 'pending') {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(splitText),
+              const SizedBox(height: 4),
+              Text('agreement_waiting_response'.tr()),
+            ],
+          );
+        }
+
+        // status == 'accepted'
+        final acceptedAt = agreement.acceptedAt!;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(splitText),
+            const SizedBox(height: 4),
+            Text('${'agreement_accepted_on'.tr()} ${acceptedAt.day}/${acceptedAt.month}/${acceptedAt.year}'),
+          ],
         );
       },
     );

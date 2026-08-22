@@ -9,7 +9,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:renly/core/theme/app_theme.dart';
+import 'package:renly/features/collaboration/agreement_providers.dart' hide currentNegotiatorIdProvider;
 import 'package:renly/features/collaboration/cobroke_request_providers.dart';
+import 'package:renly/features/collaboration/models/agreement.dart';
 import 'package:renly/features/collaboration/models/cobroke_request.dart';
 import 'package:renly/features/collaboration/models/cobroke_request_candidate.dart';
 import 'package:renly/features/collaboration/my_requests_screen.dart';
@@ -69,12 +71,20 @@ final _fixtureReceived = [
   ),
 ];
 
-Widget _wrap(GoRouter router, {List<CobrokeRequestCandidate>? received, List<CobrokeRequestCandidate>? sent}) {
+Widget _wrap(
+  GoRouter router, {
+  List<CobrokeRequestCandidate>? received,
+  List<CobrokeRequestCandidate>? sent,
+  String? agreementRequestId,
+  Agreement? agreement,
+}) {
   return ProviderScope(
     overrides: [
       currentNegotiatorIdProvider.overrideWithValue('n-1'),
       receivedRequestsProvider.overrideWith((ref) async => received ?? _fixtureReceived),
       sentRequestsProvider.overrideWith((ref) async => sent ?? const []),
+      if (agreementRequestId != null)
+        agreementForRequestProvider(agreementRequestId).overrideWith((ref) async => agreement),
     ],
     child: EasyLocalization(
       supportedLocales: const [Locale('en'), Locale('ms')],
@@ -205,5 +215,162 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('chat for req-3'), findsOneWidget);
+  });
+
+  testWidgets('shows Propose Agreement button when accepted request has no agreement', (tester) async {
+    final accepted = [
+      CobrokeRequestCandidate(
+        request: CobrokeRequest(
+          requestId: 'req-4',
+          matchId: 'm-4',
+          initiatorId: 'n-2',
+          status: 'accepted',
+          createdAt: DateTime(2026, 8, 24),
+        ),
+        match: _matchCandidate,
+      ),
+    ];
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const MyRequestsScreen()),
+    ]);
+
+    await tester.pumpWidget(_wrap(router, received: accepted, agreementRequestId: 'req-4'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Propose Agreement'), findsOneWidget);
+  });
+
+  testWidgets('shows split and Accept/Decline when viewer is the agreement recipient', (tester) async {
+    final accepted = [
+      CobrokeRequestCandidate(
+        request: CobrokeRequest(
+          requestId: 'req-5',
+          matchId: 'm-5',
+          initiatorId: 'n-2',
+          status: 'accepted',
+          createdAt: DateTime(2026, 8, 24),
+        ),
+        match: _matchCandidate,
+      ),
+    ];
+    final agreement = Agreement(
+      agreementId: 'agr-1',
+      requestId: 'req-5',
+      initiatorId: 'n-2',
+      splitInitiator: 60,
+      splitCounterparty: 40,
+      status: 'pending',
+      createdAt: DateTime(2026, 8, 24),
+    );
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const MyRequestsScreen()),
+    ]);
+
+    await tester.pumpWidget(_wrap(router, received: accepted, agreementRequestId: 'req-5', agreement: agreement));
+    await tester.pumpAndSettle();
+
+    expect(find.text('60% / 40%'), findsOneWidget);
+    expect(find.text('Accept'), findsOneWidget);
+    expect(find.text('Decline'), findsOneWidget);
+  });
+
+  testWidgets('shows waiting-for-response label when viewer is the agreement initiator', (tester) async {
+    final accepted = [
+      CobrokeRequestCandidate(
+        request: CobrokeRequest(
+          requestId: 'req-6',
+          matchId: 'm-6',
+          initiatorId: 'n-2',
+          status: 'accepted',
+          createdAt: DateTime(2026, 8, 24),
+        ),
+        match: _matchCandidate,
+      ),
+    ];
+    final agreement = Agreement(
+      agreementId: 'agr-2',
+      requestId: 'req-6',
+      initiatorId: 'n-1',
+      splitInitiator: 50,
+      splitCounterparty: 50,
+      status: 'pending',
+      createdAt: DateTime(2026, 8, 24),
+    );
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const MyRequestsScreen()),
+    ]);
+
+    await tester.pumpWidget(_wrap(router, received: accepted, agreementRequestId: 'req-6', agreement: agreement));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Waiting for response'), findsOneWidget);
+    expect(find.text('Accept'), findsNothing);
+  });
+
+  testWidgets('shows final split and accepted date when agreement is accepted', (tester) async {
+    final accepted = [
+      CobrokeRequestCandidate(
+        request: CobrokeRequest(
+          requestId: 'req-7',
+          matchId: 'm-7',
+          initiatorId: 'n-2',
+          status: 'accepted',
+          createdAt: DateTime(2026, 8, 24),
+        ),
+        match: _matchCandidate,
+      ),
+    ];
+    final agreement = Agreement(
+      agreementId: 'agr-3',
+      requestId: 'req-7',
+      initiatorId: 'n-2',
+      splitInitiator: 70,
+      splitCounterparty: 30,
+      status: 'accepted',
+      acceptedAt: DateTime(2026, 8, 25),
+      createdAt: DateTime(2026, 8, 24),
+    );
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const MyRequestsScreen()),
+    ]);
+
+    await tester.pumpWidget(_wrap(router, received: accepted, agreementRequestId: 'req-7', agreement: agreement));
+    await tester.pumpAndSettle();
+
+    expect(find.text('70% / 30%'), findsOneWidget);
+    expect(find.text('Accepted on 25/8/2026'), findsOneWidget);
+    expect(find.text('Accept'), findsNothing);
+    expect(find.text('Decline'), findsNothing);
+  });
+
+  testWidgets('propose dialog validates that shares sum to 100', (tester) async {
+    final accepted = [
+      CobrokeRequestCandidate(
+        request: CobrokeRequest(
+          requestId: 'req-8',
+          matchId: 'm-8',
+          initiatorId: 'n-2',
+          status: 'accepted',
+          createdAt: DateTime(2026, 8, 24),
+        ),
+        match: _matchCandidate,
+      ),
+    ];
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const MyRequestsScreen()),
+    ]);
+
+    await tester.pumpWidget(_wrap(router, received: accepted, agreementRequestId: 'req-8'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Propose Agreement'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextFormField).at(0), '60');
+    await tester.enterText(find.byType(TextFormField).at(1), '30');
+    await tester.tap(find.text('Submit'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Shares must add up to 100'), findsOneWidget);
   });
 }
