@@ -82,3 +82,7 @@ One more SQL file, same process as before: Supabase dashboard -> SQL Editor -> N
 ## Milestone 7 setup (messaging)
 
 Run `supabase/migrations/0008_messaging.sql` in the Supabase SQL Editor after 0001-0007. This creates the `message` table, its RLS policies, and enables Realtime delivery for it (`alter publication supabase_realtime add table message;`) — no separate Database > Replication dashboard step is needed, it's included in the migration. If that statement ever errors with "must be owner of publication" (a role-permissions edge case, not expected on this project), toggle `message` on manually under Database > Replication instead.
+
+## Milestone 8 setup (agreement)
+
+Run `supabase/migrations/0009_agreement.sql` in the Supabase SQL Editor after 0001-0008. This creates the `agreement` table, its RLS policies, and a trigger that sets `accepted_at` server-side when an agreement's status moves to `accepted` -- no manual dashboard step beyond running the SQL.
