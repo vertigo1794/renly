@@ -94,7 +94,19 @@ grant insert (request_id, sender_id, body) on message to authenticated;
 
 -- Enable Realtime delivery for this table. Without this, .stream()
 -- subscriptions receive the initial row set but never see live inserts.
-alter publication supabase_realtime add table message;
+-- Guarded (unlike a bare ALTER PUBLICATION ... ADD TABLE) so re-running
+-- this file after a successful first run doesn't raise "relation "message"
+-- is already member of publication" and roll back the whole script --
+-- Supabase's SQL editor runs a pasted file as one implicit transaction.
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'message'
+  ) then
+    alter publication supabase_realtime add table message;
+  end if;
+end $$;
 ```
 
 - [ ] **Step 2: Append README setup section**
@@ -266,11 +278,15 @@ class MessageRepository {
   /// delta -- so this single stream covers both the initial history load
   /// and every subsequent live insert, with no separate merge logic.
   Stream<List<Message>> messagesStream(String requestId) {
+    // SupabaseStreamBuilder.order() defaults to ascending: false (unlike
+    // the plain Postgrest query builder, which defaults to true) --
+    // explicit ascending: true is required here for oldest-first
+    // chronological chat order, or every message list renders reversed.
     return _client
         .from('message')
         .stream(primaryKey: ['message_id'])
         .eq('request_id', requestId)
-        .order('sent_at')
+        .order('sent_at', ascending: true)
         .map((rows) => rows.map(Message.fromJson).toList());
   }
 
