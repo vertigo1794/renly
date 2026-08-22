@@ -673,13 +673,16 @@ git commit -m "feat: add ProposeAgreementDialog and agreement l10n keys"
 
 - [ ] **Step 1: Add imports to my_requests_screen.dart**
 
-In `app/lib/features/collaboration/my_requests_screen.dart`, add these three imports alphabetically with the existing `collaboration/` imports (after `import 'cobroke_request_providers.dart';`, before `import 'models/cobroke_request_candidate.dart';`):
+In `app/lib/features/collaboration/my_requests_screen.dart`, add these two imports alphabetically with the existing `collaboration/` imports (after `import 'cobroke_request_providers.dart';`, before `import 'models/cobroke_request_candidate.dart';`):
 
 ```dart
-import 'agreement_providers.dart';
-import 'models/agreement.dart';
+import 'agreement_providers.dart' hide currentNegotiatorIdProvider;
 import 'propose_agreement_dialog.dart';
 ```
+
+Two notes on why this differs from a naive import list:
+- **`hide currentNegotiatorIdProvider`**: `agreement_providers.dart` and `cobroke_request_providers.dart` (already imported by this file) each define their OWN `currentNegotiatorIdProvider` -- the established per-feature-file duplication convention. Importing both without a `hide` clause is an ambiguous-import compile error. Follow the same `hide` pattern already used in `post_listing_screen.dart`/`post_requirement_screen.dart` for this exact class of collision.
+- **No `import 'models/agreement.dart';`**: this file never names the `Agreement` type directly (it's only used via type inference through `agreementForRequestProvider`), so importing it here triggers an `unused_import` analyzer warning. `Agreement` IS imported explicitly in the test file below (Step 3), where it's constructed directly in test fixtures.
 
 - [ ] **Step 2: Add the _AgreementSection widget**
 
