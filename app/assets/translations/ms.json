@@ -102,5 +102,14 @@
   "matching_view_matches": "Lihat Padanan",
   "matching_my_matches_link": "Padanan Saya",
   "cobroke_request_send": "Minta Co-Broke",
-  "cobroke_request_sent": "Permintaan dihantar"
+  "cobroke_request_sent": "Permintaan dihantar",
+  "cobroke_request_my_requests_title": "Permintaan Saya",
+  "cobroke_request_tab_received": "Diterima",
+  "cobroke_request_tab_sent": "Dihantar",
+  "cobroke_request_empty": "Tiada permintaan lagi",
+  "cobroke_request_accept": "Terima",
+  "cobroke_request_decline": "Tolak",
+  "cobroke_request_status_pending": "Menunggu",
+  "cobroke_request_status_accepted": "Diterima",
+  "cobroke_request_status_declined": "Ditolak"
 }

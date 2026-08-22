@@ -102,5 +102,14 @@
   "matching_view_matches": "View Matches",
   "matching_my_matches_link": "My Matches",
   "cobroke_request_send": "Request Co-Broke",
-  "cobroke_request_sent": "Request sent"
+  "cobroke_request_sent": "Request sent",
+  "cobroke_request_my_requests_title": "My Requests",
+  "cobroke_request_tab_received": "Received",
+  "cobroke_request_tab_sent": "Sent",
+  "cobroke_request_empty": "No requests yet",
+  "cobroke_request_accept": "Accept",
+  "cobroke_request_decline": "Decline",
+  "cobroke_request_status_pending": "Pending",
+  "cobroke_request_status_accepted": "Accepted",
+  "cobroke_request_status_declined": "Declined"
 }
