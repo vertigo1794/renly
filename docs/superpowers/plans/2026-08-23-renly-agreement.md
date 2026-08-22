@@ -826,10 +826,10 @@ Note: `_AgreementSection` does NOT reuse `_RequestList`'s private `_statusLabel`
 
 - [ ] **Step 3: Extend the test file's `_wrap` helper**
 
-In `app/test/features/collaboration/my_requests_screen_test.dart`, add these imports after the existing `cobroke_request_providers.dart` import:
+In `app/test/features/collaboration/my_requests_screen_test.dart`, add these imports after the existing `cobroke_request_providers.dart` import. `agreement_providers.dart` needs the same `hide currentNegotiatorIdProvider` clause as Step 1's lib-file import, for the same reason: this test file also imports `cobroke_request_providers.dart`, which defines its own `currentNegotiatorIdProvider`:
 
 ```dart
-import 'package:renly/features/collaboration/agreement_providers.dart';
+import 'package:renly/features/collaboration/agreement_providers.dart' hide currentNegotiatorIdProvider;
 import 'package:renly/features/collaboration/models/agreement.dart';
 ```
 
