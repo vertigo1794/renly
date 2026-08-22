@@ -162,9 +162,11 @@ Two approaches considered:
 No new screen or route. All UI lives inside `MyRequestsScreen`'s existing accepted-row `Card`, via a new small `ConsumerWidget` (`_AgreementSection`) added per row, watching `agreementForRequestProvider(requestId)`:
 
 - **No agreement yet, or the existing one was declined:** a "Propose Agreement" button (both Received and Sent tabs, same `status == 'accepted'` gate as the existing Chat button — no `isReceived` restriction, since either party to the underlying request may propose). Tapping it opens `ProposeAgreementDialog` — two numeric percentage inputs (validated to sum to 100) plus an optional free-text terms field.
-- **Status `pending`, viewer is the recipient** (`agreement.initiatorId != currentNegotiatorId`): shows the proposed split and an Accept/Decline button pair, same interaction shape as `cobroke_request`'s own Accept/Decline.
-- **Status `pending`, viewer is the initiator:** shows the proposed split, read-only, with a "waiting for response" label — no action available.
-- **Status `accepted`:** shows the final split and the accepted timestamp, read-only. No further action — this request's agreement is done.
+- **Status `pending`, viewer is the recipient** (`agreement.initiatorId != currentNegotiatorId`): shows the proposed split, the terms text if any was entered, and an Accept/Decline button pair, same interaction shape as `cobroke_request`'s own Accept/Decline.
+- **Status `pending`, viewer is the initiator:** shows the proposed split and terms, read-only, with a "waiting for response" label — no action available.
+- **Status `accepted`:** shows the final split, terms, and the accepted timestamp, read-only. No further action — this request's agreement is done.
+
+The split percentages must render without lossy rounding — `numeric(5,2)` allows decimals (e.g. `55.5`/`44.5`), and truncating both to whole numbers can display a pair that doesn't sum to 100 (`56%`/`45%`). The terms field is shown in every non-propose state precisely because "recorded immutably with a timestamp" (the proposal's own wording) implies the recipient must be able to read what they're accepting before they accept it — collecting terms in the propose dialog but never displaying them anywhere would defeat that.
 
 This is a direct continuation of the row-level accept/decline pattern already used for `cobroke_request` itself — one more layer nested inside the same card, not a new interaction paradigm.
 
