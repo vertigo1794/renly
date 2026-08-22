@@ -74,3 +74,7 @@ One more SQL file, same process as before: Supabase dashboard -> SQL Editor -> N
 ## Milestone 5 setup (matching)
 
 One more SQL file, same process as before: Supabase dashboard -> SQL Editor -> New query -> paste the entire contents of `supabase/migrations/0006_matching.sql` (repo root) -> Run. This creates the `match` table and its two RLS policies. No storage bucket, no Auth-dashboard changes.
+
+## Milestone 6 setup (co-broke request)
+
+One more SQL file, same process as before: Supabase dashboard -> SQL Editor -> New query -> paste the entire contents of `supabase/migrations/0007_cobroke_request.sql` (repo root) -> Run. This creates the `cobroke_request` table and its three RLS policies. No storage bucket, no Auth-dashboard changes.
