@@ -78,3 +78,7 @@ One more SQL file, same process as before: Supabase dashboard -> SQL Editor -> N
 ## Milestone 6 setup (co-broke request)
 
 One more SQL file, same process as before: Supabase dashboard -> SQL Editor -> New query -> paste the entire contents of `supabase/migrations/0007_cobroke_request.sql` (repo root) -> Run. This creates the `cobroke_request` table and its three RLS policies. No storage bucket, no Auth-dashboard changes.
+
+## Milestone 7 setup (messaging)
+
+Run `supabase/migrations/0008_messaging.sql` in the Supabase SQL Editor after 0001-0007. This creates the `message` table, its RLS policies, and enables Realtime delivery for it (`alter publication supabase_realtime add table message;`) — no separate Database > Replication dashboard step is needed, it's included in the migration.
