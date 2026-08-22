@@ -112,5 +112,10 @@
   "cobroke_request_status_pending": "Menunggu",
   "cobroke_request_status_accepted": "Diterima",
   "cobroke_request_status_declined": "Ditolak",
-  "cobroke_request_my_requests_link": "Permintaan Saya"
+  "cobroke_request_my_requests_link": "Permintaan Saya",
+  "message_chat_title": "Sembang",
+  "message_input_hint": "Taip mesej...",
+  "message_send": "Hantar",
+  "message_empty": "Tiada mesej lagi. Cuba mula sembang!",
+  "cobroke_request_chat_button": "Sembang"
 }

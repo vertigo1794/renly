@@ -112,5 +112,10 @@
   "cobroke_request_status_pending": "Pending",
   "cobroke_request_status_accepted": "Accepted",
   "cobroke_request_status_declined": "Declined",
-  "cobroke_request_my_requests_link": "My Requests"
+  "cobroke_request_my_requests_link": "My Requests",
+  "message_chat_title": "Chat",
+  "message_input_hint": "Type a message...",
+  "message_send": "Send",
+  "message_empty": "No messages yet. Say hello!",
+  "cobroke_request_chat_button": "Chat"
 }
