@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../listing/models/listing_owner.dart';
 import 'message_providers.dart';
-import 'models/message.dart';
 
 final _senderNameProvider = FutureProvider.family<ListingOwner, String>((ref, negotiatorId) {
   return ref.watch(messageRepositoryProvider).fetchSenderName(negotiatorId);
