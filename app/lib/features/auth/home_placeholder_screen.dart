@@ -44,6 +44,11 @@ class HomePlaceholderScreen extends StatelessWidget {
                   onPressed: () => context.push('/my-matches'),
                   child: Text('matching_my_matches_link'.tr()),
                 ),
+                const SizedBox(height: 12),
+                OutlinedButton(
+                  onPressed: () => context.push('/my-requests'),
+                  child: Text('cobroke_request_my_requests_link'.tr()),
+                ),
               ],
             ),
           ),

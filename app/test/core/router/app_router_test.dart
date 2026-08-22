@@ -76,5 +76,9 @@ void main() {
     test('unauthenticated user on /my-matches is redirected to /', () {
       expect(computeAuthRedirect(hasSession: false, location: '/my-matches'), '/');
     });
+
+    test('unauthenticated user on /my-requests is redirected to /', () {
+      expect(computeAuthRedirect(hasSession: false, location: '/my-requests'), '/');
+    });
   });
 }

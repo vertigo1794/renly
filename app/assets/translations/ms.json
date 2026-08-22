@@ -111,5 +111,6 @@
   "cobroke_request_decline": "Tolak",
   "cobroke_request_status_pending": "Menunggu",
   "cobroke_request_status_accepted": "Diterima",
-  "cobroke_request_status_declined": "Ditolak"
+  "cobroke_request_status_declined": "Ditolak",
+  "cobroke_request_my_requests_link": "Permintaan Saya"
 }

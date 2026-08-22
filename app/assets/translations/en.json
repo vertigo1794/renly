@@ -111,5 +111,6 @@
   "cobroke_request_decline": "Decline",
   "cobroke_request_status_pending": "Pending",
   "cobroke_request_status_accepted": "Accepted",
-  "cobroke_request_status_declined": "Declined"
+  "cobroke_request_status_declined": "Declined",
+  "cobroke_request_my_requests_link": "My Requests"
 }

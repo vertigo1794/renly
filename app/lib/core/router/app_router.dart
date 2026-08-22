@@ -11,6 +11,7 @@ import '../../features/auth/login_screen.dart';
 import '../../features/auth/registration_personal_screen.dart';
 import '../../features/auth/registration_professional_screen.dart';
 import '../../features/auth/verification_pending_screen.dart';
+import '../../features/collaboration/my_requests_screen.dart';
 import '../../features/listing/marketplace_screen.dart';
 import '../../features/listing/my_inventory_screen.dart';
 import '../../features/listing/post_listing_screen.dart';
@@ -124,6 +125,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             MatchesForRequirementScreen(requirementId: state.pathParameters['requirementId']!),
       ),
       GoRoute(path: '/my-matches', builder: (context, state) => const MyMatchesScreen()),
+      GoRoute(path: '/my-requests', builder: (context, state) => const MyRequestsScreen()),
     ],
   );
 });
