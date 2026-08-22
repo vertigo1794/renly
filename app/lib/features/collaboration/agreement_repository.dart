@@ -35,7 +35,7 @@ class AgreementRepository {
         .update({'status': 'accepted'})
         .eq('agreement_id', agreementId)
         .select();
-    if ((rows as List).isEmpty) {
+    if (rows.isEmpty) {
       throw StateError('Agreement update was rejected (not found or not permitted)');
     }
   }
@@ -46,7 +46,7 @@ class AgreementRepository {
         .update({'status': 'declined'})
         .eq('agreement_id', agreementId)
         .select();
-    if ((rows as List).isEmpty) {
+    if (rows.isEmpty) {
       throw StateError('Agreement update was rejected (not found or not permitted)');
     }
   }

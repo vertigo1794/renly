@@ -6,8 +6,8 @@ import 'package:go_router/go_router.dart';
 
 import 'agreement_providers.dart' hide currentNegotiatorIdProvider;
 import 'cobroke_request_providers.dart';
-import 'propose_agreement_dialog.dart';
 import 'models/cobroke_request_candidate.dart';
+import 'propose_agreement_dialog.dart';
 
 /// Both directions of cobroke_request in one screen -- Received (requests
 /// where the viewer can act) and Sent (requests the viewer initiated,
@@ -185,10 +185,8 @@ class _RequestList extends ConsumerWidget {
 /// exactly 100) must never be displayed as 56% / 45% (reads as 101%).
 String _formatSplitPercent(double value) {
   if (value == value.roundToDouble()) return value.toStringAsFixed(0);
-  var formatted = value.toStringAsFixed(2);
-  if (formatted.endsWith('0')) formatted = formatted.substring(0, formatted.length - 1);
-  if (formatted.endsWith('.')) formatted = formatted.substring(0, formatted.length - 1);
-  return formatted;
+  final formatted = value.toStringAsFixed(2);
+  return formatted.endsWith('0') ? formatted.substring(0, formatted.length - 1) : formatted;
 }
 
 class _AgreementSection extends ConsumerWidget {
@@ -204,14 +202,17 @@ class _AgreementSection extends ConsumerWidget {
 
     return agreementAsync.when(
       loading: () => const SizedBox.shrink(),
-      error: (error, stack) => Row(
-        children: [
-          Expanded(child: Text('listing_error_generic'.tr())),
-          TextButton(
-            onPressed: () => ref.invalidate(agreementForRequestProvider(requestId)),
-            child: Text('agreement_retry'.tr()),
-          ),
-        ],
+      error: (error, stack) => Padding(
+        padding: const EdgeInsets.only(top: 8),
+        child: Row(
+          children: [
+            Expanded(child: Text('listing_error_generic'.tr())),
+            TextButton(
+              onPressed: () => ref.invalidate(agreementForRequestProvider(requestId)),
+              child: Text('agreement_retry'.tr()),
+            ),
+          ],
+        ),
       ),
       data: (agreement) {
         if (agreement == null || agreement.status == 'declined') {

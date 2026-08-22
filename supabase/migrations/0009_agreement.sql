@@ -32,7 +32,8 @@ create unique index agreement_one_open_per_request
 -- regardless of status (it must also see declined rows to tell "never
 -- proposed" apart from "was declined"), so it can't be served by the
 -- partial index above -- add a plain covering index for that query shape.
-create index if not exists agreement_request_id_created_at_idx on agreement(request_id, created_at desc);
+drop index if exists agreement_request_id_created_at_idx;
+create index agreement_request_id_created_at_idx on agreement(request_id, created_at desc);
 
 -- accepted_at is set by the database, never supplied by the client --
 -- "recorded immutably with a timestamp" per the proposal means the
