@@ -11,6 +11,7 @@ import '../../features/auth/login_screen.dart';
 import '../../features/auth/registration_personal_screen.dart';
 import '../../features/auth/registration_professional_screen.dart';
 import '../../features/auth/verification_pending_screen.dart';
+import '../../features/collaboration/chat_screen.dart';
 import '../../features/collaboration/my_requests_screen.dart';
 import '../../features/listing/marketplace_screen.dart';
 import '../../features/listing/my_inventory_screen.dart';
@@ -126,6 +127,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(path: '/my-matches', builder: (context, state) => const MyMatchesScreen()),
       GoRoute(path: '/my-requests', builder: (context, state) => const MyRequestsScreen()),
+      GoRoute(
+        path: '/messages/:requestId',
+        builder: (context, state) => ChatScreen(requestId: state.pathParameters['requestId']!),
+      ),
     ],
   );
 });

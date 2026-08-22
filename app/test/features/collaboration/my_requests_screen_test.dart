@@ -156,4 +156,36 @@ void main() {
 
     expect(find.text('No requests yet'), findsOneWidget);
   });
+
+  testWidgets('accepted request shows a Chat button, pending does not', (tester) async {
+    final accepted = [
+      CobrokeRequestCandidate(
+        request: CobrokeRequest(
+          requestId: 'req-3',
+          matchId: 'm-3',
+          initiatorId: 'n-2',
+          status: 'accepted',
+          createdAt: DateTime(2026, 8, 24),
+        ),
+        match: _matchCandidate,
+      ),
+    ];
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const MyRequestsScreen()),
+      GoRoute(
+        path: '/messages/:requestId',
+        builder: (context, state) => Scaffold(body: Text('chat for ${state.pathParameters['requestId']}')),
+      ),
+    ]);
+
+    await tester.pumpWidget(_wrap(router, received: accepted));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Chat'), findsOneWidget);
+
+    await tester.tap(find.text('Chat'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('chat for req-3'), findsOneWidget);
+  });
 }

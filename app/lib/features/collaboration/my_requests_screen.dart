@@ -2,6 +2,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import 'cobroke_request_providers.dart';
 import 'models/cobroke_request_candidate.dart';
@@ -152,6 +153,13 @@ class _RequestList extends ConsumerWidget {
                               child: Text('cobroke_request_decline'.tr()),
                             ),
                           ],
+                        ),
+                      ],
+                      if (candidate.request.status == 'accepted') ...[
+                        const SizedBox(height: 8),
+                        OutlinedButton(
+                          onPressed: () => context.push('/messages/${candidate.request.requestId}'),
+                          child: Text('cobroke_request_chat_button'.tr()),
                         ),
                       ],
                     ],
