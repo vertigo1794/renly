@@ -117,5 +117,18 @@
   "message_input_hint": "Taip mesej...",
   "message_send": "Hantar",
   "message_empty": "Tiada mesej lagi. Cuba mula sembang!",
-  "cobroke_request_chat_button": "Sembang"
+  "cobroke_request_chat_button": "Sembang",
+  "agreement_propose_title": "Cadang Perjanjian",
+  "agreement_propose_button": "Cadang Perjanjian",
+  "agreement_split_initiator_label": "Bahagian anda (%)",
+  "agreement_split_counterparty_label": "Bahagian pihak satu lagi (%)",
+  "agreement_terms_label": "Terma (pilihan)",
+  "agreement_split_invalid": "Masukkan peratusan antara 0 dan 100",
+  "agreement_split_sum_error": "Bahagian mesti berjumlah 100",
+  "agreement_submit": "Hantar",
+  "agreement_cancel": "Batal",
+  "agreement_accept": "Terima",
+  "agreement_decline": "Tolak",
+  "agreement_waiting_response": "Menunggu respons",
+  "agreement_accepted_on": "Diterima pada"
 }

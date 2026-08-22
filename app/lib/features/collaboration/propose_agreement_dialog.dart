@@ -1,0 +1,125 @@
+// app/lib/features/collaboration/propose_agreement_dialog.dart
+import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'agreement_providers.dart';
+
+class ProposeAgreementDialog extends ConsumerStatefulWidget {
+  const ProposeAgreementDialog({super.key, required this.requestId, required this.initiatorId});
+
+  final String requestId;
+  final String initiatorId;
+
+  @override
+  ConsumerState<ProposeAgreementDialog> createState() => _ProposeAgreementDialogState();
+}
+
+class _ProposeAgreementDialogState extends ConsumerState<ProposeAgreementDialog> {
+  final _formKey = GlobalKey<FormState>();
+  final _initiatorController = TextEditingController();
+  final _counterpartyController = TextEditingController();
+  final _termsController = TextEditingController();
+  bool _submitting = false;
+  String? _submitError;
+
+  @override
+  void dispose() {
+    _initiatorController.dispose();
+    _counterpartyController.dispose();
+    _termsController.dispose();
+    super.dispose();
+  }
+
+  String? _percentageValidator(String? value) {
+    final parsed = double.tryParse(value ?? '');
+    if (parsed == null || parsed <= 0 || parsed >= 100) {
+      return 'agreement_split_invalid'.tr();
+    }
+    return null;
+  }
+
+  Future<void> _submit() async {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+    final splitInitiator = double.parse(_initiatorController.text);
+    final splitCounterparty = double.parse(_counterpartyController.text);
+    // Compare as integer cents, never as a raw double `==` check --
+    // floating-point arithmetic can make an exact-100 sum fail an exact
+    // equality comparison even when both inputs are individually valid
+    // (e.g. 33.33 + 66.67 is not guaranteed to equal exactly 100.0 in
+    // double precision).
+    final sumInCents = (splitInitiator * 100).round() + (splitCounterparty * 100).round();
+    if (sumInCents != 10000) {
+      setState(() => _submitError = 'agreement_split_sum_error'.tr());
+      return;
+    }
+    setState(() {
+      _submitting = true;
+      _submitError = null;
+    });
+    try {
+      await ref.read(agreementRepositoryProvider).createAgreement(
+            requestId: widget.requestId,
+            initiatorId: widget.initiatorId,
+            splitInitiator: splitInitiator,
+            splitCounterparty: splitCounterparty,
+            terms: _termsController.text.trim().isEmpty ? null : _termsController.text.trim(),
+          );
+      ref.invalidate(agreementForRequestProvider(widget.requestId));
+      if (mounted) Navigator.of(context).pop();
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _submitError = 'listing_error_generic'.tr();
+          _submitting = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text('agreement_propose_title'.tr()),
+      content: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextFormField(
+              controller: _initiatorController,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              decoration: InputDecoration(labelText: 'agreement_split_initiator_label'.tr()),
+              validator: _percentageValidator,
+            ),
+            TextFormField(
+              controller: _counterpartyController,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              decoration: InputDecoration(labelText: 'agreement_split_counterparty_label'.tr()),
+              validator: _percentageValidator,
+            ),
+            TextFormField(
+              controller: _termsController,
+              decoration: InputDecoration(labelText: 'agreement_terms_label'.tr()),
+              maxLines: 3,
+            ),
+            if (_submitError != null) ...[
+              const SizedBox(height: 8),
+              Text(_submitError!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+            ],
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _submitting ? null : () => Navigator.of(context).pop(),
+          child: Text('agreement_cancel'.tr()),
+        ),
+        ElevatedButton(
+          onPressed: _submitting ? null : _submit,
+          child: Text('agreement_submit'.tr()),
+        ),
+      ],
+    );
+  }
+}

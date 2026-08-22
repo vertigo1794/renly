@@ -117,5 +117,18 @@
   "message_input_hint": "Type a message...",
   "message_send": "Send",
   "message_empty": "No messages yet. Say hello!",
-  "cobroke_request_chat_button": "Chat"
+  "cobroke_request_chat_button": "Chat",
+  "agreement_propose_title": "Propose Agreement",
+  "agreement_propose_button": "Propose Agreement",
+  "agreement_split_initiator_label": "Your share (%)",
+  "agreement_split_counterparty_label": "Counterparty's share (%)",
+  "agreement_terms_label": "Terms (optional)",
+  "agreement_split_invalid": "Enter a percentage between 0 and 100",
+  "agreement_split_sum_error": "Shares must add up to 100",
+  "agreement_submit": "Submit",
+  "agreement_cancel": "Cancel",
+  "agreement_accept": "Accept",
+  "agreement_decline": "Decline",
+  "agreement_waiting_response": "Waiting for response",
+  "agreement_accepted_on": "Accepted on"
 }
