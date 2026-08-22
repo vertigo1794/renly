@@ -170,6 +170,10 @@ void main() {
 
     expect(find.text('Chat'), findsNothing);
 
+    // Force a full unmount before the second full-tree pump below: it swaps
+    // in a different GoRouter instance at the same widget-tree position,
+    // and without an intervening unmount MaterialApp.router would try to
+    // hot-swap a live Router's delegate instead of rebuilding from scratch.
     await tester.pumpWidget(const SizedBox.shrink());
 
     final accepted = [

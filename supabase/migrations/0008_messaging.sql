@@ -14,8 +14,12 @@ create table if not exists message (
 );
 
 -- Every .stream() open (and every Realtime re-evaluation of this table's
--- RLS per subscriber) filters on request_id, then orders by sent_at --
--- without this index every chat open is a sequential scan.
+-- RLS per subscriber) filters on request_id -- without this index every
+-- chat open is a sequential scan. sent_at is included as a second column
+-- since the client sorts by it (in Dart, not via SQL ORDER BY -- see
+-- MessageRepository.messagesStream), so a request_id-only index would
+-- still serve the filter equally well; this just keeps both hot columns
+-- together.
 create index if not exists message_request_id_sent_at_idx on message(request_id, sent_at);
 
 alter table message enable row level security;
