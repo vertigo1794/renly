@@ -4,7 +4,7 @@
 
 **Goal:** Let two negotiators with an ACCEPTED co-broke request exchange live text messages over Supabase Realtime, gated at the RLS level on `cobroke_request.status = 'accepted'`.
 
-**Architecture:** A `message` table with RLS joining through `cobroke_request` -> `match` -> `listing`/`requirement` (same ownership-join pattern as every prior milestone). `MessageRepository` composes `ListingRepository` for sender-name lookups, same reuse precedent as `CobrokeRequestRepository`. Live delivery uses supabase_flutter's `.stream()` convenience API (not a hand-rolled `RealtimeChannel`), wrapped in a Riverpod `StreamProvider.family`. A "Chat" button on accepted rows in `MyRequestsScreen` is the only entry point.
+**Architecture:** A `message` table with RLS joining through `cobroke_request` -> `match` -> `listing`/`requirement` (same ownership-join pattern as every prior milestone). `MessageRepository` composes `ListingRepository` for sender-name lookups, same reuse precedent as `CobrokeRequestRepository`. Live delivery uses supabase_flutter's `.stream()` convenience API (not a hand-rolled `RealtimeChannel`), wrapped in a Riverpod `StreamProvider.autoDispose.family` (the `.autoDispose` is required, not implicit — see Task 4). A "Chat" button on accepted rows in `MyRequestsScreen` is the only entry point.
 
 **Tech Stack:** Flutter, Riverpod, supabase_flutter ^2.8.0 (`.stream()` API), go_router, easy_localization (EN/MS).
 
@@ -47,6 +47,11 @@ create table if not exists message (
   body text not null check (char_length(trim(body)) > 0),
   sent_at timestamptz not null default now()
 );
+
+-- Every .stream() open (and every Realtime re-evaluation of this table's
+-- RLS per subscriber) filters on request_id, then orders by sent_at --
+-- without this index every chat open is a sequential scan.
+create index if not exists message_request_id_sent_at_idx on message(request_id, sent_at);
 
 alter table message enable row level security;
 
@@ -116,7 +121,7 @@ Read `app/README.md`, find the "Milestone 6 setup (co-broke request)" section, a
 ```markdown
 ### Milestone 7 setup (messaging)
 
-Run `supabase/migrations/0008_messaging.sql` in the Supabase SQL Editor after 0001-0007. This creates the `message` table, its RLS policies, and enables Realtime delivery for it (`alter publication supabase_realtime add table message;`) — no separate Database > Replication dashboard step is needed, it's included in the migration.
+Run `supabase/migrations/0008_messaging.sql` in the Supabase SQL Editor after 0001-0007. This creates the `message` table, its RLS policies, and enables Realtime delivery for it (`alter publication supabase_realtime add table message;`) — no separate Database > Replication dashboard step is needed, it's included in the migration. If that statement ever errors with "must be owner of publication" (a role-permissions edge case, not expected on this project), toggle `message` on manually under Database > Replication instead.
 ```
 
 - [ ] **Step 3: Verify with grep**
@@ -278,16 +283,26 @@ class MessageRepository {
   /// delta -- so this single stream covers both the initial history load
   /// and every subsequent live insert, with no separate merge logic.
   Stream<List<Message>> messagesStream(String requestId) {
-    // SupabaseStreamBuilder.order() defaults to ascending: false (unlike
-    // the plain Postgrest query builder, which defaults to true) --
-    // explicit ascending: true is required here for oldest-first
-    // chronological chat order, or every message list renders reversed.
+    // Sort the PARSED DateTime in Dart, not via .order('sent_at') on the
+    // stream builder. SupabaseStreamBuilder merges rows from two different
+    // sources -- the initial PostgREST fetch and live Realtime INSERT
+    // payloads -- and sorts the raw sent_at STRING. Those two sources
+    // format timestamptz differently ("2026-08-24T10:00:00+00:00" from
+    // PostgREST vs "2026-08-24 10:00:00+00" from a Realtime payload,
+    // space- not T-separated), so a raw string comparison sorts every
+    // live-delivered message ABOVE the entire same-day history instead of
+    // below it. Sorting the parsed DateTime sidesteps the format mismatch
+    // entirely (and makes ascending: true unnecessary -- no .order() call
+    // at all).
     return _client
         .from('message')
         .stream(primaryKey: ['message_id'])
         .eq('request_id', requestId)
-        .order('sent_at', ascending: true)
-        .map((rows) => rows.map(Message.fromJson).toList());
+        .map((rows) {
+          final messages = rows.map(Message.fromJson).toList();
+          messages.sort((a, b) => a.sentAt.compareTo(b.sentAt));
+          return messages;
+        });
   }
 
   Future<ListingOwner> fetchSenderName(String negotiatorId) {
@@ -312,7 +327,7 @@ git commit -m "feat: add MessageRepository with Realtime stream"
 
 **Interfaces:**
 - Consumes: `MessageRepository` (Task 3); `authStateProvider` (`app/lib/features/auth/auth_providers.dart`, same as every other feature's own `currentNegotiatorIdProvider` copy); `listingRepositoryProvider` (`app/lib/features/listing/listing_providers.dart`).
-- Produces: `messageRepositoryProvider`, `currentNegotiatorIdProvider` (this feature's own copy), `messagesStreamProvider = StreamProvider.family<List<Message>, String>` — used by Task 5's `ChatScreen`.
+- Produces: `messageRepositoryProvider`, `currentNegotiatorIdProvider` (this feature's own copy), `messagesStreamProvider = StreamProvider.autoDispose.family<List<Message>, String>` (the `.autoDispose` is required, not the default — see the code below) — used by Task 5's `ChatScreen`.
 
 - [ ] **Step 1: Write the providers**
 
@@ -339,12 +354,19 @@ final currentNegotiatorIdProvider = Provider<String?>((ref) {
   return authState.valueOrNull?.session?.user.id;
 });
 
-/// Live-updating message list for one request. StreamProvider.family is
-/// autoDispose by default: when ChatScreen is popped, the underlying
-/// Realtime subscription is cancelled automatically, and reopening the
-/// screen establishes a fresh subscription (whose first emission is the
-/// full current history, per messagesStream's own contract).
-final messagesStreamProvider = StreamProvider.family<List<Message>, String>((ref, requestId) {
+/// Live-updating message list for one request. The .autoDispose HERE IS
+/// REQUIRED, not the default: in the Riverpod version this project is
+/// pinned to (2.6.1), `.family` alone does NOT default to autoDispose --
+/// that's a Riverpod 3.x behavior. Without the explicit modifier, popping
+/// ChatScreen would NOT cancel the underlying Realtime subscription --
+/// SupabaseStreamBuilder only tears down its channel when the Dart
+/// subscription is cancelled, which only happens on provider disposal --
+/// leaking one open Realtime channel per distinct requestId ever opened
+/// for the rest of the app's process lifetime. With .autoDispose, popping
+/// ChatScreen cancels the subscription, and reopening the screen
+/// establishes a fresh one (whose first emission is the full current
+/// history, per messagesStream's own contract).
+final messagesStreamProvider = StreamProvider.autoDispose.family<List<Message>, String>((ref, requestId) {
   return ref.watch(messageRepositoryProvider).messagesStream(requestId);
 });
 ```
@@ -404,7 +426,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../listing/models/listing_owner.dart';
 import 'message_providers.dart';
 
-final _senderNameProvider = FutureProvider.family<ListingOwner, String>((ref, negotiatorId) {
+final _senderNameProvider = FutureProvider.autoDispose.family<ListingOwner, String>((ref, negotiatorId) {
   return ref.watch(messageRepositoryProvider).fetchSenderName(negotiatorId);
 });
 
@@ -437,7 +459,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             senderId: senderId,
             body: body,
           );
-      _controller.clear();
+      if (mounted) _controller.clear();
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -456,7 +478,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     return Scaffold(
       appBar: AppBar(title: Text('message_chat_title'.tr())),
-      body: Column(
+      body: SafeArea(
+        child: Column(
         children: [
           Expanded(
             child: messagesAsync.when(
@@ -466,11 +489,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 if (messages.isEmpty) {
                   return Center(child: Text('message_empty'.tr()));
                 }
+                // reverse: true keeps the viewport pinned to the newest
+                // message on open and on every new arrival, without a
+                // ScrollController. messages is already oldest-first (see
+                // MessageRepository.messagesStream), so the itemBuilder
+                // reads it back-to-front via reversedIndex.
                 return ListView.builder(
+                  reverse: true,
                   padding: const EdgeInsets.all(20),
                   itemCount: messages.length,
                   itemBuilder: (context, index) {
-                    final message = messages[index];
+                    final reversedIndex = messages.length - 1 - index;
+                    final message = messages[reversedIndex];
                     final isOwn = message.senderId == currentNegotiatorId;
                     return Align(
                       alignment: isOwn ? Alignment.centerRight : Alignment.centerLeft,
@@ -519,6 +549,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               ),
             ),
         ],
+        ),
       ),
     );
   }
@@ -723,6 +754,18 @@ In `app/test/features/collaboration/my_requests_screen_test.dart`, add this test
 
 ```dart
   testWidgets('accepted request shows a Chat button, pending does not', (tester) async {
+    final pendingRouter = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const MyRequestsScreen()),
+    ]);
+
+    // _fixtureReceived (the default when `received` is omitted) is a
+    // 'pending' request -- confirm no Chat button renders for it before
+    // testing the accepted case below.
+    await tester.pumpWidget(_wrap(pendingRouter));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Chat'), findsNothing);
+
     final accepted = [
       CobrokeRequestCandidate(
         request: CobrokeRequest(
