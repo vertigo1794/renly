@@ -54,6 +54,7 @@ Deno.serve(async (req) => {
       Stripe.createSubtleCryptoProvider(),
     );
   } catch (err) {
+    console.error("stripe-webhook: signature verification failed:", (err as Error).message);
     return new Response(`Webhook signature verification failed: ${(err as Error).message}`, {
       status: 400,
     });
@@ -64,15 +65,62 @@ Deno.serve(async (req) => {
       case "customer.subscription.updated":
       case "customer.subscription.deleted": {
         const subscription = event.data.object as Stripe.Subscription;
-        const tier = ["active", "trialing"].includes(subscription.status) ? "professional" : "free";
-        await adminClient
+        // 'past_due' deliberately KEEPS professional access. A failed
+        // renewal charge moves the subscription to 'past_due' and fires
+        // this event -- but Stripe then runs its own retry/dunning
+        // schedule, and only if it gives up entirely does it move the
+        // subscription to a genuinely terminal status ('canceled',
+        // 'unpaid', 'incomplete_expired'), firing this event again. Those
+        // terminal statuses are what actually drop the tier to 'free'.
+        // This app does not invent its own grace-period logic on top.
+        const tier = ["active", "trialing", "past_due"].includes(subscription.status)
+          ? "professional"
+          : "free";
+        // `current_period_end` must be read defensively, NOT as a plain
+        // `subscription.current_period_end`. The shape of this INBOUND
+        // payload is set by the API version pinned on the webhook
+        // ENDPOINT in the Stripe Dashboard (which defaults to the Stripe
+        // account's own default version) -- it is NOT governed by the
+        // `apiVersion` passed to `new Stripe(...)` above, which only
+        // shapes responses to OUTBOUND calls this SDK makes (and this
+        // handler makes none). As of API version 2025-03-31.basil Stripe
+        // moved this field off the Subscription object and onto the
+        // subscription ITEMS, so on any recently-created Stripe account
+        // the top-level field is simply absent. Reading it blindly gave
+        // `undefined * 1000` -> NaN -> `new Date(NaN).toISOString()`
+        // THROWS RangeError, 500ing the whole delivery and losing the
+        // tier flip. Falling back to the item, then to null, keeps the
+        // load-bearing tier write alive even when this display-only
+        // field cannot be resolved (the column is nullable).
+        const firstItem = subscription.items?.data?.[0] as Record<string, unknown> | undefined;
+        const periodEndSeconds: unknown = subscription.current_period_end ??
+          firstItem?.["current_period_end"];
+        const currentPeriodEndIso =
+          typeof periodEndSeconds === "number" && Number.isFinite(periodEndSeconds)
+            ? new Date(periodEndSeconds * 1000).toISOString()
+            : null;
+        const { error: updateError } = await adminClient
           .from("negotiator")
           .update({
             subscription_status: subscription.status,
             subscription_tier: tier,
-            current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+            current_period_end: currentPeriodEndIso,
           })
           .eq("stripe_customer_id", subscription.customer as string);
+        // supabase-js does NOT throw on a database error -- it resolves
+        // with an `error` field. Without this check a failed write (bad
+        // grant, or 0013_subscription.sql not yet run so the columns
+        // don't exist) would still fall through to the 200 below, Stripe
+        // would consider the delivery successful and never retry, and
+        // the tier flip would be silently lost. Throwing hands it to the
+        // outer catch, which returns 500 and makes Stripe retry.
+        if (updateError) {
+          console.error(
+            `stripe-webhook: ${event.type} (${event.id}) failed to update negotiator for customer ${subscription.customer}:`,
+            updateError,
+          );
+          throw updateError;
+        }
         break;
       }
       case "invoice.payment_failed": {
@@ -82,10 +130,19 @@ Deno.serve(async (req) => {
         // customer.subscription.updated with a 'canceled'/'unpaid' status
         // if it eventually gives up, which the branch above already
         // handles. This app does not invent its own grace-period logic.
-        await adminClient
+        const { error: updateError } = await adminClient
           .from("negotiator")
           .update({ subscription_status: "past_due" })
           .eq("stripe_customer_id", invoice.customer as string);
+        // Same swallowed-error hazard as the branch above -- see the
+        // longer note there.
+        if (updateError) {
+          console.error(
+            `stripe-webhook: ${event.type} (${event.id}) failed to update negotiator for customer ${invoice.customer}:`,
+            updateError,
+          );
+          throw updateError;
+        }
         break;
       }
       default:
@@ -98,6 +155,10 @@ Deno.serve(async (req) => {
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
+    console.error(
+      `stripe-webhook: unhandled failure processing ${event.type} (${event.id}):`,
+      error,
+    );
     return new Response(JSON.stringify({ error: (error as Error).message }), {
       status: 500,
       headers: { "Content-Type": "application/json" },

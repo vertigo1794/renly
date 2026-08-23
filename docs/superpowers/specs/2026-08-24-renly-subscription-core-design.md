@@ -28,7 +28,7 @@ SubscriptionScreen
   PaymentSheet.confirm(client_secret) ---------------------------------->  charge (test card)
                                                                             emits webhook event
                                      stripe-webhook  <--------------------  customer.subscription.*
-                                       verify signature                    invoice.paid / .payment_failed
+                                       verify signature                    invoice.payment_failed
                                        update negotiator row
                                        (subscription_tier, subscription_status,
                                         current_period_end, stripe_subscription_id)
@@ -70,7 +70,7 @@ No new table: this is a 1:1 relationship with `negotiator`, same reasoning as `p
 
 **`stripe-webhook`** (public endpoint, Stripe calls this directly — no Supabase auth, secured instead by Stripe's own webhook signature; MUST be deployed with `--no-verify-jwt`, since Supabase's default JWT check would reject every Stripe delivery before this function's own signature check ever runs, silently making the whole tier-flip mechanism dead on arrival — this is the Edge-Function-era equivalent of this project's earlier RLS `security definer`/`WITH CHECK` lessons, a one-flag miss that fails everything downstream with no obvious error):
 1. Verifies the `Stripe-Signature` header against the raw request body using the webhook signing secret (`STRIPE_WEBHOOK_SECRET`, set via `supabase secrets set`, never in client code).
-2. On `customer.subscription.updated`/`customer.subscription.deleted`: looks up the negotiator by `stripe_customer_id`, writes `subscription_status` from the event, sets `subscription_tier = 'professional'` when status is `active` or `trialing`, sets `subscription_tier = 'free'` when status is `canceled`/`unpaid`/`incomplete_expired`, writes `current_period_end`.
+2. On `customer.subscription.updated`/`customer.subscription.deleted`: looks up the negotiator by `stripe_customer_id`, writes `subscription_status` from the event, sets `subscription_tier = 'professional'` when status is `active`, `trialing`, or `past_due` (see step 3 — access is retained through a failed charge), sets `subscription_tier = 'free'` when status is `canceled`/`unpaid`/`incomplete_expired`, writes `current_period_end`.
 3. On `invoice.payment_failed`: writes `subscription_status = 'past_due'` (tier stays `professional` until Stripe itself cancels the subscription after its own retry schedule — this app doesn't invent its own grace-period logic, it defers entirely to Stripe's).
 4. Uses the Supabase service role key for all writes (bypasses RLS, the only way an Edge Function can write columns with no client grant).
 
