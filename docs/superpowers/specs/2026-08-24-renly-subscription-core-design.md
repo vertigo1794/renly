@@ -29,9 +29,15 @@ SubscriptionScreen
                                                                             emits webhook event
                                      stripe-webhook  <--------------------  customer.subscription.*
                                        verify signature                    invoice.payment_failed
-                                       update negotiator row
-                                       (subscription_tier, subscription_status,
-                                        current_period_end)
+                                       update negotiator row (final-review fix round):
+                                       - grant (tier -> professional): always applies,
+                                         writes subscription_tier/status/current_period_end
+                                         AND claims stripe_subscription_id as current
+                                       - downgrade/past_due: only applies if the event's
+                                         subscription id still matches the negotiator's
+                                         stored stripe_subscription_id (an old/superseded
+                                         subscription's terminal event must not clobber a
+                                         row that has since claimed a different one)
 SubscriptionScreen
   (Realtime .stream() on negotiator row)
   sees tier flip -> shows "Professional" state

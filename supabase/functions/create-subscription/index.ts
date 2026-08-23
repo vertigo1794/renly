@@ -101,21 +101,31 @@ Deno.serve(async (req) => {
       price: PROFESSIONAL_PRICE_ID,
       limit: 10,
     });
+    // Checked as two separate scans, not one `find` over the mixed-status
+    // list -- a single find() picks whichever non-terminal subscription
+    // Stripe happens to list first, so if an abandoned `incomplete`
+    // subscription were ever listed ahead of a genuinely `active` one,
+    // the 409 guard below would silently never fire and the reuse path
+    // would let the user pay a second time. The paying check must not
+    // depend on Stripe's listing order.
+    const payingSubscription = existingSubscriptions.data.find((s) =>
+      ["active", "trialing"].includes(s.status)
+    );
+    if (payingSubscription) {
+      // Already paying. Nothing to do here -- the client should be
+      // showing the professional tier and the Manage Subscription
+      // button, not the upgrade flow.
+      return new Response(JSON.stringify({ error: "Already subscribed" }), {
+        status: 409,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
     const reusable = existingSubscriptions.data.find((s) =>
-      ["incomplete", "active", "trialing", "past_due"].includes(s.status)
+      ["incomplete", "past_due"].includes(s.status)
     );
 
     let subscription: Stripe.Subscription;
     if (reusable) {
-      if (["active", "trialing"].includes(reusable.status)) {
-        // Already paying. Nothing to do here -- the client should be
-        // showing the professional tier and the Manage Subscription
-        // button, not the upgrade flow.
-        return new Response(JSON.stringify({ error: "Already subscribed" }), {
-          status: 409,
-          headers: { "Content-Type": "application/json" },
-        });
-      }
       // Reuse the existing incomplete/past_due subscription instead of
       // creating a duplicate -- re-expand to get a fresh (or the same,
       // still-valid) PaymentIntent client secret.
