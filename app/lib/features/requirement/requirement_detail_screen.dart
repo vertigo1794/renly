@@ -7,6 +7,7 @@ import '../../core/widgets/signed_photo.dart';
 import 'models/requirement.dart';
 import 'requirement_formatting.dart';
 import 'requirement_providers.dart';
+import '../subscription/subscription_providers.dart' hide currentNegotiatorIdProvider;
 
 /// Symmetric with PropertyDetailScreen: photo carousel, criteria
 /// breakdown, posting negotiator, and owner-only status actions.
@@ -52,6 +53,11 @@ class _RequirementDetailScreenState extends ConsumerState<RequirementDetailScree
         error: (error, stack) => Center(child: Text('listing_error_generic'.tr())),
         data: (requirement) {
           final isOwner = currentNegotiatorId != null && currentNegotiatorId == requirement.negotiatorId;
+          final tierAsync = ref.watch(subscriptionStatusProvider);
+          final countAsync = currentNegotiatorId == null
+              ? const AsyncValue<int>.data(0)
+              : ref.watch(activeRequirementCountProvider(currentNegotiatorId));
+          final atCap = tierAsync.valueOrNull?.tier == 'free' && (countAsync.valueOrNull ?? 0) >= 3;
 
           return SafeArea(
             child: SingleChildScrollView(
@@ -140,11 +146,19 @@ class _RequirementDetailScreenState extends ConsumerState<RequirementDetailScree
                         onPressed: () => _changeStatus(requirement, 'withdrawn'),
                         child: Text('requirement_withdraw'.tr()),
                       ),
-                    if (requirement.status != 'open')
+                    if (requirement.status != 'open') ...[
+                      if (atCap) ...[
+                        Text(
+                          'requirement_cap_reached_message'.tr(),
+                          style: TextStyle(color: Theme.of(context).colorScheme.error),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
                       OutlinedButton(
-                        onPressed: () => _changeStatus(requirement, 'open'),
+                        onPressed: atCap ? null : () => _changeStatus(requirement, 'open'),
                         child: Text('requirement_reactivate'.tr()),
                       ),
+                    ],
                   ],
                 ],
               ),

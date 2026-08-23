@@ -12,6 +12,8 @@ import 'package:renly/features/listing/models/listing_owner.dart';
 import 'package:renly/features/requirement/models/requirement.dart';
 import 'package:renly/features/requirement/requirement_detail_screen.dart';
 import 'package:renly/features/requirement/requirement_providers.dart';
+import 'package:renly/features/subscription/models/subscription_status.dart' as subscription;
+import 'package:renly/features/subscription/subscription_providers.dart' as subscription_providers;
 
 const _fixtureRequirement = Requirement(
   requirementId: 'r-1',
@@ -27,14 +29,29 @@ const _fixtureRequirement = Requirement(
   status: 'open',
 );
 
+const _withdrawnRequirementOwnedByN1 = Requirement(
+  requirementId: 'r-1',
+  negotiatorId: 'n-1',
+  propertyType: 'apartment',
+  transactionType: 'sale',
+  state: 'Selangor',
+  area: 'Petaling Jaya',
+  budgetMin: 300000,
+  budgetMax: 500000,
+  bedrooms: 3,
+  photoUrls: [],
+  status: 'withdrawn',
+);
+
 const _fixtureOwner = ListingOwner(fullName: 'Aiman Yusof', renNumber: '12345');
 
-Widget _wrap(GoRouter router, {String currentNegotiatorId = 'n-2'}) {
+Widget _wrap(GoRouter router, {String currentNegotiatorId = 'n-2', Requirement? requirement, List<Override> extraOverrides = const []}) {
   return ProviderScope(
     overrides: [
       currentNegotiatorIdProvider.overrideWithValue(currentNegotiatorId),
-      requirementDetailProvider.overrideWith((ref, requirementId) async => _fixtureRequirement),
+      requirementDetailProvider.overrideWith((ref, requirementId) async => requirement ?? _fixtureRequirement),
       requirementOwnerProvider.overrideWith((ref, negotiatorId) async => _fixtureOwner),
+      ...extraOverrides,
     ],
     child: EasyLocalization(
       supportedLocales: const [Locale('en'), Locale('ms')],
@@ -100,5 +117,31 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Mark as Fulfilled'), findsNothing);
+  });
+
+  testWidgets('disables the reactivate button at the free-tier active-requirement cap', (tester) async {
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const RequirementDetailScreen(requirementId: 'r-1')),
+    ]);
+
+    await tester.pumpWidget(_wrap(
+      router,
+      currentNegotiatorId: 'n-1',
+      requirement: _withdrawnRequirementOwnedByN1,
+      extraOverrides: [
+        activeRequirementCountProvider('n-1').overrideWith((ref) async => 3),
+        subscription_providers.subscriptionStatusProvider.overrideWith(
+          (ref) => Stream.value(const subscription.SubscriptionStatus(tier: 'free')),
+        ),
+      ],
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.text("You've reached the Free plan's limit of 3 active requirements. Upgrade to Professional for unlimited requirements."), findsOneWidget);
+
+    final reactivateButton = tester.widget<OutlinedButton>(
+      find.ancestor(of: find.text('requirement_reactivate'.tr()), matching: find.byType(OutlinedButton)),
+    );
+    expect(reactivateButton.onPressed, isNull);
   });
 }
