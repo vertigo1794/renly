@@ -342,6 +342,8 @@ Deno.serve(async (req) => {
 });
 ```
 
+**Post-task-review note (added after Task 3's review round found real bugs in the code block above):** the shipped `supabase/functions/stripe-webhook/index.ts` no longer matches this snippet verbatim — task review found the `apiVersion` pin doesn't protect the inbound webhook payload shape (a fresh Stripe account can omit `current_period_end` entirely, crashing the naive `new Date(x * 1000)` call above), that `past_due` was wrongly excluded from the professional-tier set (contradicting the very next case's own comment about deferring to Stripe's dunning schedule), and that the `.update(...)` calls above never check the returned `{ error }` (a Supabase write failure would still return 200 to Stripe with no retry). All three were fixed in commit `e9cdb17`, plus a zero-row-match check added in a second small round. Treat the actual file as the source of truth for this function's exact code, not this snippet — this note exists so a future reader of this plan doesn't copy the pre-fix version.
+
 - [ ] **Step 2: Deploy with JWT verification disabled**
 
 ```bash
