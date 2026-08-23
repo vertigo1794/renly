@@ -63,8 +63,23 @@ create trigger rating_set_updated_at_trigger
 A `rater_id`/`rated_id` pair must both be genuine parties to the same accepted agreement, and distinct from each other (no self-rating). Rather than repeat the `agreement -> cobroke_request -> match -> listing/requirement` join chain three times inline (as `agreement`'s own RLS does twice per policy), this milestone extracts it into a reusable helper function — checking "is this ONE negotiator a party to this ONE agreement" is simpler to get right than trying to pair two negotiators against two sides inline, and since every `cobroke_request` has exactly two parties, confirming both `rater_id` and `rated_id` are independently party members (and distinct) is sufficient to prove they're the two opposite sides — no explicit pairing logic needed:
 
 ```sql
+-- SECURITY DEFINER is required, not stylistic: as SECURITY INVOKER (the
+-- default) this function runs as the calling `authenticated` role, and
+-- listing_select/requirement_select ("negotiator_id = auth.uid() or
+-- status = 'active'/'open'") hide a listing/requirement the instant its
+-- owner marks it sold/fulfilled or withdraws it -- exactly the moment a
+-- deal is complete and rating becomes relevant. Checking whether the
+-- OTHER party (rated_id) is still a visible party to the agreement would
+-- silently fail for the non-initiator once their side of the deal
+-- closes, the same zero-rows trap get_listing_owner_info was created to
+-- escape (0004_listing_hardening.sql). This is the third distinct RLS
+-- failure mode this project has hit: missing WITH CHECK (Co-Broke
+-- Request), a grant regression (Profile Management), and now invoker-
+-- rights inside a cross-user helper.
 create function is_agreement_party(p_agreement_id uuid, p_negotiator_id uuid) returns boolean
-language sql stable as $$
+language sql stable
+security definer
+set search_path = public as $$
   select exists (
     select 1 from agreement a
     join cobroke_request cr on cr.request_id = a.request_id
@@ -77,6 +92,9 @@ language sql stable as $$
       )
   );
 $$;
+
+revoke execute on function is_agreement_party(uuid, uuid) from public;
+grant execute on function is_agreement_party(uuid, uuid) to authenticated;
 
 alter table rating enable row level security;
 
@@ -160,6 +178,14 @@ New route, requiring a session: `/reviews` → `ReviewsScreen`. No new route for
 Same boundary as every prior milestone: `RatingRepository` untested directly. `Rating.fromJson` gets a real unit test. `RateDialog`, the `MyRequestsScreen` row addition, `ProfileScreen`'s stat card update, and `ReviewsScreen` all get widget tests via provider override, following established conventions.
 
 **Given this milestone's history-informed risk (the UPDATE+WITH CHECK class has broken twice already):** the final whole-branch review must specifically trace the `rating_update_by_rater` policy's USING/WITH CHECK symmetry and the `is_agreement_party` helper's self-rating and cross-agreement-party exclusion logic by hand — this is flagged here explicitly so it isn't treated as routine boilerplate during review.
+
+**Mandatory manual verification after merge, before considering the milestone done** (this module's final review found that RLS inspection alone missed a real bug — `is_agreement_party` needed `security definer`, invisible to a live test performed too early in the lifecycle — so the check below is sequence-sensitive, not optional):
+1. Two real accounts, an accepted `cobroke_request` and an accepted `agreement` between them.
+2. **Mark the listing sold and the requirement fulfilled BEFORE testing ratings** — this is the step that exposes the bug the design missed the first time; testing immediately after acceptance would pass even with the bug present.
+3. Both parties rate each other — confirm BOTH directions succeed, not just the agreement's own initiator rating the other side.
+4. Edit a rating within 24h, confirm it persists.
+5. Attempt a second rating on the same agreement, confirm it's rejected.
+6. Confirm the Trust Score and `/reviews` render correctly on the rated side.
 
 ## Explicitly deferred / out of scope for this milestone
 
