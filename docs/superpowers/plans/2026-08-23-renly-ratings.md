@@ -81,8 +81,19 @@ create trigger rating_set_updated_at_trigger
 -- rater_id and rated_id are independently party members (and distinct
 -- from each other, enforced separately) is sufficient to prove they are
 -- the two opposite sides -- no explicit pairing logic needed.
+-- SECURITY DEFINER is required, not stylistic: as SECURITY INVOKER (the
+-- default) this function runs as the calling `authenticated` role, and
+-- listing_select/requirement_select ("negotiator_id = auth.uid() or
+-- status = 'active'/'open'") hide a listing/requirement the instant its
+-- owner marks it sold/fulfilled or withdraws it -- exactly the moment a
+-- deal is complete and rating becomes relevant. Without this, checking
+-- whether rated_id is still a visible party would silently fail for the
+-- non-initiator once their side of the deal closes, the same zero-rows
+-- trap get_listing_owner_info was created to escape (0004_listing_hardening.sql).
 create or replace function is_agreement_party(p_agreement_id uuid, p_negotiator_id uuid) returns boolean
-language sql stable as $$
+language sql stable
+security definer
+set search_path = public as $$
   select exists (
     select 1 from agreement a
     join cobroke_request cr on cr.request_id = a.request_id
@@ -95,6 +106,9 @@ language sql stable as $$
       )
   );
 $$;
+
+revoke execute on function is_agreement_party(uuid, uuid) from public;
+grant execute on function is_agreement_party(uuid, uuid) to authenticated;
 
 alter table rating enable row level security;
 
@@ -148,9 +162,18 @@ grant update (stars, review_text) on rating to authenticated;
 Read `app/README.md`, find the "Milestone 9 setup (profile)" section, and append immediately after it:
 
 ```markdown
-### Milestone 10 setup (rating)
+## Milestone 10 setup (rating)
 
-Run `supabase/migrations/0011_rating.sql` in the Supabase SQL Editor after 0001-0010. This creates the `rating` table, its RLS policies, an `is_agreement_party` helper function, and a trigger that sets `updated_at` server-side on every update -- no manual dashboard step beyond running the SQL.
+Run `supabase/migrations/0011_rating.sql` in the Supabase SQL Editor after 0001-0010. This creates the `rating` table, its RLS policies, an `is_agreement_party` helper function (SECURITY DEFINER -- required so the party check still works after a listing/requirement is marked sold/fulfilled/withdrawn, when it would otherwise be hidden from the other party by listing_select/requirement_select's own RLS), and a trigger that sets `updated_at` server-side on every update -- no manual dashboard step beyond running the SQL.
+
+After running, verify the grant with this query -- expect UPDATE listed for exactly `stars`/`review_text`, INSERT for exactly `agreement_id`/`rater_id`/`rated_id`/`stars`/`review_text`, and NO UPDATE row for `created_at`/`rater_id`/`rated_id`/`agreement_id`:
+```sql
+select grantee, privilege_type, column_name
+from information_schema.column_privileges
+where table_name = 'rating' and grantee = 'authenticated';
+```
+
+**Mandatory manual verification, sequence-sensitive:** with two real accounts and an accepted agreement, mark the listing sold and the requirement fulfilled BEFORE testing ratings (this is the step that would have caught the security-definer bug this milestone's final review found -- testing immediately after acceptance passes even with that bug present), then confirm BOTH parties can rate each other, not just the agreement's own initiator rating the other side.
 ```
 
 - [ ] **Step 3: Verify with grep**
