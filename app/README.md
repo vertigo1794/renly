@@ -110,3 +110,9 @@ where table_name = 'rating' and grantee = 'authenticated';
 ```
 
 **Mandatory manual verification, sequence-sensitive:** with two real accounts and an accepted agreement, mark the listing sold and the requirement fulfilled BEFORE testing ratings (this is the step that would have caught the security-definer bug this milestone's final review found -- testing immediately after acceptance passes even with that bug present), then confirm BOTH parties can rate each other, not just the agreement's own initiator rating the other side.
+
+## Milestone 11 setup (settings)
+
+Run `supabase/migrations/0012_settings.sql` in the Supabase SQL Editor after 0001-0011. This adds 3 notification-preference boolean columns to `negotiator` (all default `true`) and an additive-only UPDATE grant for them -- no RLS policy change, no new table, no `revoke` statement. No manual dashboard step beyond running the SQL, and no sequence-sensitive verification needed (unlike Ratings) since nothing here depends on cross-user visibility.
+
+A normal smoke test after running is sufficient: open Settings > Notification and confirm all 3 toggles show as ON by default, flip one off and confirm it persists across an app restart.
