@@ -8,6 +8,7 @@ import 'listing_formatting.dart';
 import 'listing_photo.dart';
 import 'listing_providers.dart';
 import 'models/listing.dart';
+import '../subscription/subscription_providers.dart' hide currentNegotiatorIdProvider;
 
 /// Ports stitch_renly_property_agent_network/property_detail.
 class PropertyDetailScreen extends ConsumerStatefulWidget {
@@ -51,6 +52,11 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
         error: (error, stack) => Center(child: Text('listing_error_generic'.tr())),
         data: (listing) {
           final isOwner = currentNegotiatorId != null && currentNegotiatorId == listing.negotiatorId;
+          final tierAsync = ref.watch(subscriptionStatusProvider);
+          final countAsync = currentNegotiatorId == null
+              ? const AsyncValue<int>.data(0)
+              : ref.watch(activeListingCountProvider(currentNegotiatorId));
+          final atCap = tierAsync.valueOrNull?.tier == 'free' && (countAsync.valueOrNull ?? 0) >= 3;
 
           return SafeArea(
             child: SingleChildScrollView(
@@ -138,11 +144,19 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
                         onPressed: () => _changeStatus(listing, 'withdrawn'),
                         child: Text('property_withdraw'.tr()),
                       ),
-                    if (listing.status != 'active')
+                    if (listing.status != 'active') ...[
+                      if (atCap) ...[
+                        Text(
+                          'listing_cap_reached_message'.tr(),
+                          style: TextStyle(color: Theme.of(context).colorScheme.error),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
                       OutlinedButton(
-                        onPressed: () => _changeStatus(listing, 'active'),
+                        onPressed: atCap ? null : () => _changeStatus(listing, 'active'),
                         child: Text('property_reactivate'.tr()),
                       ),
+                    ],
                   ],
                 ],
               ),
