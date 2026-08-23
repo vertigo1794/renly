@@ -33,3 +33,7 @@ final listingDetailProvider = FutureProvider.family<Listing, String>((ref, listi
 final listingOwnerProvider = FutureProvider.family<ListingOwner, String>((ref, negotiatorId) {
   return ref.watch(listingRepositoryProvider).fetchListingOwner(negotiatorId);
 });
+
+final activeListingCountProvider = FutureProvider.family<int, String>((ref, negotiatorId) {
+  return ref.watch(listingRepositoryProvider).countActiveListings(negotiatorId);
+});

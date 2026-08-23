@@ -115,4 +115,14 @@ class ListingRepository {
   Future<void> updateListingStatus({required String listingId, required String status}) {
     return _client.from('listing').update({'status': status}).eq('listing_id', listingId);
   }
+
+  Future<int> countActiveListings(String negotiatorId) async {
+    final response = await _client
+        .from('listing')
+        .select('listing_id')
+        .eq('negotiator_id', negotiatorId)
+        .eq('status', 'active')
+        .count(CountOption.exact);
+    return response.count;
+  }
 }

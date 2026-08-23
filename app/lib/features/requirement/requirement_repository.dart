@@ -112,4 +112,14 @@ class RequirementRepository {
   Future<void> updateRequirementStatus({required String requirementId, required String status}) {
     return _client.from('requirement').update({'status': status}).eq('requirement_id', requirementId);
   }
+
+  Future<int> countActiveRequirements(String negotiatorId) async {
+    final response = await _client
+        .from('requirement')
+        .select('requirement_id')
+        .eq('negotiator_id', negotiatorId)
+        .eq('status', 'open')
+        .count(CountOption.exact);
+    return response.count;
+  }
 }

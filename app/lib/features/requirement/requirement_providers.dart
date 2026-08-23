@@ -35,3 +35,7 @@ final requirementDetailProvider = FutureProvider.family<Requirement, String>((re
 final requirementOwnerProvider = FutureProvider.family<ListingOwner, String>((ref, negotiatorId) {
   return ref.watch(requirementRepositoryProvider).fetchRequirementOwner(negotiatorId);
 });
+
+final activeRequirementCountProvider = FutureProvider.family<int, String>((ref, negotiatorId) {
+  return ref.watch(requirementRepositoryProvider).countActiveRequirements(negotiatorId);
+});
