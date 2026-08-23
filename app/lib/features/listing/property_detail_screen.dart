@@ -31,6 +31,11 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
       ref.invalidate(listingDetailProvider(widget.listingId));
       ref.invalidate(marketplaceListingsProvider);
       ref.invalidate(myListingsProvider(listing.negotiatorId));
+      // The cap counter is not autoDispose, so withdrawing/reactivating here
+      // must invalidate it too -- otherwise a free-tier user who withdraws a
+      // listing to free up a slot still sees PostListingScreen's submit button
+      // disabled with the upsell message, with no in-app way to clear it.
+      ref.invalidate(activeListingCountProvider(listing.negotiatorId));
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -52,11 +57,17 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
         error: (error, stack) => Center(child: Text('listing_error_generic'.tr())),
         data: (listing) {
           final isOwner = currentNegotiatorId != null && currentNegotiatorId == listing.negotiatorId;
-          final tierAsync = ref.watch(subscriptionStatusProvider);
-          final countAsync = currentNegotiatorId == null
-              ? const AsyncValue<int>.data(0)
-              : ref.watch(activeListingCountProvider(currentNegotiatorId));
-          final atCap = tierAsync.valueOrNull?.tier == 'free' && (countAsync.valueOrNull ?? 0) >= 3;
+          // Only watched for the owner: the cap-gated reactivate button below
+          // renders inside `if (isOwner)`, and subscriptionStatusProvider is a
+          // live Realtime subscription. Watching it unconditionally would open
+          // (and tear down) a channel for every non-owner browsing a listing,
+          // which is the common case.
+          var atCap = false;
+          if (isOwner) {
+            final tierAsync = ref.watch(subscriptionStatusProvider);
+            final countAsync = ref.watch(activeListingCountProvider(currentNegotiatorId));
+            atCap = tierAsync.valueOrNull?.tier == 'free' && (countAsync.valueOrNull ?? 0) >= 3;
+          }
 
           return SafeArea(
             child: SingleChildScrollView(

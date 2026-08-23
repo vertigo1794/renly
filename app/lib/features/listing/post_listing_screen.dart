@@ -130,6 +130,14 @@ class _PostListingScreenState extends ConsumerState<PostListingScreen> {
 
       ref.invalidate(marketplaceListingsProvider);
       ref.invalidate(myListingsProvider(negotiatorId));
+      // activeListingCountProvider is deliberately not autoDispose, so it
+      // caches for the whole process lifetime unless invalidated here. Without
+      // this, a free-tier user who posts (or later withdraws) a listing keeps
+      // seeing a stale count and a falsely disabled submit button. Invalidated
+      // only after the create + photo-upload sequence has fully succeeded, so a
+      // retry after a photo-upload failure isn't handed a fresh (now higher)
+      // count that would disable the submit button it needs.
+      ref.invalidate(activeListingCountProvider(negotiatorId));
 
       try {
         final createdListing = await repository.fetchListingById(listingId);

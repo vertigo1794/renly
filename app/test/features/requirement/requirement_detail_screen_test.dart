@@ -144,4 +144,30 @@ void main() {
     );
     expect(reactivateButton.onPressed, isNull);
   });
+
+  testWidgets('keeps the reactivate button enabled for a free-tier owner under the cap', (tester) async {
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const RequirementDetailScreen(requirementId: 'r-1')),
+    ]);
+
+    await tester.pumpWidget(_wrap(
+      router,
+      currentNegotiatorId: 'n-1',
+      requirement: _withdrawnRequirementOwnedByN1,
+      extraOverrides: [
+        activeRequirementCountProvider('n-1').overrideWith((ref) async => 2),
+        subscription_providers.subscriptionStatusProvider.overrideWith(
+          (ref) => Stream.value(const subscription.SubscriptionStatus(tier: 'free')),
+        ),
+      ],
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.text("You've reached the Free plan's limit of 3 active requirements. Upgrade to Professional for unlimited requirements."), findsNothing);
+
+    final reactivateButton = tester.widget<OutlinedButton>(
+      find.ancestor(of: find.text('requirement_reactivate'.tr()), matching: find.byType(OutlinedButton)),
+    );
+    expect(reactivateButton.onPressed, isNotNull);
+  });
 }

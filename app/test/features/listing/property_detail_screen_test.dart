@@ -151,4 +151,30 @@ void main() {
     );
     expect(reactivateButton.onPressed, isNull);
   });
+
+  testWidgets('keeps the reactivate button enabled for a free-tier owner under the cap', (tester) async {
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const PropertyDetailScreen(listingId: 'l-1')),
+    ]);
+
+    await tester.pumpWidget(_wrap(
+      router,
+      currentNegotiatorId: 'n-1',
+      listing: _withdrawnListingOwnedByN1,
+      extraOverrides: [
+        activeListingCountProvider('n-1').overrideWith((ref) async => 2),
+        subscription_providers.subscriptionStatusProvider.overrideWith(
+          (ref) => Stream.value(const subscription.SubscriptionStatus(tier: 'free')),
+        ),
+      ],
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.text("You've reached the Free plan's limit of 3 active listings. Upgrade to Professional for unlimited listings."), findsNothing);
+
+    final reactivateButton = tester.widget<OutlinedButton>(
+      find.ancestor(of: find.text('property_reactivate'.tr()), matching: find.byType(OutlinedButton)),
+    );
+    expect(reactivateButton.onPressed, isNotNull);
+  });
 }

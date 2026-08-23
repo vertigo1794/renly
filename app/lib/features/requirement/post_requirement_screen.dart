@@ -121,6 +121,11 @@ class _PostRequirementScreenState extends ConsumerState<PostRequirementScreen> {
 
       ref.invalidate(boardRequirementsProvider);
       ref.invalidate(myRequirementsProvider(negotiatorId));
+      // Same reasoning as PostListingScreen: the count provider is not
+      // autoDispose, so it stays cached until invalidated, and invalidating it
+      // only after the upload sequence succeeds keeps a retrying user from
+      // being locked out by a freshly incremented count.
+      ref.invalidate(activeRequirementCountProvider(negotiatorId));
 
       try {
         final createdRequirement = await repository.fetchRequirementById(requirementId);

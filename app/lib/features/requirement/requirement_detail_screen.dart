@@ -32,6 +32,9 @@ class _RequirementDetailScreenState extends ConsumerState<RequirementDetailScree
       ref.invalidate(requirementDetailProvider(widget.requirementId));
       ref.invalidate(boardRequirementsProvider);
       ref.invalidate(myRequirementsProvider(requirement.negotiatorId));
+      // Same reasoning as PropertyDetailScreen: the non-autoDispose cap counter
+      // would otherwise keep a free-tier user falsely locked out of posting.
+      ref.invalidate(activeRequirementCountProvider(requirement.negotiatorId));
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -53,11 +56,14 @@ class _RequirementDetailScreenState extends ConsumerState<RequirementDetailScree
         error: (error, stack) => Center(child: Text('listing_error_generic'.tr())),
         data: (requirement) {
           final isOwner = currentNegotiatorId != null && currentNegotiatorId == requirement.negotiatorId;
-          final tierAsync = ref.watch(subscriptionStatusProvider);
-          final countAsync = currentNegotiatorId == null
-              ? const AsyncValue<int>.data(0)
-              : ref.watch(activeRequirementCountProvider(currentNegotiatorId));
-          final atCap = tierAsync.valueOrNull?.tier == 'free' && (countAsync.valueOrNull ?? 0) >= 3;
+          // Only watched for the owner -- same Realtime-subscription reasoning
+          // as PropertyDetailScreen.
+          var atCap = false;
+          if (isOwner) {
+            final tierAsync = ref.watch(subscriptionStatusProvider);
+            final countAsync = ref.watch(activeRequirementCountProvider(currentNegotiatorId));
+            atCap = tierAsync.valueOrNull?.tier == 'free' && (countAsync.valueOrNull ?? 0) >= 3;
+          }
 
           return SafeArea(
             child: SingleChildScrollView(
