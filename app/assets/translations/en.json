@@ -162,5 +162,13 @@
   "notification_settings_title": "Notification",
   "notification_settings_match_label": "New matches",
   "notification_settings_message_label": "New messages",
-  "notification_settings_cobroke_request_label": "New co-broke requests"
+  "notification_settings_cobroke_request_label": "New co-broke requests",
+  "account_settings_title": "Account",
+  "account_settings_ic_label": "IC Number",
+  "account_settings_phone_label": "Phone Number",
+  "account_settings_password_section_title": "Change Password",
+  "account_settings_new_password_label": "New Password",
+  "account_settings_confirm_password_label": "Confirm New Password",
+  "account_settings_submit": "Update Password",
+  "account_settings_password_success": "Password updated"
 }

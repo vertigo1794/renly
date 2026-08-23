@@ -162,5 +162,13 @@
   "notification_settings_title": "Notifikasi",
   "notification_settings_match_label": "Padanan baharu",
   "notification_settings_message_label": "Mesej baharu",
-  "notification_settings_cobroke_request_label": "Permintaan co-broke baharu"
+  "notification_settings_cobroke_request_label": "Permintaan co-broke baharu",
+  "account_settings_title": "Akaun",
+  "account_settings_ic_label": "Nombor IC",
+  "account_settings_phone_label": "Nombor Telefon",
+  "account_settings_password_section_title": "Tukar Kata Laluan",
+  "account_settings_new_password_label": "Kata Laluan Baharu",
+  "account_settings_confirm_password_label": "Sahkan Kata Laluan Baharu",
+  "account_settings_submit": "Kemas Kini Kata Laluan",
+  "account_settings_password_success": "Kata laluan dikemas kini"
 }
