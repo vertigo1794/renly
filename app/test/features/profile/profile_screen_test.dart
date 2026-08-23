@@ -12,6 +12,8 @@ import 'package:renly/core/theme/app_theme.dart';
 import 'package:renly/features/profile/models/profile.dart';
 import 'package:renly/features/profile/profile_providers.dart';
 import 'package:renly/features/profile/profile_screen.dart';
+import 'package:renly/features/ratings/models/rating_candidate.dart';
+import 'package:renly/features/ratings/rating_providers.dart' hide currentNegotiatorIdProvider;
 
 const _fixtureProfile = Profile(
   negotiatorId: 'n-1',
@@ -23,12 +25,13 @@ const _fixtureProfile = Profile(
   verificationStatus: 'approved',
 );
 
-Widget _wrap(GoRouter router, {Profile? profile, (int, int)? counts}) {
+Widget _wrap(GoRouter router, {Profile? profile, (int, int)? counts, List<RatingCandidate>? ratings}) {
   return ProviderScope(
     overrides: [
       currentNegotiatorIdProvider.overrideWithValue('n-1'),
       myProfileProvider.overrideWith((ref) async => profile ?? _fixtureProfile),
       profileCountsProvider.overrideWith((ref) async => counts ?? (5, 3)),
+      ratingsForNegotiatorProvider('n-1').overrideWith((ref) async => ratings ?? const []),
     ],
     child: EasyLocalization(
       supportedLocales: const [Locale('en'), Locale('ms')],
@@ -102,5 +105,17 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Verification Pending'), findsOneWidget);
+  });
+
+  testWidgets('shows "No ratings yet" when the negotiator has no ratings', (tester) async {
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const ProfileScreen()),
+    ]);
+
+    await tester.pumpWidget(_wrap(router, ratings: const []));
+    await tester.pumpAndSettle();
+
+    expect(find.text('No ratings yet'), findsOneWidget);
+    expect(find.text('Trust Score'), findsOneWidget);
   });
 }
