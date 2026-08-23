@@ -97,3 +97,7 @@ select grantee, privilege_type, column_name
 from information_schema.column_privileges
 where table_name = 'negotiator' and grantee = 'authenticated';
 ```
+
+## Milestone 10 setup (rating)
+
+Run `supabase/migrations/0011_rating.sql` in the Supabase SQL Editor after 0001-0010. This creates the `rating` table, its RLS policies, an `is_agreement_party` helper function, and a trigger that sets `updated_at` server-side on every update -- no manual dashboard step beyond running the SQL.
