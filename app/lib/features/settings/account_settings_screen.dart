@@ -21,15 +21,17 @@ class AccountSettingsScreen extends ConsumerWidget {
           children: [
             infoAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stack) => Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('listing_error_generic'.tr()),
-                  TextButton(
-                    onPressed: () => ref.invalidate(identityInfoProvider),
-                    child: Text('agreement_retry'.tr()),
-                  ),
-                ],
+              error: (error, stack) => Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('listing_error_generic'.tr()),
+                    TextButton(
+                      onPressed: () => ref.invalidate(identityInfoProvider),
+                      child: Text('agreement_retry'.tr()),
+                    ),
+                  ],
+                ),
               ),
               data: (info) => Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

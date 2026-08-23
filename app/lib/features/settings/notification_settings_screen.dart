@@ -2,32 +2,60 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'models/notification_preferences.dart';
 import 'settings_providers.dart';
 
-class NotificationSettingsScreen extends ConsumerWidget {
+class NotificationSettingsScreen extends ConsumerStatefulWidget {
   const NotificationSettingsScreen({super.key});
 
-  Future<void> _toggle(
-    BuildContext context,
-    WidgetRef ref,
-    NotificationPreferences current, {
+  @override
+  ConsumerState<NotificationSettingsScreen> createState() => _NotificationSettingsScreenState();
+}
+
+class _NotificationSettingsScreenState extends ConsumerState<NotificationSettingsScreen> {
+  // Optimistic local overrides so each switch's thumb moves the instant
+  // it's tapped, rather than waiting on write+invalidate+refetch. Each is
+  // cleared once that field's write settles (success or failure); on
+  // failure the provider's last-known value is what the switch reverts to.
+  bool? _matchOverride;
+  bool? _messageOverride;
+  bool? _cobrokeOverride;
+
+  Future<void> _toggle({
     bool? notifyMatch,
     bool? notifyMessage,
     bool? notifyCobrokeRequest,
   }) async {
     final negotiatorId = ref.read(currentNegotiatorIdProvider);
     if (negotiatorId == null) return;
+
+    setState(() {
+      if (notifyMatch != null) _matchOverride = notifyMatch;
+      if (notifyMessage != null) _messageOverride = notifyMessage;
+      if (notifyCobrokeRequest != null) _cobrokeOverride = notifyCobrokeRequest;
+    });
+
     try {
       await ref.read(settingsRepositoryProvider).updateNotificationPreferences(
             negotiatorId: negotiatorId,
-            notifyMatch: notifyMatch ?? current.notifyMatch,
-            notifyMessage: notifyMessage ?? current.notifyMessage,
-            notifyCobrokeRequest: notifyCobrokeRequest ?? current.notifyCobrokeRequest,
+            notifyMatch: notifyMatch,
+            notifyMessage: notifyMessage,
+            notifyCobrokeRequest: notifyCobrokeRequest,
           );
       ref.invalidate(notificationPreferencesProvider);
+      if (mounted) {
+        setState(() {
+          if (notifyMatch != null) _matchOverride = null;
+          if (notifyMessage != null) _messageOverride = null;
+          if (notifyCobrokeRequest != null) _cobrokeOverride = null;
+        });
+      }
     } catch (e) {
-      if (context.mounted) {
+      if (mounted) {
+        setState(() {
+          if (notifyMatch != null) _matchOverride = null;
+          if (notifyMessage != null) _messageOverride = null;
+          if (notifyCobrokeRequest != null) _cobrokeOverride = null;
+        });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('listing_error_generic'.tr())),
         );
@@ -36,7 +64,7 @@ class NotificationSettingsScreen extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final prefsAsync = ref.watch(notificationPreferencesProvider);
 
     return Scaffold(
@@ -56,21 +84,22 @@ class NotificationSettingsScreen extends ConsumerWidget {
           ),
         ),
         data: (prefs) => ListView(
+          padding: const EdgeInsets.all(20),
           children: [
             SwitchListTile(
               title: Text('notification_settings_match_label'.tr()),
-              value: prefs.notifyMatch,
-              onChanged: (value) => _toggle(context, ref, prefs, notifyMatch: value),
+              value: _matchOverride ?? prefs.notifyMatch,
+              onChanged: (value) => _toggle(notifyMatch: value),
             ),
             SwitchListTile(
               title: Text('notification_settings_message_label'.tr()),
-              value: prefs.notifyMessage,
-              onChanged: (value) => _toggle(context, ref, prefs, notifyMessage: value),
+              value: _messageOverride ?? prefs.notifyMessage,
+              onChanged: (value) => _toggle(notifyMessage: value),
             ),
             SwitchListTile(
               title: Text('notification_settings_cobroke_request_label'.tr()),
-              value: prefs.notifyCobrokeRequest,
-              onChanged: (value) => _toggle(context, ref, prefs, notifyCobrokeRequest: value),
+              value: _cobrokeOverride ?? prefs.notifyCobrokeRequest,
+              onChanged: (value) => _toggle(notifyCobrokeRequest: value),
             ),
           ],
         ),

@@ -113,6 +113,17 @@ where table_name = 'rating' and grantee = 'authenticated';
 
 ## Milestone 11 setup (settings)
 
-Run `supabase/migrations/0012_settings.sql` in the Supabase SQL Editor after 0001-0011. This adds 3 notification-preference boolean columns to `negotiator` (all default `true`) and an additive-only UPDATE grant for them -- no RLS policy change, no new table, no `revoke` statement. No manual dashboard step beyond running the SQL, and no sequence-sensitive verification needed (unlike Ratings) since nothing here depends on cross-user visibility.
+Run `supabase/migrations/0012_settings.sql` in the Supabase SQL Editor after 0001-0011. This adds 3 notification-preference boolean columns to `negotiator` (all default `true`) and an additive-only UPDATE grant for them -- no RLS policy change, no new table, no `revoke` statement. No manual dashboard step beyond running the SQL.
 
-A normal smoke test after running is sufficient: open Settings > Notification and confirm all 3 toggles show as ON by default, flip one off and confirm it persists across an app restart.
+After running, verify the grant with this query -- expect UPDATE listed for `notify_match`/`notify_message`/`notify_cobroke_request` in addition to the 7 columns from Milestone 9's grant (10 UPDATE rows total):
+```sql
+select grantee, privilege_type, column_name
+from information_schema.column_privileges
+where table_name = 'negotiator' and grantee = 'authenticated' and privilege_type = 'UPDATE';
+```
+
+**Ordering note:** always run migrations in numeric order (0001 through 0012). `0010_profile.sql` contains a `revoke update on negotiator` statement -- re-running it AFTER `0012_settings.sql` would silently strip the 3 notification grants added here, causing the toggles to fail with a permission error. This migration was deliberately written to never revoke, for exactly this reason, but 0010 predates that lesson.
+
+A normal smoke test after running is sufficient beyond the grant check above: open Settings > Notification and confirm all 3 toggles show as ON by default, flip one off and confirm it persists across an app restart.
+
+Consider enabling Supabase's "Secure password change" project setting (Authentication > Settings), which requires a recent login before a password change is accepted -- this codebase's password-change flow has no re-authentication step of its own, by design, since Supabase Auth's `updateUser` API has no current-password parameter.

@@ -66,6 +66,14 @@ class ProfileScreen extends ConsumerWidget {
                 Card(
                   child: Column(
                     children: [
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text('settings_section_title'.tr(), style: Theme.of(context).textTheme.titleMedium),
+                        ),
+                      ),
+                      const Divider(height: 1),
                       ListTile(
                         leading: const Icon(Icons.notifications_active),
                         title: Text('settings_notification_row_title'.tr()),

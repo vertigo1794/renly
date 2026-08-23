@@ -21,17 +21,24 @@ class SettingsRepository {
     return NotificationPreferences.fromJson(row);
   }
 
+  /// Writes only the fields that are non-null -- a genuine partial update,
+  /// not a full-row overwrite. This is load-bearing: the caller only ever
+  /// has a fresh value for the single switch that was just tapped, and
+  /// sending stale values for the other two columns (read from a
+  /// last-rendered snapshot) can silently clobber a concurrent write to
+  /// this same row. See NotificationSettingsScreen._toggle.
   Future<void> updateNotificationPreferences({
     required String negotiatorId,
-    required bool notifyMatch,
-    required bool notifyMessage,
-    required bool notifyCobrokeRequest,
+    bool? notifyMatch,
+    bool? notifyMessage,
+    bool? notifyCobrokeRequest,
   }) {
-    return _client.from('negotiator').update({
-      'notify_match': notifyMatch,
-      'notify_message': notifyMessage,
-      'notify_cobroke_request': notifyCobrokeRequest,
-    }).eq('negotiator_id', negotiatorId);
+    final payload = <String, dynamic>{
+      'notify_match': ?notifyMatch,
+      'notify_message': ?notifyMessage,
+      'notify_cobroke_request': ?notifyCobrokeRequest,
+    };
+    return _client.from('negotiator').update(payload).eq('negotiator_id', negotiatorId);
   }
 
   /// Deliberately separate from ProfileRepository.fetchMyProfile, which
