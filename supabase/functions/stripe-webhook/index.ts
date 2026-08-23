@@ -99,14 +99,27 @@ Deno.serve(async (req) => {
           typeof periodEndSeconds === "number" && Number.isFinite(periodEndSeconds)
             ? new Date(periodEndSeconds * 1000).toISOString()
             : null;
-        const { error: updateError } = await adminClient
+        // `.select("negotiator_id")` is NOT decorative -- it is what makes
+        // a zero-row match detectable. PostgREST answers an
+        // `.update(...).eq(col, value)` that matches NO row with
+        // `{ data: [], error: null }`, i.e. NOT an error. So if
+        // `stripe_customer_id` was never persisted on the negotiator row
+        // (or Stripe sent a null customer, which `as string` would turn
+        // into `.eq("stripe_customer_id", null)` -- also a match on
+        // nothing), the write would silently no-op, the `error` check
+        // below would pass, this handler would return 200, and Stripe
+        // would never retry. The tier would never flip, with no trace
+        // anywhere. Asking for the affected rows back lets us tell
+        // "updated" apart from "matched nothing" and throw on the latter.
+        const { data: updatedRows, error: updateError } = await adminClient
           .from("negotiator")
           .update({
             subscription_status: subscription.status,
             subscription_tier: tier,
             current_period_end: currentPeriodEndIso,
           })
-          .eq("stripe_customer_id", subscription.customer as string);
+          .eq("stripe_customer_id", subscription.customer as string)
+          .select("negotiator_id");
         // supabase-js does NOT throw on a database error -- it resolves
         // with an `error` field. Without this check a failed write (bad
         // grant, or 0013_subscription.sql not yet run so the columns
@@ -121,6 +134,12 @@ Deno.serve(async (req) => {
           );
           throw updateError;
         }
+        if (!updatedRows || updatedRows.length === 0) {
+          const message =
+            `stripe-webhook: ${event.type} (${event.id}) matched no negotiator for stripe_customer_id=${subscription.customer}`;
+          console.error(message);
+          throw new Error(message);
+        }
         break;
       }
       case "invoice.payment_failed": {
@@ -130,18 +149,25 @@ Deno.serve(async (req) => {
         // customer.subscription.updated with a 'canceled'/'unpaid' status
         // if it eventually gives up, which the branch above already
         // handles. This app does not invent its own grace-period logic.
-        const { error: updateError } = await adminClient
+        const { data: updatedRows, error: updateError } = await adminClient
           .from("negotiator")
           .update({ subscription_status: "past_due" })
-          .eq("stripe_customer_id", invoice.customer as string);
-        // Same swallowed-error hazard as the branch above -- see the
-        // longer note there.
+          .eq("stripe_customer_id", invoice.customer as string)
+          .select("negotiator_id");
+        // Same swallowed-error hazard as the branch above, and the same
+        // silent zero-row-match hazard -- see the longer notes there.
         if (updateError) {
           console.error(
             `stripe-webhook: ${event.type} (${event.id}) failed to update negotiator for customer ${invoice.customer}:`,
             updateError,
           );
           throw updateError;
+        }
+        if (!updatedRows || updatedRows.length === 0) {
+          const message =
+            `stripe-webhook: ${event.type} (${event.id}) matched no negotiator for stripe_customer_id=${invoice.customer}`;
+          console.error(message);
+          throw new Error(message);
         }
         break;
       }

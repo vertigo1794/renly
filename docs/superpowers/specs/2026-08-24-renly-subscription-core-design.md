@@ -31,7 +31,7 @@ SubscriptionScreen
                                        verify signature                    invoice.payment_failed
                                        update negotiator row
                                        (subscription_tier, subscription_status,
-                                        current_period_end, stripe_subscription_id)
+                                        current_period_end)
 SubscriptionScreen
   (Realtime .stream() on negotiator row)
   sees tier flip -> shows "Professional" state

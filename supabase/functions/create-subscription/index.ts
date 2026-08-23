@@ -58,10 +58,28 @@ Deno.serve(async (req) => {
         metadata: { negotiator_id: user.id },
       });
       customerId = customer.id;
-      await adminClient
+      // This write is load-bearing far beyond this request: it is the ONLY
+      // place `stripe_customer_id` gets persisted, and `stripe-webhook`
+      // looks the negotiator up by that exact column on every later
+      // subscription event. supabase-js resolves (never throws) on a
+      // database error, so letting this go unchecked meant a failed write
+      // would leave the column null while this request still returned a
+      // client secret -- the customer would pay, and every subsequent
+      // webhook would match zero rows and never flip the tier.
+      const { error: customerIdWriteError } = await adminClient
         .from("negotiator")
         .update({ stripe_customer_id: customerId })
         .eq("negotiator_id", user.id);
+      if (customerIdWriteError) {
+        console.error(
+          `create-subscription: failed to persist stripe_customer_id for negotiator ${user.id}:`,
+          customerIdWriteError,
+        );
+        return new Response(JSON.stringify({ error: "Failed to save Stripe customer id" }), {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
     }
 
     const subscription = await stripe.subscriptions.create({
