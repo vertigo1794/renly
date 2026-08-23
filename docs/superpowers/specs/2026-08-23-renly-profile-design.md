@@ -27,16 +27,25 @@ The Stitch mockup for this screen (`stitch_renly_property_agent_network/profile_
 ```sql
 alter table negotiator add column if not exists property_specialisation text;
 
--- Territory and property_specialisation are the only user-editable fields
--- on this table. Every other column (ren_number, agency_id, full_name,
--- verification_status, subscription_tier) stays unwritable by the client --
--- UPDATE was fully revoked from `negotiator` during Auth+Verification's
--- Critical self-approval fix (0002_rls_hardening.sql), and this grant is
--- the first UPDATE access the client has had on this table since.
-grant update (territory, property_specialisation) on negotiator to authenticated;
+-- IMPORTANT: 0002_rls_hardening.sql did NOT fully revoke UPDATE on
+-- negotiator -- it revoked-then-re-granted a 6-column set:
+-- (full_name, ic_number, phone_number, ren_number, agency_id, territory).
+-- REVOKE UPDATE on a table also revokes ALL existing column-level UPDATE
+-- privileges on it (this is documented Postgres behaviour, not scoped to
+-- the columns being re-granted) -- so a bare `revoke update ...` here,
+-- followed by a grant covering only (territory, property_specialisation),
+-- would silently strip the other 5 columns' write access, including
+-- ren_number/agency_id, which registration Step 2's
+-- completeProfessionalDetails() depends on. The grant below MUST restate
+-- the full desired column set, not just the two new ones.
+revoke update on negotiator from authenticated;
+grant update (full_name, ic_number, phone_number, ren_number, agency_id, territory, property_specialisation)
+  on negotiator to authenticated;
 ```
 
-No RLS policy changes needed: `negotiator_select_own` (from `0001_auth_verification.sql`) already lets a negotiator read their own full row, including the new column once added. `negotiator_update_own` already exists too — only the column grant was missing. `agency_select_all` already lets any authenticated user read agency rows, which is how the profile screen resolves the current user's agency name via their `agency_id`.
+No RLS policy changes needed: `negotiator_select_own` (from `0001_auth_verification.sql`) already lets a negotiator read their own full row, including the new column once added. `negotiator_update_own` already exists too — only the column grant was missing `property_specialisation`. `agency_select_all` already lets any authenticated user read agency rows, which is how the profile screen resolves the current user's agency name via their `agency_id`.
+
+Note: this milestone's own UI only ever writes `territory`/`property_specialisation` (the ProfileScreen edit form) -- `ren_number`/`agency_id`/etc. remain writable at the DB layer only because registration Step 2 already needed that access; nothing new in this milestone edits them.
 
 ## Repository
 

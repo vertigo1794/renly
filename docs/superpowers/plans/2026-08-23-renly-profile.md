@@ -40,16 +40,22 @@
 
 alter table negotiator add column if not exists property_specialisation text;
 
--- Territory and property_specialisation are the only user-editable fields
--- on this table. UPDATE was fully revoked from negotiator during
--- Auth+Verification's Critical self-approval fix (0002_rls_hardening.sql)
--- -- this is the first UPDATE access the client has had on this table
--- since, and it's scoped to exactly these two columns. No RLS policy
--- change is needed: negotiator_update_own (from 0001) already gates which
--- ROW can be touched (auth.uid() = negotiator_id); this grant is what
--- makes any UPDATE possible at all again, restricted to which COLUMNS.
+-- IMPORTANT: 0002_rls_hardening.sql did NOT fully revoke UPDATE on
+-- negotiator -- it revoked-then-re-granted a 6-column set:
+-- (full_name, ic_number, phone_number, ren_number, agency_id, territory).
+-- REVOKE UPDATE on a table also revokes ALL existing column-level UPDATE
+-- privileges on it (documented Postgres behaviour, not scoped to only the
+-- columns being re-granted) -- so a bare revoke here followed by a grant
+-- covering only (territory, property_specialisation) would silently strip
+-- the other 5 columns' write access, including ren_number/agency_id,
+-- which registration Step 2's completeProfessionalDetails() depends on.
+-- This grant restates the FULL desired column set, not just the two new
+-- ones. No RLS policy change is needed: negotiator_update_own (from 0001)
+-- already gates which ROW can be touched (auth.uid() = negotiator_id);
+-- this grant controls which COLUMNS.
 revoke update on negotiator from authenticated;
-grant update (territory, property_specialisation) on negotiator to authenticated;
+grant update (full_name, ic_number, phone_number, ren_number, agency_id, territory, property_specialisation)
+  on negotiator to authenticated;
 ```
 
 - [ ] **Step 2: Append README setup section**
@@ -59,7 +65,14 @@ Read `app/README.md`, find the "Milestone 8 setup (agreement)" section, and appe
 ```markdown
 ### Milestone 9 setup (profile)
 
-Run `supabase/migrations/0010_profile.sql` in the Supabase SQL Editor after 0001-0009. This adds `negotiator.property_specialisation` and grants authenticated users UPDATE on exactly `(territory, property_specialisation)` -- no other manual dashboard step.
+Run `supabase/migrations/0010_profile.sql` in the Supabase SQL Editor after 0001-0009. This adds `negotiator.property_specialisation` and re-grants UPDATE on `(full_name, ic_number, phone_number, ren_number, agency_id, territory, property_specialisation)` -- the same 6 columns 0002_rls_hardening.sql already granted, plus the new one (a bare revoke without restating all 6 would silently break registration Step 2).
+
+After running, verify the grant with this query -- expect UPDATE listed for exactly those 7 columns, and NO row for `verification_status` or `subscription_tier`:
+```sql
+select grantee, privilege_type, column_name
+from information_schema.column_privileges
+where table_name = 'negotiator' and grantee = 'authenticated';
+```
 ```
 
 - [ ] **Step 3: Verify with grep**
@@ -68,7 +81,7 @@ Run:
 ```bash
 cd "/Users/unxpected/Desktop/Semester 4/Mobile Application/RENLY"
 grep -c "alter table negotiator add column" supabase/migrations/0010_profile.sql
-grep -c "grant update (territory, property_specialisation)" supabase/migrations/0010_profile.sql
+grep -c "grant update (full_name, ic_number, phone_number, ren_number, agency_id, territory, property_specialisation)" supabase/migrations/0010_profile.sql
 ```
 Expected: `1`, `1`.
 
