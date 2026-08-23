@@ -144,6 +144,7 @@
   "profile_language_en": "English",
   "profile_language_ms": "Bahasa Melayu",
   "profile_sign_out": "Sign Out",
+  "profile_save_success": "Profile updated",
   "profile_status_approved": "Verified",
   "profile_status_pending": "Verification Pending",
   "profile_status_rejected": "Not Verified"

@@ -89,4 +89,11 @@ Run `supabase/migrations/0009_agreement.sql` in the Supabase SQL Editor after 00
 
 ## Milestone 9 setup (profile)
 
-Run `supabase/migrations/0010_profile.sql` in the Supabase SQL Editor after 0001-0009. This adds `negotiator.property_specialisation` and grants authenticated users UPDATE on exactly `(territory, property_specialisation)` -- no other manual dashboard step.
+Run `supabase/migrations/0010_profile.sql` in the Supabase SQL Editor after 0001-0009. This adds `negotiator.property_specialisation` and re-grants UPDATE on `(full_name, ic_number, phone_number, ren_number, agency_id, territory, property_specialisation)` -- the same 6 columns 0002_rls_hardening.sql already granted, plus the new one (a bare revoke without restating all 6 would silently break registration Step 2).
+
+After running, verify the grant with this query -- expect UPDATE listed for exactly those 7 columns, and NO row for `verification_status` or `subscription_tier`:
+```sql
+select grantee, privilege_type, column_name
+from information_schema.column_privileges
+where table_name = 'negotiator' and grantee = 'authenticated';
+```

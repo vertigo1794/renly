@@ -108,6 +108,10 @@ class AuthRepository {
     return _client.auth.signInWithPassword(email: email, password: password);
   }
 
+  Future<void> signOut() {
+    return _client.auth.signOut();
+  }
+
   /// Returns null if the caller has an auth session but no `negotiator`
   /// row yet (e.g. the app was killed between signUp() and Task 8's
   /// insertNegotiator() call during a previous attempt).

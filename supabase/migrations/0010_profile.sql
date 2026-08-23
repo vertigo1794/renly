@@ -6,13 +6,19 @@
 
 alter table negotiator add column if not exists property_specialisation text;
 
--- Territory and property_specialisation are the only user-editable fields
--- on this table. UPDATE was fully revoked from negotiator during
--- Auth+Verification's Critical self-approval fix (0002_rls_hardening.sql)
--- -- this is the first UPDATE access the client has had on this table
--- since, and it's scoped to exactly these two columns. No RLS policy
--- change is needed: negotiator_update_own (from 0001) already gates which
--- ROW can be touched (auth.uid() = negotiator_id); this grant is what
--- makes any UPDATE possible at all again, restricted to which COLUMNS.
+-- IMPORTANT: 0002_rls_hardening.sql did NOT fully revoke UPDATE on
+-- negotiator -- it revoked-then-re-granted a 6-column set:
+-- (full_name, ic_number, phone_number, ren_number, agency_id, territory).
+-- REVOKE UPDATE on a table also revokes ALL existing column-level UPDATE
+-- privileges on it (documented Postgres behaviour, not scoped to only the
+-- columns being re-granted) -- so a bare revoke here followed by a grant
+-- covering only (territory, property_specialisation) would silently strip
+-- the other 5 columns' write access, including ren_number/agency_id,
+-- which registration Step 2's completeProfessionalDetails() depends on.
+-- This grant restates the FULL desired column set, not just the two new
+-- ones. No RLS policy change is needed: negotiator_update_own (from 0001)
+-- already gates which ROW can be touched (auth.uid() = negotiator_id);
+-- this grant controls which COLUMNS.
 revoke update on negotiator from authenticated;
-grant update (territory, property_specialisation) on negotiator to authenticated;
+grant update (full_name, ic_number, phone_number, ren_number, agency_id, territory, property_specialisation)
+  on negotiator to authenticated;

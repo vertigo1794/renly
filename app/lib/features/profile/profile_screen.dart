@@ -2,8 +2,8 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../auth/auth_providers.dart';
 import 'models/profile.dart';
 import 'profile_providers.dart';
 
@@ -50,33 +50,9 @@ class ProfileScreen extends ConsumerWidget {
                   error: (error, stack) => const SizedBox.shrink(),
                   data: (counts) => Row(
                     children: [
-                      Expanded(
-                        child: Card(
-                          child: Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Column(
-                              children: [
-                                Text('${counts.$1}', style: Theme.of(context).textTheme.headlineSmall),
-                                Text('profile_active_listings_label'.tr()),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
+                      Expanded(child: _StatCard(value: counts.$1, label: 'profile_active_listings_label'.tr())),
                       const SizedBox(width: 12),
-                      Expanded(
-                        child: Card(
-                          child: Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Column(
-                              children: [
-                                Text('${counts.$2}', style: Theme.of(context).textTheme.headlineSmall),
-                                Text('profile_deals_closed_label'.tr()),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
+                      Expanded(child: _StatCard(value: counts.$2, label: 'profile_deals_closed_label'.tr())),
                     ],
                   ),
                 ),
@@ -95,12 +71,45 @@ class ProfileScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 32),
                 OutlinedButton(
-                  onPressed: () => Supabase.instance.client.auth.signOut(),
+                  onPressed: () async {
+                    try {
+                      await ref.read(authRepositoryProvider).signOut();
+                    } catch (_) {
+                      // Sign-out already clears the local session before any
+                      // network call and swallows most HTTP errors -- a
+                      // rethrow here would only be a transport failure after
+                      // the local session is already gone, so the redirect
+                      // to '/' still happens regardless. Swallow rather than
+                      // show an error the user can't act on.
+                    }
+                  },
                   child: Text('profile_sign_out'.tr()),
                 ),
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _StatCard extends StatelessWidget {
+  const _StatCard({required this.value, required this.label});
+
+  final int value;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Text('$value', style: Theme.of(context).textTheme.headlineSmall),
+            Text(label),
+          ],
         ),
       ),
     );
@@ -167,6 +176,11 @@ class _EditFormState extends ConsumerState<_EditForm> {
                 _specialisationController.text.trim().isEmpty ? null : _specialisationController.text.trim(),
           );
       ref.invalidate(myProfileProvider);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('profile_save_success'.tr())),
+        );
+      }
     } catch (_) {
       if (mounted) setState(() => _submitError = 'listing_error_generic'.tr());
     } finally {

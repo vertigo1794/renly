@@ -15,7 +15,7 @@ class ProfileRepository {
   Future<Profile> fetchMyProfile(String negotiatorId) async {
     final row = await _client
         .from('negotiator')
-        .select()
+        .select('negotiator_id, full_name, ren_number, agency_id, territory, property_specialisation, verification_status')
         .eq('negotiator_id', negotiatorId)
         .single();
     final agencyId = row['agency_id'] as String?;
