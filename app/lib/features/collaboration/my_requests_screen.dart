@@ -8,6 +8,8 @@ import 'agreement_providers.dart' hide currentNegotiatorIdProvider;
 import 'cobroke_request_providers.dart';
 import 'models/cobroke_request_candidate.dart';
 import 'propose_agreement_dialog.dart';
+import '../ratings/rate_dialog.dart';
+import '../ratings/rating_providers.dart' hide currentNegotiatorIdProvider;
 
 /// Both directions of cobroke_request in one screen -- Received (requests
 /// where the viewer can act) and Sent (requests the viewer initiated,
@@ -99,6 +101,8 @@ class _RequestList extends ConsumerWidget {
               final candidate = requests[index];
               final isMyListing = candidate.match.listing.negotiatorId == currentNegotiatorId;
               final counterpartyOwner = isMyListing ? candidate.match.requirementOwner : candidate.match.listingOwner;
+              final counterpartyNegotiatorId =
+                  isMyListing ? candidate.match.requirement.negotiatorId : candidate.match.listing.negotiatorId;
 
               return Card(
                 margin: const EdgeInsets.only(bottom: 16),
@@ -166,6 +170,7 @@ class _RequestList extends ConsumerWidget {
                         _AgreementSection(
                           requestId: candidate.request.requestId,
                           currentNegotiatorId: currentNegotiatorId,
+                          ratedId: counterpartyNegotiatorId,
                         ),
                       ],
                     ],
@@ -190,10 +195,15 @@ String _formatSplitPercent(double value) {
 }
 
 class _AgreementSection extends ConsumerWidget {
-  const _AgreementSection({required this.requestId, required this.currentNegotiatorId});
+  const _AgreementSection({
+    required this.requestId,
+    required this.currentNegotiatorId,
+    required this.ratedId,
+  });
 
   final String requestId;
   final String? currentNegotiatorId;
+  final String ratedId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -320,8 +330,63 @@ class _AgreementSection extends ConsumerWidget {
             Text(acceptedAt == null
                 ? 'agreement_accepted_on'.tr()
                 : '${'agreement_accepted_on'.tr()} ${acceptedAt.day}/${acceptedAt.month}/${acceptedAt.year}'),
+            const SizedBox(height: 8),
+            _RatingSection(
+              agreementId: agreement.agreementId,
+              raterId: currentNegotiatorId!,
+              ratedId: ratedId,
+            ),
           ],
         );
+      },
+    );
+  }
+}
+
+class _RatingSection extends ConsumerWidget {
+  const _RatingSection({required this.agreementId, required this.raterId, required this.ratedId});
+
+  final String agreementId;
+  final String raterId;
+  final String ratedId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final ratingAsync = ref.watch(myRatingForAgreementProvider(agreementId));
+
+    return ratingAsync.when(
+      loading: () => const SizedBox.shrink(),
+      error: (error, stack) => const SizedBox.shrink(),
+      data: (rating) {
+        if (rating == null) {
+          return OutlinedButton(
+            onPressed: () => showDialog<void>(
+              context: context,
+              barrierDismissible: false,
+              builder: (_) => RateDialog(agreementId: agreementId, raterId: raterId, ratedId: ratedId),
+            ),
+            child: Text('rating_rate_button'.tr()),
+          );
+        }
+
+        final withinEditWindow = DateTime.now().difference(rating.createdAt) < const Duration(hours: 24);
+        if (withinEditWindow) {
+          return OutlinedButton(
+            onPressed: () => showDialog<void>(
+              context: context,
+              barrierDismissible: false,
+              builder: (_) => RateDialog(
+                agreementId: agreementId,
+                raterId: raterId,
+                ratedId: ratedId,
+                existingRating: rating,
+              ),
+            ),
+            child: Text('rating_edit_button'.tr()),
+          );
+        }
+
+        return Text('${'rating_you_rated'.tr()}: ${rating.stars}');
       },
     );
   }

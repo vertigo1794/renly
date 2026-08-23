@@ -18,6 +18,8 @@ import 'package:renly/features/collaboration/my_requests_screen.dart';
 import 'package:renly/features/listing/models/listing.dart';
 import 'package:renly/features/listing/models/listing_owner.dart';
 import 'package:renly/features/matching/models/match_candidate.dart';
+import 'package:renly/features/ratings/models/rating.dart';
+import 'package:renly/features/ratings/rating_providers.dart' hide currentNegotiatorIdProvider;
 import 'package:renly/features/requirement/models/requirement.dart';
 
 const _myListing = Listing(
@@ -77,6 +79,8 @@ Widget _wrap(
   List<CobrokeRequestCandidate>? sent,
   String? agreementRequestId,
   Agreement? agreement,
+  String? ratingAgreementId,
+  Rating? rating,
 }) {
   return ProviderScope(
     overrides: [
@@ -85,6 +89,8 @@ Widget _wrap(
       sentRequestsProvider.overrideWith((ref) async => sent ?? const []),
       if (agreementRequestId != null)
         agreementForRequestProvider(agreementRequestId).overrideWith((ref) async => agreement),
+      if (ratingAgreementId != null)
+        myRatingForAgreementProvider(ratingAgreementId).overrideWith((ref) async => rating),
     ],
     child: EasyLocalization(
       supportedLocales: const [Locale('en'), Locale('ms')],
@@ -414,5 +420,144 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Propose Agreement'), findsOneWidget);
+  });
+
+  testWidgets('shows Rate button when accepted agreement has no rating yet', (tester) async {
+    final accepted = [
+      CobrokeRequestCandidate(
+        request: CobrokeRequest(
+          requestId: 'req-10',
+          matchId: 'm-10',
+          initiatorId: 'n-2',
+          status: 'accepted',
+          createdAt: DateTime(2026, 8, 24),
+        ),
+        match: _matchCandidate,
+      ),
+    ];
+    final agreement = Agreement(
+      agreementId: 'agr-5',
+      requestId: 'req-10',
+      initiatorId: 'n-2',
+      splitInitiator: 50,
+      splitCounterparty: 50,
+      status: 'accepted',
+      acceptedAt: DateTime(2026, 8, 24),
+      createdAt: DateTime(2026, 8, 24),
+    );
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const MyRequestsScreen()),
+    ]);
+
+    await tester.pumpWidget(_wrap(
+      router,
+      received: accepted,
+      agreementRequestId: 'req-10',
+      agreement: agreement,
+      ratingAgreementId: 'agr-5',
+      rating: null,
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Rate'), findsOneWidget);
+  });
+
+  testWidgets('shows Edit rating button within the 24-hour window', (tester) async {
+    final accepted = [
+      CobrokeRequestCandidate(
+        request: CobrokeRequest(
+          requestId: 'req-11',
+          matchId: 'm-11',
+          initiatorId: 'n-2',
+          status: 'accepted',
+          createdAt: DateTime(2026, 8, 24),
+        ),
+        match: _matchCandidate,
+      ),
+    ];
+    final agreement = Agreement(
+      agreementId: 'agr-6',
+      requestId: 'req-11',
+      initiatorId: 'n-2',
+      splitInitiator: 50,
+      splitCounterparty: 50,
+      status: 'accepted',
+      acceptedAt: DateTime(2026, 8, 24),
+      createdAt: DateTime(2026, 8, 24),
+    );
+    final recentRating = Rating(
+      ratingId: 'rat-10',
+      agreementId: 'agr-6',
+      raterId: 'n-1',
+      ratedId: 'n-2',
+      stars: 4,
+      createdAt: DateTime.now().subtract(const Duration(hours: 1)),
+    );
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const MyRequestsScreen()),
+    ]);
+
+    await tester.pumpWidget(_wrap(
+      router,
+      received: accepted,
+      agreementRequestId: 'req-11',
+      agreement: agreement,
+      ratingAgreementId: 'agr-6',
+      rating: recentRating,
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Edit rating'), findsOneWidget);
+    expect(find.text('Rate'), findsNothing);
+  });
+
+  testWidgets('shows read-only "you rated" text past the 24-hour window', (tester) async {
+    final accepted = [
+      CobrokeRequestCandidate(
+        request: CobrokeRequest(
+          requestId: 'req-12',
+          matchId: 'm-12',
+          initiatorId: 'n-2',
+          status: 'accepted',
+          createdAt: DateTime(2026, 8, 24),
+        ),
+        match: _matchCandidate,
+      ),
+    ];
+    final agreement = Agreement(
+      agreementId: 'agr-7',
+      requestId: 'req-12',
+      initiatorId: 'n-2',
+      splitInitiator: 50,
+      splitCounterparty: 50,
+      status: 'accepted',
+      acceptedAt: DateTime(2026, 8, 24),
+      createdAt: DateTime(2026, 8, 24),
+    );
+    final oldRating = Rating(
+      ratingId: 'rat-11',
+      agreementId: 'agr-7',
+      raterId: 'n-1',
+      ratedId: 'n-2',
+      stars: 2,
+      createdAt: DateTime.now().subtract(const Duration(hours: 25)),
+    );
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const MyRequestsScreen()),
+    ]);
+
+    await tester.pumpWidget(_wrap(
+      router,
+      received: accepted,
+      agreementRequestId: 'req-12',
+      agreement: agreement,
+      ratingAgreementId: 'agr-7',
+      rating: oldRating,
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.text('You rated: 2'), findsOneWidget);
+    expect(find.text('Rate'), findsNothing);
+    expect(find.text('Edit rating'), findsNothing);
   });
 }
