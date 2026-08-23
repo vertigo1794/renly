@@ -205,5 +205,7 @@
   "settings_subscription_row_title": "Langganan",
   "settings_subscription_row_subtitle": "Urus pelan dan bil anda",
   "listing_active_count_label": "penyenaraian aktif",
-  "listing_cap_reached_message": "Anda telah mencapai had 3 penyenaraian aktif pelan Percuma. Naik taraf ke Profesional utk penyenaraian tanpa had."
+  "listing_cap_reached_message": "Anda telah mencapai had 3 penyenaraian aktif pelan Percuma. Naik taraf ke Profesional utk penyenaraian tanpa had.",
+  "requirement_active_count_label": "keperluan aktif",
+  "requirement_cap_reached_message": "Anda telah mencapai had 3 keperluan aktif pelan Percuma. Naik taraf ke Profesional utk keperluan tanpa had."
 }

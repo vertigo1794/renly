@@ -10,6 +10,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../core/constants/malaysian_states.dart';
 import '../matching/matching_providers.dart' hide currentNegotiatorIdProvider;
 import 'requirement_providers.dart';
+import '../subscription/subscription_providers.dart' hide currentNegotiatorIdProvider;
 
 /// Separate screen from PostListingScreen -- see the design doc for why the
 /// mockup's tab toggle isn't retrofitted into the shared, already-tested
@@ -147,6 +148,14 @@ class _PostRequirementScreenState extends ConsumerState<PostRequirementScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final negotiatorId = ref.watch(currentNegotiatorIdProvider);
+    final tierAsync = ref.watch(subscriptionStatusProvider);
+    final countAsync = negotiatorId == null
+        ? const AsyncValue<int>.data(0)
+        : ref.watch(activeRequirementCountProvider(negotiatorId));
+    final activeCount = countAsync.valueOrNull ?? 0;
+    final atCap = tierAsync.valueOrNull?.tier == 'free' && activeCount >= 3;
+
     return Scaffold(
       appBar: AppBar(title: Text('requirement_post_title'.tr())),
       body: SafeArea(
@@ -295,13 +304,24 @@ class _PostRequirementScreenState extends ConsumerState<PostRequirementScreen> {
                       ),
                   ],
                 ),
+                if (tierAsync.valueOrNull?.tier == 'free') ...[
+                  const SizedBox(height: 12),
+                  Text('$activeCount/3 ${'requirement_active_count_label'.tr()}'),
+                ],
+                if (atCap) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    'requirement_cap_reached_message'.tr(),
+                    style: TextStyle(color: Theme.of(context).colorScheme.error),
+                  ),
+                ],
                 if (_submitError != null) ...[
                   const SizedBox(height: 12),
                   Text(_submitError!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
                 ],
                 const SizedBox(height: 24),
                 ElevatedButton(
-                  onPressed: _submitting ? null : _submit,
+                  onPressed: (_submitting || atCap) ? null : _submit,
                   child: Text('requirement_post_now'.tr()),
                 ),
               ],

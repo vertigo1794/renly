@@ -205,5 +205,7 @@
   "settings_subscription_row_title": "Subscription",
   "settings_subscription_row_subtitle": "Manage your plan and billing",
   "listing_active_count_label": "active listings",
-  "listing_cap_reached_message": "You've reached the Free plan's limit of 3 active listings. Upgrade to Professional for unlimited listings."
+  "listing_cap_reached_message": "You've reached the Free plan's limit of 3 active listings. Upgrade to Professional for unlimited listings.",
+  "requirement_active_count_label": "active requirements",
+  "requirement_cap_reached_message": "You've reached the Free plan's limit of 3 active requirements. Upgrade to Professional for unlimited requirements."
 }
