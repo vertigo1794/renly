@@ -99,46 +99,102 @@ Deno.serve(async (req) => {
           typeof periodEndSeconds === "number" && Number.isFinite(periodEndSeconds)
             ? new Date(periodEndSeconds * 1000).toISOString()
             : null;
-        // `.select("negotiator_id")` is NOT decorative -- it is what makes
-        // a zero-row match detectable. PostgREST answers an
-        // `.update(...).eq(col, value)` that matches NO row with
-        // `{ data: [], error: null }`, i.e. NOT an error. So if
-        // `stripe_customer_id` was never persisted on the negotiator row
-        // (or Stripe sent a null customer, which `as string` would turn
-        // into `.eq("stripe_customer_id", null)` -- also a match on
+        // `.select("negotiator_id")` on both branches below is NOT
+        // decorative -- it is what makes a zero-row match detectable.
+        // PostgREST answers an `.update(...).eq(col, value)` that matches
+        // NO row with `{ data: [], error: null }`, i.e. NOT an error. So
+        // if `stripe_customer_id` was never persisted on the negotiator
+        // row (or Stripe sent a null customer, which `as string` would
+        // turn into `.eq("stripe_customer_id", null)` -- also a match on
         // nothing), the write would silently no-op, the `error` check
-        // below would pass, this handler would return 200, and Stripe
-        // would never retry. The tier would never flip, with no trace
-        // anywhere. Asking for the affected rows back lets us tell
-        // "updated" apart from "matched nothing" and throw on the latter.
-        const { data: updatedRows, error: updateError } = await adminClient
-          .from("negotiator")
-          .update({
-            subscription_status: subscription.status,
-            subscription_tier: tier,
-            current_period_end: currentPeriodEndIso,
-          })
-          .eq("stripe_customer_id", subscription.customer as string)
-          .select("negotiator_id");
-        // supabase-js does NOT throw on a database error -- it resolves
-        // with an `error` field. Without this check a failed write (bad
+        // would pass, this handler would return 200, and Stripe would
+        // never retry. The tier would never flip, with no trace anywhere.
+        // Asking for the affected rows back lets us tell "updated" apart
+        // from "matched nothing" -- which the two branches then treat
+        // very differently, see below.
+        //
+        // Also note that both branches check `error` explicitly:
+        // supabase-js does NOT throw on a database error, it resolves
+        // with an `error` field. Without that check a failed write (bad
         // grant, or 0013_subscription.sql not yet run so the columns
-        // don't exist) would still fall through to the 200 below, Stripe
-        // would consider the delivery successful and never retry, and
-        // the tier flip would be silently lost. Throwing hands it to the
-        // outer catch, which returns 500 and makes Stripe retry.
-        if (updateError) {
-          console.error(
-            `stripe-webhook: ${event.type} (${event.id}) failed to update negotiator for customer ${subscription.customer}:`,
-            updateError,
-          );
-          throw updateError;
-        }
-        if (!updatedRows || updatedRows.length === 0) {
-          const message =
-            `stripe-webhook: ${event.type} (${event.id}) matched no negotiator for stripe_customer_id=${subscription.customer}`;
-          console.error(message);
-          throw new Error(message);
+        // don't exist) would fall through to the 200 below, Stripe would
+        // consider the delivery successful and never retry, and the tier
+        // flip would be silently lost. Throwing hands it to the outer
+        // catch, which returns 500 and makes Stripe retry.
+        if (tier === "professional") {
+          // Any event that GRANTS professional access always takes effect
+          // and claims this subscription as the current one for this
+          // customer. That claim is what lets a legitimate re-subscribe
+          // after a fully-resolved cancellation correctly become
+          // authoritative, and it is also what later lets a downgrade
+          // tell "this is the subscription we're tracking" apart from
+          // "this is an old, superseded one".
+          const { data: updatedRows, error: updateError } = await adminClient
+            .from("negotiator")
+            .update({
+              subscription_status: subscription.status,
+              subscription_tier: "professional",
+              stripe_subscription_id: subscription.id,
+              current_period_end: currentPeriodEndIso,
+            })
+            .eq("stripe_customer_id", subscription.customer as string)
+            .select("negotiator_id");
+          if (updateError) {
+            console.error(
+              `stripe-webhook: ${event.type} (${event.id}) failed to grant professional tier for customer ${subscription.customer}:`,
+              updateError,
+            );
+            throw updateError;
+          }
+          if (!updatedRows || updatedRows.length === 0) {
+            // A grant that matches nothing IS an error -- the customer id
+            // should always resolve to exactly one negotiator. Throw so
+            // Stripe retries.
+            const message =
+              `stripe-webhook: ${event.type} (${event.id}) matched no negotiator for stripe_customer_id=${subscription.customer}`;
+            console.error(message);
+            throw new Error(message);
+          }
+        } else {
+          // Only apply a DOWNGRADE if THIS subscription is still the one
+          // currently on file. An old/abandoned subscription being
+          // cleaned up -- e.g. an unpaid `incomplete` subscription that
+          // Stripe auto-expires ~23h after it was created, because the
+          // user dismissed the PaymentSheet on a first attempt and paid
+          // on a second one -- must not clobber a row that has since
+          // claimed a different, successful subscription. Without this
+          // extra `.eq`, that stale expiry event silently downgraded a
+          // paying user to 'free' and nulled their current_period_end
+          // while Stripe kept billing them, with no in-app way back
+          // (Manage Subscription only renders at professional tier).
+          //
+          // A zero-row match here is therefore an EXPECTED, legitimate
+          // outcome (a stale event for a superseded subscription), NOT an
+          // error -- so it is logged for visibility and deliberately not
+          // thrown. Throwing would make Stripe retry the delivery
+          // forever for an event that can never match again.
+          const { data: updatedRows, error: updateError } = await adminClient
+            .from("negotiator")
+            .update({
+              subscription_status: subscription.status,
+              subscription_tier: "free",
+              current_period_end: currentPeriodEndIso,
+            })
+            .eq("stripe_customer_id", subscription.customer as string)
+            .eq("stripe_subscription_id", subscription.id)
+            .select("negotiator_id");
+          if (updateError) {
+            console.error(
+              `stripe-webhook: ${event.type} (${event.id}) failed to downgrade for customer ${subscription.customer}:`,
+              updateError,
+            );
+            throw updateError;
+          }
+          if (!updatedRows || updatedRows.length === 0) {
+            console.error(
+              `stripe-webhook: ${event.type} (${event.id}) skipped downgrade for stale subscription ${subscription.id} (customer ${subscription.customer}) -- not the current subscription on file`,
+            );
+          }
         }
         break;
       }
@@ -149,25 +205,61 @@ Deno.serve(async (req) => {
         // customer.subscription.updated with a 'canceled'/'unpaid' status
         // if it eventually gives up, which the branch above already
         // handles. This app does not invent its own grace-period logic.
+        // Which subscription this invoice belongs to. Read with the same
+        // defensiveness as `current_period_end` above and for exactly the
+        // same reason: the inbound payload's shape is set by the API
+        // version pinned on the webhook ENDPOINT, not by the `apiVersion`
+        // passed to `new Stripe(...)`. Recent API versions moved this off
+        // the top-level `subscription` field and under
+        // `parent.subscription_details.subscription`, so the top-level
+        // field can simply be absent on a newer account.
+        const invoiceRecord = invoice as unknown as Record<string, unknown>;
+        const parent = invoiceRecord["parent"] as Record<string, unknown> | undefined;
+        const subscriptionDetails = parent?.["subscription_details"] as
+          | Record<string, unknown>
+          | undefined;
+        const rawInvoiceSubscription = invoice.subscription ??
+          subscriptionDetails?.["subscription"];
+        const invoiceSubscriptionId = typeof rawInvoiceSubscription === "string"
+          ? rawInvoiceSubscription
+          : (rawInvoiceSubscription as Stripe.Subscription | undefined)?.id;
+
+        if (!invoiceSubscriptionId) {
+          // Nothing to key on. A one-off (non-subscription) invoice can
+          // legitimately land here, and marking the negotiator past_due
+          // on the strength of the customer id alone is exactly the
+          // unguarded write this branch is being fixed to avoid.
+          console.error(
+            `stripe-webhook: ${event.type} (${event.id}) has no resolvable subscription id (customer ${invoice.customer}) -- skipping past_due`,
+          );
+          break;
+        }
+
+        // Guarded on `stripe_subscription_id` for the same reason the
+        // downgrade branch above is: a failed invoice belonging to an
+        // old, superseded subscription must not mark a negotiator
+        // past_due when their CURRENT subscription is paying fine. As
+        // there too, a zero-row match is an expected outcome for a stale
+        // event -- logged, not thrown, so Stripe doesn't retry forever.
         const { data: updatedRows, error: updateError } = await adminClient
           .from("negotiator")
           .update({ subscription_status: "past_due" })
           .eq("stripe_customer_id", invoice.customer as string)
+          .eq("stripe_subscription_id", invoiceSubscriptionId)
           .select("negotiator_id");
-        // Same swallowed-error hazard as the branch above, and the same
-        // silent zero-row-match hazard -- see the longer notes there.
+        // Same swallowed-error hazard as the branch above -- see the
+        // longer notes there.
         if (updateError) {
           console.error(
-            `stripe-webhook: ${event.type} (${event.id}) failed to update negotiator for customer ${invoice.customer}:`,
+            `stripe-webhook: ${event.type} (${event.id}) failed to mark past_due for customer ${invoice.customer}:`,
             updateError,
           );
           throw updateError;
         }
         if (!updatedRows || updatedRows.length === 0) {
-          const message =
-            `stripe-webhook: ${event.type} (${event.id}) matched no negotiator for stripe_customer_id=${invoice.customer}`;
-          console.error(message);
-          throw new Error(message);
+          console.error(
+            `stripe-webhook: ${event.type} (${event.id}) skipped past_due for stale subscription ${invoiceSubscriptionId} (customer ${invoice.customer}) -- not the current subscription on file`,
+          );
         }
         break;
       }

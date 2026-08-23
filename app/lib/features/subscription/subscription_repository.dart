@@ -41,6 +41,17 @@ class SubscriptionRepository {
         .from('negotiator')
         .stream(primaryKey: ['negotiator_id'])
         .eq('negotiator_id', negotiatorId)
-        .map((rows) => SubscriptionStatus.fromJson(rows.first));
+        .map((rows) {
+          // A bare `rows.first` throws `StateError: No element` here,
+          // which says nothing about what actually went wrong. An empty
+          // snapshot means the negotiator row is genuinely missing (or
+          // unreadable), so name that in the message -- otherwise the
+          // error surfaces on the Subscription screen as a generic
+          // failure with no way to tell it apart from a network problem.
+          if (rows.isEmpty) {
+            throw StateError('No negotiator row found for id $negotiatorId');
+          }
+          return SubscriptionStatus.fromJson(rows.first);
+        });
   }
 }

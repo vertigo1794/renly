@@ -82,21 +82,82 @@ Deno.serve(async (req) => {
       }
     }
 
-    const subscription = await stripe.subscriptions.create({
+    // Create-ONCE for the Subscription, mirroring the create-once logic
+    // for the Customer above. Calling stripe.subscriptions.create
+    // unconditionally here was a real, reachable money bug, not a
+    // theoretical one: a user taps Upgrade, dismisses the PaymentSheet
+    // (which leaves a live, `incomplete` Subscription behind on Stripe's
+    // side), then taps Upgrade again and pays on the SECOND one. ~23
+    // hours later Stripe auto-expires the FIRST, never-paid subscription
+    // and fires customer.subscription.updated/.deleted for it with
+    // status `incomplete_expired` -- which the webhook, keyed only on
+    // the customer id, would happily apply, downgrading a paying user to
+    // 'free' while Stripe keeps billing their real subscription. The
+    // webhook now also guards on stripe_subscription_id, but not
+    // manufacturing the duplicate in the first place is the actual fix.
+    const existingSubscriptions = await stripe.subscriptions.list({
       customer: customerId,
-      items: [{ price: PROFESSIONAL_PRICE_ID }],
-      payment_behavior: "default_incomplete",
-      payment_settings: { save_default_payment_method: "on_subscription" },
-      expand: ["latest_invoice.payment_intent"],
+      status: "all",
+      price: PROFESSIONAL_PRICE_ID,
+      limit: 10,
     });
+    const reusable = existingSubscriptions.data.find((s) =>
+      ["incomplete", "active", "trialing", "past_due"].includes(s.status)
+    );
 
-    await adminClient
+    let subscription: Stripe.Subscription;
+    if (reusable) {
+      if (["active", "trialing"].includes(reusable.status)) {
+        // Already paying. Nothing to do here -- the client should be
+        // showing the professional tier and the Manage Subscription
+        // button, not the upgrade flow.
+        return new Response(JSON.stringify({ error: "Already subscribed" }), {
+          status: 409,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+      // Reuse the existing incomplete/past_due subscription instead of
+      // creating a duplicate -- re-expand to get a fresh (or the same,
+      // still-valid) PaymentIntent client secret.
+      subscription = await stripe.subscriptions.retrieve(reusable.id, {
+        expand: ["latest_invoice.payment_intent"],
+      });
+    } else {
+      subscription = await stripe.subscriptions.create({
+        customer: customerId,
+        items: [{ price: PROFESSIONAL_PRICE_ID }],
+        payment_behavior: "default_incomplete",
+        payment_settings: { save_default_payment_method: "on_subscription" },
+        expand: ["latest_invoice.payment_intent"],
+      });
+    }
+
+    // Checked for the same reason the stripe_customer_id write above is:
+    // supabase-js resolves (never throws) on a database error. This write
+    // used to go unchecked on the grounds that nothing read the column --
+    // that is no longer true. `stripe-webhook` now matches on
+    // `stripe_subscription_id` before applying any DOWNGRADE, so a
+    // silently-failed write here would leave the column stale or null and
+    // make every legitimate cancellation event look like a stale event
+    // for a superseded subscription, i.e. the tier would never drop back
+    // to 'free'. The column is load-bearing now, so the write is checked.
+    const { error: subscriptionWriteError } = await adminClient
       .from("negotiator")
       .update({
         stripe_subscription_id: subscription.id,
         subscription_status: subscription.status,
       })
       .eq("negotiator_id", user.id);
+    if (subscriptionWriteError) {
+      console.error(
+        `create-subscription: failed to persist stripe_subscription_id for negotiator ${user.id}:`,
+        subscriptionWriteError,
+      );
+      return new Response(JSON.stringify({ error: "Failed to save subscription id" }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
 
     const invoice = subscription.latest_invoice as Stripe.Invoice;
     const paymentIntent = invoice.payment_intent as Stripe.PaymentIntent;

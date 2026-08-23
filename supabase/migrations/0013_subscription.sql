@@ -37,3 +37,25 @@ create unique index negotiator_stripe_customer_id_idx
 -- grant (never revoked in this migration set, same as ic_number/
 -- phone_number) -- a negotiator can read their own subscription details,
 -- just never write them directly.
+
+-- Enable Realtime delivery for this table. Without this, .stream()
+-- subscriptions receive the initial row set but never see live updates.
+-- Same guarded pattern as 0008_messaging.sql used for `message`.
+--
+-- This is load-bearing for the whole live tier-flip feature:
+-- SubscriptionRepository.subscriptionStream watches this row so the
+-- Subscription screen swaps out of "Processing..." the moment
+-- stripe-webhook writes subscription_tier = 'professional'. Without the
+-- table in the publication the stream delivers its initial snapshot once
+-- and then never emits again -- the database value would be correct, but
+-- every paying user would sit on "This is taking longer than expected"
+-- until they manually tapped Refresh.
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'negotiator'
+  ) then
+    alter publication supabase_realtime add table negotiator;
+  end if;
+end $$;

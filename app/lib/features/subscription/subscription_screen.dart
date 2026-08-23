@@ -50,11 +50,40 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
         _upgradeProcessing = true;
         _processingTimedOut = false;
       });
+      // The Realtime stream can emit 'professional' BEFORE this line --
+      // stripe-webhook fires the instant the payment confirms, which can
+      // beat presentPaymentSheet() resolving. ref.listen's callback in
+      // build() already ran for that emission (while _upgradeProcessing
+      // was still false, so it did nothing) and will NOT run again for
+      // the same value, so switching into the processing state now would
+      // strand the screen on "Processing..." for the full 15 seconds
+      // despite the upgrade already being complete. Read the current
+      // value once here and short-circuit out instead of waiting for an
+      // emission that has already been and gone.
+      if (ref.read(subscriptionStatusProvider).valueOrNull?.tier == 'professional') {
+        setState(() {
+          _upgradeProcessing = false;
+          _processingTimedOut = false;
+        });
+        return;
+      }
       _timeoutTimer?.cancel();
       _timeoutTimer = Timer(const Duration(seconds: 15), () {
         if (mounted) setState(() => _processingTimedOut = true);
       });
     } on StripeException catch (e) {
+      // Dismissing the native PaymentSheet is a StripeException with
+      // FailureCode.Canceled -- a deliberate user action, not a failure.
+      // Showing red error text for it is worse than cosmetic here: by
+      // this point create-subscription has already left a real,
+      // billable-later Stripe Subscription on the server, and a user who
+      // reads "error" as "that failed, try again" is precisely the user
+      // who used to manufacture duplicate subscriptions. Return silently
+      // -- no error, no state change; the finally block still clears
+      // _submitting.
+      if (e.error.code == FailureCode.Canceled) {
+        return;
+      }
       if (mounted) setState(() => _submitError = e.error.localizedMessage ?? 'listing_error_generic'.tr());
     } catch (_) {
       if (mounted) setState(() => _submitError = 'listing_error_generic'.tr());
@@ -70,7 +99,15 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
     });
     try {
       final url = await ref.read(subscriptionRepositoryProvider).createPortalSession();
-      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+      // launchUrl RETURNS false (it does not throw) when no installed app
+      // can handle the URL -- e.g. no browser on the device. Unchecked,
+      // that made this button a completely silent no-op: the spinner
+      // stops, nothing happens, and the user has no idea the billing
+      // portal never opened.
+      final launched = await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+      if (!launched && mounted) {
+        setState(() => _submitError = 'listing_error_generic'.tr());
+      }
     } catch (_) {
       if (mounted) setState(() => _submitError = 'listing_error_generic'.tr());
     } finally {

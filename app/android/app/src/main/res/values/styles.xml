@@ -1,7 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Theme applied to the Android Window while the process is starting when the OS's Dark Mode setting is off -->
-    <style name="LaunchTheme" parent="@android:style/Theme.Light.NoTitleBar">
+    <!-- Parent MUST stay in the AppCompat/MaterialComponents lineage. Stripe's
+         Android SDK inflates AppCompat views and throws at runtime under a
+         plain platform theme ("You need to use a Theme.AppCompat theme (or
+         descendant) with this activity"), which would kill the PaymentSheet
+         before it ever appears. The values-night/ variant supplies the dark
+         colours, so the light Light.NoActionBar variant is used here rather
+         than DayNight. -->
+    <style name="LaunchTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
         <!-- Show a splash screen on the activity. Automatically removed when
              the Flutter engine draws its first frame -->
         <item name="android:windowBackground">@drawable/launch_background</item>
@@ -12,7 +19,7 @@
          running.
 
          This Theme is only used starting with V2 of Flutter's Android embedding. -->
-    <style name="NormalTheme" parent="@android:style/Theme.Light.NoTitleBar">
+    <style name="NormalTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
         <item name="android:windowBackground">?android:colorBackground</item>
     </style>
 </resources>

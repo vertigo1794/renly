@@ -1,0 +1,17 @@
+project_id = "renly"
+
+# `stripe-webhook` MUST be deployed with JWT verification disabled: Stripe
+# calls it directly from its own servers and carries no Supabase session,
+# so with the default behaviour every real webhook delivery is rejected
+# with a 401 before the handler runs. Declaring it here is the structural
+# backstop for the `--no-verify-jwt` flag documented in the function's own
+# header comment -- the setting travels with the repo and survives any
+# future redeploy even if someone forgets the flag.
+#
+# Note: `project_id` above is a LOCAL identifier only (it is what
+# `supabase init` defaults to the working-directory name). It is NOT the
+# remote Supabase project ref -- `supabase functions deploy` takes that
+# from `supabase link` or an explicit `--project-ref`, independently of
+# this file.
+[functions.stripe-webhook]
+verify_jwt = false

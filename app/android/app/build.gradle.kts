@@ -42,3 +42,18 @@ android {
 flutter {
     source = "../.."
 }
+
+dependencies {
+    // Required by the Theme.MaterialComponents.* parents this module's own
+    // res/values/styles.xml and res/values-night/styles.xml now use (needed
+    // so Stripe's PaymentSheet has an AppCompat-descendant theme to inflate
+    // under). This IS already on the runtime classpath transitively -- the
+    // stripe_android plugin declares
+    // `implementation 'com.google.android.material:material:1.6.0'` -- but a
+    // theme parent referenced from THIS module's resources should not depend
+    // on another module's private `implementation` dependency continuing to
+    // exist. Declared explicitly so the resource reference cannot break if
+    // flutter_stripe ever drops or renames it. Gradle resolves to the
+    // highest requested version, so this also supersedes the 1.6.0 above.
+    implementation("com.google.android.material:material:1.12.0")
+}
