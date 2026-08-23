@@ -203,5 +203,7 @@
   "subscription_processing_timeout": "This is taking longer than expected.",
   "subscription_refresh_button": "Refresh",
   "settings_subscription_row_title": "Subscription",
-  "settings_subscription_row_subtitle": "Manage your plan and billing"
+  "settings_subscription_row_subtitle": "Manage your plan and billing",
+  "listing_active_count_label": "active listings",
+  "listing_cap_reached_message": "You've reached the Free plan's limit of 3 active listings. Upgrade to Professional for unlimited listings."
 }

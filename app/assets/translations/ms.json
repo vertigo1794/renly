@@ -203,5 +203,7 @@
   "subscription_processing_timeout": "Ini mengambil masa lebih lama dari dijangka.",
   "subscription_refresh_button": "Muat Semula",
   "settings_subscription_row_title": "Langganan",
-  "settings_subscription_row_subtitle": "Urus pelan dan bil anda"
+  "settings_subscription_row_subtitle": "Urus pelan dan bil anda",
+  "listing_active_count_label": "penyenaraian aktif",
+  "listing_cap_reached_message": "Anda telah mencapai had 3 penyenaraian aktif pelan Percuma. Naik taraf ke Profesional utk penyenaraian tanpa had."
 }

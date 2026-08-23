@@ -10,6 +10,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../core/constants/malaysian_states.dart';
 import '../matching/matching_providers.dart' hide currentNegotiatorIdProvider;
 import 'listing_providers.dart';
+import '../subscription/subscription_providers.dart' hide currentNegotiatorIdProvider;
 
 /// Ports stitch_renly_property_agent_network/post_listing's "Sediakan
 /// Listing" branch only -- see the design doc's "Scope split" section for
@@ -162,6 +163,14 @@ class _PostListingScreenState extends ConsumerState<PostListingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final negotiatorId = ref.watch(currentNegotiatorIdProvider);
+    final tierAsync = ref.watch(subscriptionStatusProvider);
+    final countAsync = negotiatorId == null
+        ? const AsyncValue<int>.data(0)
+        : ref.watch(activeListingCountProvider(negotiatorId));
+    final activeCount = countAsync.valueOrNull ?? 0;
+    final atCap = tierAsync.valueOrNull?.tier == 'free' && activeCount >= 3;
+
     return Scaffold(
       appBar: AppBar(title: Text('listing_post_title'.tr())),
       body: SafeArea(
@@ -327,13 +336,24 @@ class _PostListingScreenState extends ConsumerState<PostListingScreen> {
                       ),
                   ],
                 ),
+                if (tierAsync.valueOrNull?.tier == 'free') ...[
+                  const SizedBox(height: 12),
+                  Text('$activeCount/3 ${'listing_active_count_label'.tr()}'),
+                ],
+                if (atCap) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    'listing_cap_reached_message'.tr(),
+                    style: TextStyle(color: Theme.of(context).colorScheme.error),
+                  ),
+                ],
                 if (_submitError != null) ...[
                   const SizedBox(height: 12),
                   Text(_submitError!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
                 ],
                 const SizedBox(height: 24),
                 ElevatedButton(
-                  onPressed: _submitting ? null : _submit,
+                  onPressed: (_submitting || atCap) ? null : _submit,
                   child: Text('listing_post_now'.tr()),
                 ),
               ],
