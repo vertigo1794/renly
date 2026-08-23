@@ -86,3 +86,7 @@ Run `supabase/migrations/0008_messaging.sql` in the Supabase SQL Editor after 00
 ## Milestone 8 setup (agreement)
 
 Run `supabase/migrations/0009_agreement.sql` in the Supabase SQL Editor after 0001-0008. This creates the `agreement` table, its RLS policies, and a trigger that sets `accepted_at` server-side when an agreement's status moves to `accepted` -- no manual dashboard step beyond running the SQL.
+
+## Milestone 9 setup (profile)
+
+Run `supabase/migrations/0010_profile.sql` in the Supabase SQL Editor after 0001-0009. This adds `negotiator.property_specialisation` and grants authenticated users UPDATE on exactly `(territory, property_specialisation)` -- no other manual dashboard step.
