@@ -30,6 +30,7 @@ import '../../features/settings/account_settings_screen.dart';
 import '../../features/settings/help_screen.dart';
 import '../../features/settings/notification_settings_screen.dart';
 import '../../features/settings/privacy_screen.dart';
+import '../../features/subscription/subscription_screen.dart';
 
 const _publicRoutes = {'/', '/login', '/register/personal', '/register/professional'};
 
@@ -143,6 +144,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/settings/account', builder: (context, state) => const AccountSettingsScreen()),
       GoRoute(path: '/settings/privacy', builder: (context, state) => const PrivacyScreen()),
       GoRoute(path: '/settings/help', builder: (context, state) => const HelpScreen()),
+      GoRoute(path: '/settings/subscription', builder: (context, state) => const SubscriptionScreen()),
     ],
   );
 });

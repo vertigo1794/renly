@@ -102,6 +102,13 @@ class ProfileScreen extends ConsumerWidget {
                         trailing: const Icon(Icons.chevron_right),
                         onTap: () => context.push('/settings/help'),
                       ),
+                      ListTile(
+                        leading: const Icon(Icons.workspace_premium),
+                        title: Text('settings_subscription_row_title'.tr()),
+                        subtitle: Text('settings_subscription_row_subtitle'.tr()),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () => context.push('/settings/subscription'),
+                      ),
                     ],
                   ),
                 ),

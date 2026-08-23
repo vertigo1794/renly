@@ -141,4 +141,21 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('notification screen'), findsOneWidget);
   });
+
+  testWidgets('renders the Subscription row and navigates to it on tap', (tester) async {
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const ProfileScreen()),
+      GoRoute(path: '/settings/subscription', builder: (context, state) => const Text('subscription screen')),
+    ]);
+
+    await tester.pumpWidget(_wrap(router));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Subscription'), findsOneWidget);
+
+    await tester.ensureVisible(find.text('Subscription'));
+    await tester.tap(find.text('Subscription'));
+    await tester.pumpAndSettle();
+    expect(find.text('subscription screen'), findsOneWidget);
+  });
 }

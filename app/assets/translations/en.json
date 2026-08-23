@@ -201,5 +201,7 @@
   "subscription_status_past_due": "Payment past due",
   "subscription_processing": "Processing your upgrade...",
   "subscription_processing_timeout": "This is taking longer than expected.",
-  "subscription_refresh_button": "Refresh"
+  "subscription_refresh_button": "Refresh",
+  "settings_subscription_row_title": "Subscription",
+  "settings_subscription_row_subtitle": "Manage your plan and billing"
 }

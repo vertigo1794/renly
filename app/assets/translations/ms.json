@@ -201,5 +201,7 @@
   "subscription_status_past_due": "Pembayaran tertunggak",
   "subscription_processing": "Memproses naik taraf anda...",
   "subscription_processing_timeout": "Ini mengambil masa lebih lama dari dijangka.",
-  "subscription_refresh_button": "Muat Semula"
+  "subscription_refresh_button": "Muat Semula",
+  "settings_subscription_row_title": "Langganan",
+  "settings_subscription_row_subtitle": "Urus pelan dan bil anda"
 }
