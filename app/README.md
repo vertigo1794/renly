@@ -127,3 +127,9 @@ where table_name = 'negotiator' and grantee = 'authenticated' and privilege_type
 A normal smoke test after running is sufficient beyond the grant check above: open Settings > Notification and confirm all 3 toggles show as ON by default, flip one off and confirm it persists across an app restart.
 
 Consider enabling Supabase's "Secure password change" project setting (Authentication > Settings), which requires a recent login before a password change is accepted -- this codebase's password-change flow has no re-authentication step of its own, by design, since Supabase Auth's `updateUser` API has no current-password parameter.
+
+## Milestone 12 setup (subscription)
+
+Run `supabase/migrations/0013_subscription.sql` in the Supabase SQL Editor after 0001-0012. This adds 4 nullable columns to `negotiator` for Stripe subscription state -- no grant statement of any kind is added for them, ever (unlike every other new-column migration in this project). They are written only by the `stripe-webhook` Edge Function using the Supabase service role key, which bypasses grants and RLS entirely.
+
+This milestone also requires deploying 3 new Supabase Edge Functions and configuring a Stripe account (test mode) -- see the Subscription Core design doc (`docs/superpowers/specs/2026-08-24-renly-subscription-core-design.md`) for the full manual setup sequence (Stripe account, Price creation, secrets, Edge Function deployment with `--no-verify-jwt` on `stripe-webhook`, webhook registration). This is NOT just a SQL paste-and-run step like every prior migration -- the migration alone does nothing useful until the Edge Functions are deployed and the webhook is registered.
