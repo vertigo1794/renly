@@ -137,9 +137,19 @@ class _TrustScoreCard extends ConsumerWidget {
             ? 'profile_no_ratings_yet'.tr()
             : (candidates.map((c) => c.rating.stars).reduce((a, b) => a + b) / candidates.length)
                 .toStringAsFixed(1);
-        return InkWell(
-          onTap: () => context.push('/reviews'),
-          child: _StatCard(value: display, label: 'profile_trust_score_label'.tr()),
+        return Card(
+          child: InkWell(
+            onTap: () => context.push('/reviews'),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  Text(display, style: Theme.of(context).textTheme.headlineSmall),
+                  Text('profile_trust_score_label'.tr()),
+                ],
+              ),
+            ),
+          ),
         );
       },
     );

@@ -25,6 +25,12 @@ drop index if exists rating_one_per_rater_per_agreement;
 create unique index rating_one_per_rater_per_agreement
   on rating(agreement_id, rater_id);
 
+-- fetchRatingsForNegotiator filters on rated_id, queried on every Profile
+-- and Reviews screen view. The unique index above is on
+-- (agreement_id, rater_id) and can't serve this lookup.
+drop index if exists rating_rated_id_created_at_idx;
+create index rating_rated_id_created_at_idx on rating(rated_id, created_at desc);
+
 create or replace function rating_set_updated_at() returns trigger as $$
 begin
   new.updated_at := now();
@@ -46,8 +52,20 @@ create trigger rating_set_updated_at_trigger
 -- rater_id and rated_id are independently party members (and distinct
 -- from each other, enforced separately) is sufficient to prove they are
 -- the two opposite sides -- no explicit pairing logic needed.
+--
+-- SECURITY DEFINER is required, not stylistic: as SECURITY INVOKER (the
+-- default) this function runs as the calling `authenticated` role, and
+-- listing_select/requirement_select ("negotiator_id = auth.uid() or
+-- status = 'active'/'open'") hide a listing/requirement the instant its
+-- owner marks it sold/fulfilled/withdrawn -- exactly the moment a deal
+-- is complete and rating becomes relevant. Without this, checking
+-- whether rated_id is still a visible party would silently fail for the
+-- non-initiator once their side of the deal closes, the same zero-rows
+-- trap get_listing_owner_info was created to escape (0004_listing_hardening.sql).
 create or replace function is_agreement_party(p_agreement_id uuid, p_negotiator_id uuid) returns boolean
-language sql stable as $$
+language sql stable
+security definer
+set search_path = public as $$
   select exists (
     select 1 from agreement a
     join cobroke_request cr on cr.request_id = a.request_id
@@ -60,6 +78,9 @@ language sql stable as $$
       )
   );
 $$;
+
+revoke execute on function is_agreement_party(uuid, uuid) from public;
+grant execute on function is_agreement_party(uuid, uuid) to authenticated;
 
 alter table rating enable row level security;
 
