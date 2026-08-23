@@ -158,5 +158,9 @@
   "rating_reviews_empty": "Belum ada ulasan",
   "profile_status_approved": "Disahkan",
   "profile_status_pending": "Menunggu Pengesahan",
-  "profile_status_rejected": "Tidak Disahkan"
+  "profile_status_rejected": "Tidak Disahkan",
+  "notification_settings_title": "Notifikasi",
+  "notification_settings_match_label": "Padanan baharu",
+  "notification_settings_message_label": "Mesej baharu",
+  "notification_settings_cobroke_request_label": "Permintaan co-broke baharu"
 }

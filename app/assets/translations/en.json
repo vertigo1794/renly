@@ -158,5 +158,9 @@
   "rating_reviews_empty": "No reviews yet",
   "profile_status_approved": "Verified",
   "profile_status_pending": "Verification Pending",
-  "profile_status_rejected": "Not Verified"
+  "profile_status_rejected": "Not Verified",
+  "notification_settings_title": "Notification",
+  "notification_settings_match_label": "New matches",
+  "notification_settings_message_label": "New messages",
+  "notification_settings_cobroke_request_label": "New co-broke requests"
 }
