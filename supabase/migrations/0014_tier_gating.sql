@@ -5,8 +5,8 @@
 -- migration.
 
 -- Only gates transitions INTO 'active' -- a brand new listing, or
--- reactivation of a withdrawn one via PropertyDetailScreen's "Mark
--- Active" button (which calls the same updateListingStatus path as
+-- reactivation of a withdrawn one via PropertyDetailScreen's "Reactivate
+-- Listing" button (which calls the same updateListingStatus path as
 -- PostListingScreen's initial create). Does nothing when status stays
 -- active, moves OUT of active (sold/withdrawn), or an unrelated field
 -- (price, description, photos) is edited on an already-active row.
