@@ -131,5 +131,20 @@
   "agreement_decline": "Tolak",
   "agreement_waiting_response": "Menunggu respons",
   "agreement_accepted_on": "Diterima pada",
-  "agreement_retry": "Cuba lagi"
+  "agreement_retry": "Cuba lagi",
+  "profile_title": "Profil",
+  "profile_ren_number_label": "Nombor Pendaftaran",
+  "profile_agency_label": "Agensi",
+  "profile_territory_label": "Kawasan Operasi",
+  "profile_specialisation_label": "Kepakaran Hartanah",
+  "profile_save": "Simpan",
+  "profile_active_listings_label": "Penyenaraian Aktif",
+  "profile_deals_closed_label": "Deal Selesai",
+  "profile_language_label": "Bahasa",
+  "profile_language_en": "English",
+  "profile_language_ms": "Bahasa Melayu",
+  "profile_sign_out": "Log Keluar",
+  "profile_status_approved": "Disahkan",
+  "profile_status_pending": "Menunggu Pengesahan",
+  "profile_status_rejected": "Tidak Disahkan"
 }

@@ -131,5 +131,20 @@
   "agreement_decline": "Decline",
   "agreement_waiting_response": "Waiting for response",
   "agreement_accepted_on": "Accepted on",
-  "agreement_retry": "Retry"
+  "agreement_retry": "Retry",
+  "profile_title": "Profile",
+  "profile_ren_number_label": "Registration Number",
+  "profile_agency_label": "Agency",
+  "profile_territory_label": "Territory",
+  "profile_specialisation_label": "Property Specialisation",
+  "profile_save": "Save",
+  "profile_active_listings_label": "Active Listings",
+  "profile_deals_closed_label": "Deals Closed",
+  "profile_language_label": "Language",
+  "profile_language_en": "English",
+  "profile_language_ms": "Bahasa Melayu",
+  "profile_sign_out": "Sign Out",
+  "profile_status_approved": "Verified",
+  "profile_status_pending": "Verification Pending",
+  "profile_status_rejected": "Not Verified"
 }
