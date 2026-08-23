@@ -41,7 +41,18 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
             notifyMessage: notifyMessage,
             notifyCobrokeRequest: notifyCobrokeRequest,
           );
+      // Await the refetch itself, not just fire ref.invalidate -- otherwise
+      // clearing the override here races the stale cached value that
+      // AsyncValue.when renders during the refetch window (riverpod 2.6.1
+      // defaults skipLoadingOnRefresh to true), and the switch visibly
+      // bounces back to the pre-tap value before landing on the real one.
       ref.invalidate(notificationPreferencesProvider);
+      try {
+        await ref.read(notificationPreferencesProvider.future);
+      } catch (_) {
+        // A refetch failure after a successful write shouldn't surface as
+        // a write error -- the write already succeeded.
+      }
       if (mounted) {
         setState(() {
           if (notifyMatch != null) _matchOverride = null;
