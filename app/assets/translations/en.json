@@ -182,5 +182,14 @@
   "help_faq_q3": "Can I edit a rating after I submit it?",
   "help_faq_a3": "Yes, within 24 hours of submitting it. After that, the rating becomes permanent.",
   "help_contact_title": "Contact Support",
-  "help_contact_body": "For help with your account or verification, email support@renly.app."
+  "help_contact_body": "For help with your account or verification, email support@renly.app.",
+  "settings_section_title": "App Settings",
+  "settings_notification_row_title": "Notification",
+  "settings_notification_row_subtitle": "Manage alerts and sounds",
+  "settings_account_row_title": "Account",
+  "settings_account_row_subtitle": "Security, password, and identity",
+  "settings_privacy_row_title": "Privacy",
+  "settings_privacy_row_subtitle": "Data sharing and visibility",
+  "settings_help_row_title": "Help",
+  "settings_help_row_subtitle": "Support, FAQ, and contact"
 }

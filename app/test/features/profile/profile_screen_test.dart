@@ -118,4 +118,27 @@ void main() {
     expect(find.text('No ratings yet'), findsOneWidget);
     expect(find.text('Trust Score'), findsOneWidget);
   });
+
+  testWidgets('renders the 4 settings rows and navigates to each on tap', (tester) async {
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const ProfileScreen()),
+      GoRoute(path: '/settings/notification', builder: (context, state) => const Text('notification screen')),
+      GoRoute(path: '/settings/account', builder: (context, state) => const Text('account screen')),
+      GoRoute(path: '/settings/privacy', builder: (context, state) => const Text('privacy screen')),
+      GoRoute(path: '/settings/help', builder: (context, state) => const Text('help screen')),
+    ]);
+
+    await tester.pumpWidget(_wrap(router));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Notification'), findsOneWidget);
+    expect(find.text('Account'), findsOneWidget);
+    expect(find.text('Privacy'), findsOneWidget);
+    expect(find.text('Help'), findsOneWidget);
+
+    await tester.ensureVisible(find.text('Notification'));
+    await tester.tap(find.text('Notification'));
+    await tester.pumpAndSettle();
+    expect(find.text('notification screen'), findsOneWidget);
+  });
 }

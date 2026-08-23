@@ -63,6 +63,41 @@ class ProfileScreen extends ConsumerWidget {
                 const SizedBox(height: 20),
                 _EditForm(profile: profile),
                 const SizedBox(height: 20),
+                Card(
+                  child: Column(
+                    children: [
+                      ListTile(
+                        leading: const Icon(Icons.notifications_active),
+                        title: Text('settings_notification_row_title'.tr()),
+                        subtitle: Text('settings_notification_row_subtitle'.tr()),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () => context.push('/settings/notification'),
+                      ),
+                      ListTile(
+                        leading: const Icon(Icons.manage_accounts),
+                        title: Text('settings_account_row_title'.tr()),
+                        subtitle: Text('settings_account_row_subtitle'.tr()),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () => context.push('/settings/account'),
+                      ),
+                      ListTile(
+                        leading: const Icon(Icons.privacy_tip),
+                        title: Text('settings_privacy_row_title'.tr()),
+                        subtitle: Text('settings_privacy_row_subtitle'.tr()),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () => context.push('/settings/privacy'),
+                      ),
+                      ListTile(
+                        leading: const Icon(Icons.help_outline),
+                        title: Text('settings_help_row_title'.tr()),
+                        subtitle: Text('settings_help_row_subtitle'.tr()),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () => context.push('/settings/help'),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
                 Text('profile_language_label'.tr(), style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: 8),
                 SegmentedButton<String>(

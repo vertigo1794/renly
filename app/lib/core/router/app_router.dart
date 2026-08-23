@@ -26,6 +26,10 @@ import '../../features/requirement/my_requirements_screen.dart';
 import '../../features/requirement/post_requirement_screen.dart';
 import '../../features/requirement/requirement_board_screen.dart';
 import '../../features/requirement/requirement_detail_screen.dart';
+import '../../features/settings/account_settings_screen.dart';
+import '../../features/settings/help_screen.dart';
+import '../../features/settings/notification_settings_screen.dart';
+import '../../features/settings/privacy_screen.dart';
 
 const _publicRoutes = {'/', '/login', '/register/personal', '/register/professional'};
 
@@ -135,6 +139,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(path: '/profile', builder: (context, state) => const ProfileScreen()),
       GoRoute(path: '/reviews', builder: (context, state) => const ReviewsScreen()),
+      GoRoute(path: '/settings/notification', builder: (context, state) => const NotificationSettingsScreen()),
+      GoRoute(path: '/settings/account', builder: (context, state) => const AccountSettingsScreen()),
+      GoRoute(path: '/settings/privacy', builder: (context, state) => const PrivacyScreen()),
+      GoRoute(path: '/settings/help', builder: (context, state) => const HelpScreen()),
     ],
   );
 });

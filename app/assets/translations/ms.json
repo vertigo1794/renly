@@ -182,5 +182,14 @@
   "help_faq_q3": "Boleh saya edit penilaian selepas hantar?",
   "help_faq_a3": "Boleh, dalam masa 24 jam selepas menghantarnya. Selepas itu, penilaian menjadi kekal.",
   "help_contact_title": "Hubungi Sokongan",
-  "help_contact_body": "Untuk bantuan berkaitan akaun atau pengesahan, e-mel support@renly.app."
+  "help_contact_body": "Untuk bantuan berkaitan akaun atau pengesahan, e-mel support@renly.app.",
+  "settings_section_title": "Tetapan Aplikasi",
+  "settings_notification_row_title": "Notifikasi",
+  "settings_notification_row_subtitle": "Urus makluman dan bunyi",
+  "settings_account_row_title": "Akaun",
+  "settings_account_row_subtitle": "Keselamatan, kata laluan, dan identiti",
+  "settings_privacy_row_title": "Privasi",
+  "settings_privacy_row_subtitle": "Perkongsian data dan keterlihatan",
+  "settings_help_row_title": "Bantuan",
+  "settings_help_row_subtitle": "Sokongan, soalan lazim, dan hubungi"
 }
