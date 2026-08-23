@@ -129,6 +129,22 @@ class _EditFormState extends ConsumerState<_EditForm> {
     _specialisationController = TextEditingController(text: widget.profile.propertySpecialisation ?? '');
   }
 
+  // After a successful save, ref.invalidate(myProfileProvider) causes
+  // ProfileScreen to rebuild with a fresh Profile instance -- but since
+  // _EditForm occupies the same slot with the same widget type, Flutter
+  // reuses this State and initState does NOT re-run, so the controllers
+  // would otherwise never resync to the newly-fetched canonical values.
+  @override
+  void didUpdateWidget(covariant _EditForm oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.profile.territory != oldWidget.profile.territory) {
+      _territoryController.text = widget.profile.territory ?? '';
+    }
+    if (widget.profile.propertySpecialisation != oldWidget.profile.propertySpecialisation) {
+      _specialisationController.text = widget.profile.propertySpecialisation ?? '';
+    }
+  }
+
   @override
   void dispose() {
     _territoryController.dispose();
