@@ -170,5 +170,17 @@
   "account_settings_new_password_label": "New Password",
   "account_settings_confirm_password_label": "Confirm New Password",
   "account_settings_submit": "Update Password",
-  "account_settings_password_success": "Password updated"
+  "account_settings_password_success": "Password updated",
+  "privacy_title": "Privacy",
+  "privacy_body": "Renly collects your name, IC number, phone number, REN number, and agency to verify you as a licensed real estate negotiator. Your name and REN number are visible to other negotiators when you list a property, post a requirement, or receive a match -- this is required for the co-broking process to work. Your IC number and phone number are never shown to other negotiators; they are used only for verification. Ratings and reviews you receive are visible to any verified negotiator using the app, as a trust signal for potential collaborators.",
+  "help_title": "Help",
+  "help_faq_title": "Frequently Asked Questions",
+  "help_faq_q1": "How do I get verified?",
+  "help_faq_a1": "Complete registration with your IC and REN number, then wait for an administrator to approve your account. You'll see a Verification Pending screen until this happens.",
+  "help_faq_q2": "Why can't I see a listing or requirement I used to see?",
+  "help_faq_a2": "Listings and requirements only stay visible while active or open. Once marked sold, fulfilled, or withdrawn, they're hidden from everyone except their owner.",
+  "help_faq_q3": "Can I edit a rating after I submit it?",
+  "help_faq_a3": "Yes, within 24 hours of submitting it. After that, the rating becomes permanent.",
+  "help_contact_title": "Contact Support",
+  "help_contact_body": "For help with your account or verification, email support@renly.app."
 }

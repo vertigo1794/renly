@@ -170,5 +170,17 @@
   "account_settings_new_password_label": "Kata Laluan Baharu",
   "account_settings_confirm_password_label": "Sahkan Kata Laluan Baharu",
   "account_settings_submit": "Kemas Kini Kata Laluan",
-  "account_settings_password_success": "Kata laluan dikemas kini"
+  "account_settings_password_success": "Kata laluan dikemas kini",
+  "privacy_title": "Privasi",
+  "privacy_body": "Renly mengumpul nama, nombor IC, nombor telefon, nombor REN, dan agensi anda untuk mengesahkan anda sebagai negotiator hartanah berlesen. Nama dan nombor REN anda kelihatan kepada negotiator lain apabila anda menyenaraikan hartanah, memuat naik keperluan, atau menerima padanan -- ini diperlukan untuk proses co-broking berfungsi. Nombor IC dan nombor telefon anda tidak pernah ditunjukkan kepada negotiator lain; ia digunakan hanya untuk pengesahan. Penilaian dan ulasan yang anda terima kelihatan kepada mana-mana negotiator yang disahkan menggunakan aplikasi ini, sebagai isyarat kepercayaan untuk bakal rakan kerjasama.",
+  "help_title": "Bantuan",
+  "help_faq_title": "Soalan Lazim",
+  "help_faq_q1": "Bagaimana saya boleh disahkan?",
+  "help_faq_a1": "Lengkapkan pendaftaran dengan nombor IC dan REN anda, kemudian tunggu pentadbir meluluskan akaun anda. Anda akan melihat skrin Menunggu Pengesahan sehingga ini berlaku.",
+  "help_faq_q2": "Kenapa saya tak boleh nampak penyenaraian atau keperluan yang saya pernah nampak?",
+  "help_faq_a2": "Penyenaraian dan keperluan hanya kekal kelihatan semasa aktif atau terbuka. Selepas ditanda terjual, dipenuhi, atau ditarik balik, ia disembunyikan daripada semua orang kecuali pemiliknya.",
+  "help_faq_q3": "Boleh saya edit penilaian selepas hantar?",
+  "help_faq_a3": "Boleh, dalam masa 24 jam selepas menghantarnya. Selepas itu, penilaian menjadi kekal.",
+  "help_contact_title": "Hubungi Sokongan",
+  "help_contact_body": "Untuk bantuan berkaitan akaun atau pengesahan, e-mel support@renly.app."
 }
