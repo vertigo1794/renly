@@ -21,6 +21,7 @@ import '../../features/matching/matches_for_listing_screen.dart';
 import '../../features/matching/matches_for_requirement_screen.dart';
 import '../../features/matching/my_matches_screen.dart';
 import '../../features/profile/profile_screen.dart';
+import '../../features/ratings/reviews_screen.dart';
 import '../../features/requirement/my_requirements_screen.dart';
 import '../../features/requirement/post_requirement_screen.dart';
 import '../../features/requirement/requirement_board_screen.dart';
@@ -133,6 +134,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => ChatScreen(requestId: state.pathParameters['requestId']!),
       ),
       GoRoute(path: '/profile', builder: (context, state) => const ProfileScreen()),
+      GoRoute(path: '/reviews', builder: (context, state) => const ReviewsScreen()),
     ],
   );
 });
