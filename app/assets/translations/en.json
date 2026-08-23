@@ -191,5 +191,15 @@
   "settings_privacy_row_title": "Privacy",
   "settings_privacy_row_subtitle": "Data sharing and visibility",
   "settings_help_row_title": "Help",
-  "settings_help_row_subtitle": "Support, FAQ, and contact"
+  "settings_help_row_subtitle": "Support, FAQ, and contact",
+  "subscription_title": "Subscription",
+  "subscription_free_tier_label": "Free Plan",
+  "subscription_professional_tier_label": "Professional Plan",
+  "subscription_upgrade_button": "Upgrade to Professional",
+  "subscription_manage_button": "Manage Subscription",
+  "subscription_renews_on_label": "Renews on",
+  "subscription_status_past_due": "Payment past due",
+  "subscription_processing": "Processing your upgrade...",
+  "subscription_processing_timeout": "This is taking longer than expected.",
+  "subscription_refresh_button": "Refresh"
 }

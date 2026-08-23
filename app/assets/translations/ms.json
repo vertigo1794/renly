@@ -191,5 +191,15 @@
   "settings_privacy_row_title": "Privasi",
   "settings_privacy_row_subtitle": "Perkongsian data dan keterlihatan",
   "settings_help_row_title": "Bantuan",
-  "settings_help_row_subtitle": "Sokongan, soalan lazim, dan hubungi"
+  "settings_help_row_subtitle": "Sokongan, soalan lazim, dan hubungi",
+  "subscription_title": "Langganan",
+  "subscription_free_tier_label": "Pelan Percuma",
+  "subscription_professional_tier_label": "Pelan Profesional",
+  "subscription_upgrade_button": "Naik Taraf ke Profesional",
+  "subscription_manage_button": "Urus Langganan",
+  "subscription_renews_on_label": "Diperbaharui pada",
+  "subscription_status_past_due": "Pembayaran tertunggak",
+  "subscription_processing": "Memproses naik taraf anda...",
+  "subscription_processing_timeout": "Ini mengambil masa lebih lama dari dijangka.",
+  "subscription_refresh_button": "Muat Semula"
 }
