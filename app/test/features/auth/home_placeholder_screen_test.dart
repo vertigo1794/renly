@@ -170,4 +170,24 @@ void main() {
 
     expect(find.text('my-requests-screen'), findsOneWidget);
   });
+
+  testWidgets('tapping the profile icon navigates to /profile', (tester) async {
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const HomePlaceholderScreen()),
+      GoRoute(path: '/marketplace', builder: (context, state) => const Placeholder()),
+      GoRoute(path: '/my-inventory', builder: (context, state) => const Placeholder()),
+      GoRoute(path: '/requirement-board', builder: (context, state) => const Placeholder()),
+      GoRoute(path: '/my-requirements', builder: (context, state) => const Placeholder()),
+      GoRoute(path: '/my-matches', builder: (context, state) => const Placeholder()),
+      GoRoute(path: '/my-requests', builder: (context, state) => const Placeholder()),
+      GoRoute(path: '/profile', builder: (context, state) => const Text('profile-screen')),
+    ]);
+
+    await tester.pumpWidget(_wrap(router));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.person));
+    await tester.pumpAndSettle();
+
+    expect(find.text('profile-screen'), findsOneWidget);
+  });
 }
