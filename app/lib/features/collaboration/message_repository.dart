@@ -1,4 +1,6 @@
 // app/lib/features/collaboration/message_repository.dart
+import 'dart:async';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -6,7 +8,6 @@ import '../listing/listing_repository.dart';
 import '../listing/models/listing_owner.dart';
 import '../notifications/models/push_payload.dart';
 import '../notifications/push_notification_repository.dart';
-import '../notifications/recipient_resolver.dart';
 import 'models/message.dart';
 
 /// The only file in this app that talks to Supabase for the message
@@ -30,24 +31,21 @@ class MessageRepository {
       'sender_id': senderId,
       'body': body,
     });
-    await _notifyNewMessage(requestId: requestId, senderId: senderId);
+    unawaited(_notifyNewMessage(requestId: requestId, senderId: senderId));
   }
 
   Future<void> _notifyNewMessage({required String requestId, required String senderId}) async {
     try {
       final requestRow = await _client
           .from('cobroke_request')
-          .select('match!inner(listing!inner(negotiator_id), requirement!inner(negotiator_id))')
+          .select('match_id')
           .eq('request_id', requestId)
           .single();
-      final match = requestRow['match'] as Map<String, dynamic>;
-      final listingNegotiatorId = (match['listing'] as Map<String, dynamic>)['negotiator_id'] as String;
-      final requirementNegotiatorId = (match['requirement'] as Map<String, dynamic>)['negotiator_id'] as String;
-      final recipientId = resolveOtherPartyInMatch(
-        actorId: senderId,
-        listingNegotiatorId: listingNegotiatorId,
-        requirementNegotiatorId: requirementNegotiatorId,
-      );
+      final matchId = requestRow['match_id'] as String;
+      final recipientId = await _client.rpc(
+        'get_other_party_in_match',
+        params: {'p_match_id': matchId, 'p_actor_id': senderId},
+      ) as String?;
       if (recipientId == null) return;
       await _pushNotificationRepository.sendPushNotification(PushPayload(
         recipientNegotiatorId: recipientId,

@@ -88,13 +88,19 @@ class _RenlyAppState extends ConsumerState<RenlyApp> {
   Future<void> _registerToken() async {
     final session = Supabase.instance.client.auth.currentSession;
     if (session == null) return;
-    await FirebaseMessaging.instance.requestPermission();
-    final token = await FirebaseMessaging.instance.getToken();
-    if (token == null) return;
-    await ref.read(fcmTokenRepositoryProvider).registerToken(
-          negotiatorId: session.user.id,
-          token: token,
-        );
+    try {
+      await FirebaseMessaging.instance.requestPermission();
+      final token = await FirebaseMessaging.instance.getToken();
+      if (token == null) return;
+      await ref.read(fcmTokenRepositoryProvider).registerToken(
+            negotiatorId: session.user.id,
+            token: token,
+          );
+    } catch (_) {
+      // Best-effort, same as every push-send call site in this module --
+      // e.g. no Google Play Services on this device/emulator. Push
+      // notifications are simply unavailable, never a crash.
+    }
   }
 
   Map<String, String> _stringData(Map<String, dynamic> data) =>

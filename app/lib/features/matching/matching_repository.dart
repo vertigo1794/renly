@@ -1,4 +1,6 @@
 // app/lib/features/matching/matching_repository.dart
+import 'dart:async';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -50,7 +52,7 @@ class MatchingRepository {
       final requirementId = row['requirement_id'] as String?;
       final recipientId = requirementId == null ? null : ownerByRequirementId[requirementId];
       if (recipientId == null) continue;
-      await _notifyMatch(recipientId, ownerSide: 'requirement', listingId: null, requirementId: requirementId);
+      unawaited(_notifyMatch(recipientId, ownerSide: 'requirement', listingId: null, requirementId: requirementId));
     }
   }
 
@@ -74,7 +76,7 @@ class MatchingRepository {
       final listingId = row['listing_id'] as String?;
       final recipientId = listingId == null ? null : ownerByListingId[listingId];
       if (recipientId == null) continue;
-      await _notifyMatch(recipientId, ownerSide: 'listing', listingId: listingId, requirementId: null);
+      unawaited(_notifyMatch(recipientId, ownerSide: 'listing', listingId: listingId, requirementId: null));
     }
   }
 

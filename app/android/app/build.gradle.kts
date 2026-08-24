@@ -1,9 +1,20 @@
 plugins {
     id("com.android.application")
     id("kotlin-android")
-    id("com.google.gms.google-services")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+}
+
+// google-services.json is a user-provided file (Milestone 15 setup, never
+// committed -- see .gitignore). Applying this plugin unconditionally fails
+// the ENTIRE Android build (not just push notifications) the moment the
+// file is absent, which would regress every prior milestone for a fresh
+// clone. Gate it on the file's presence instead -- main.dart's own
+// Firebase.initializeApp() try/catch already handles the resulting
+// "Firebase not configured" case gracefully at the Dart level; this just
+// lets the build reach that point at all.
+if (rootProject.file("app/google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
 }
 
 android {

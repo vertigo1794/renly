@@ -1,4 +1,6 @@
 // app/lib/features/collaboration/cobroke_request_repository.dart
+import 'dart:async';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -9,7 +11,6 @@ import '../matching/models/match.dart';
 import '../matching/models/match_candidate.dart';
 import '../notifications/models/push_payload.dart';
 import '../notifications/push_notification_repository.dart';
-import '../notifications/recipient_resolver.dart';
 import '../requirement/models/requirement.dart';
 import 'models/cobroke_request.dart';
 import 'models/cobroke_request_candidate.dart';
@@ -29,23 +30,15 @@ class CobrokeRequestRepository {
       'match_id': matchId,
       'initiator_id': initiatorId,
     });
-    await _notifyNewRequest(matchId: matchId, initiatorId: initiatorId);
+    unawaited(_notifyNewRequest(matchId: matchId, initiatorId: initiatorId));
   }
 
   Future<void> _notifyNewRequest({required String matchId, required String initiatorId}) async {
     try {
-      final matchRow = await _client
-          .from('match')
-          .select('listing!inner(negotiator_id), requirement!inner(negotiator_id)')
-          .eq('match_id', matchId)
-          .single();
-      final listingNegotiatorId = (matchRow['listing'] as Map<String, dynamic>)['negotiator_id'] as String;
-      final requirementNegotiatorId = (matchRow['requirement'] as Map<String, dynamic>)['negotiator_id'] as String;
-      final recipientId = resolveOtherPartyInMatch(
-        actorId: initiatorId,
-        listingNegotiatorId: listingNegotiatorId,
-        requirementNegotiatorId: requirementNegotiatorId,
-      );
+      final recipientId = await _client.rpc(
+        'get_other_party_in_match',
+        params: {'p_match_id': matchId, 'p_actor_id': initiatorId},
+      ) as String?;
       if (recipientId == null) return;
       await _pushNotificationRepository.sendPushNotification(PushPayload(
         recipientNegotiatorId: recipientId,
