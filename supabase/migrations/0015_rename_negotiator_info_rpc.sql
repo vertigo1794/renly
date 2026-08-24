@@ -1,0 +1,19 @@
+-- supabase/migrations/0015_rename_negotiator_info_rpc.sql
+-- Run this once in the Supabase project's SQL Editor, AFTER 0001-0014.
+--
+-- Cosmetic rename only, no behavior change. get_listing_owner_info() was
+-- named after its first caller (PropertyDetailScreen) but has since been
+-- reused by Requirement and Messaging too -- it's generic by negotiator id,
+-- not listing-specific. Renaming to reflect that.
+--
+-- ALTER FUNCTION ... RENAME TO preserves the function body, security
+-- definer setting, search_path, and existing grants -- no need to restate
+-- any of them here.
+--
+-- Not written with a guard: Postgres errors harmlessly on a repeat run
+-- ("function get_listing_owner_info(uuid) does not exist") once the first
+-- run has already renamed it, which is an acceptable, obvious failure mode
+-- for a one-time rename (unlike the create-or-replace migrations elsewhere
+-- in this project, which are guarded because they're meant to be safely
+-- re-run after an edit).
+alter function get_listing_owner_info(uuid) rename to get_negotiator_public_info;

@@ -36,15 +36,16 @@ class ListingRepository {
     return Listing.fromJson(row);
   }
 
-  /// Goes through the `get_listing_owner_info` security-definer RPC
-  /// (0004_listing_hardening.sql) rather than selecting from `negotiator`
-  /// directly: negotiator_select_own only lets a user read their OWN row,
-  /// so a plain select here returned zero rows for every listing you don't
-  /// own. The RPC returns only full_name/ren_number, so this doesn't widen
-  /// access to ic_number, phone_number or verification_status.
+  /// Goes through the `get_negotiator_public_info` security-definer RPC
+  /// (0004_listing_hardening.sql, renamed in 0015) rather than selecting
+  /// from `negotiator` directly: negotiator_select_own only lets a user
+  /// read their OWN row, so a plain select here returned zero rows for
+  /// every listing you don't own. The RPC returns only
+  /// full_name/ren_number, so this doesn't widen access to ic_number,
+  /// phone_number or verification_status.
   Future<ListingOwner> fetchListingOwner(String negotiatorId) async {
     final rows = await _client.rpc(
-      'get_listing_owner_info',
+      'get_negotiator_public_info',
       params: {'p_negotiator_id': negotiatorId},
     ) as List;
     if (rows.isEmpty) {

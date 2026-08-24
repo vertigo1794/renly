@@ -7,7 +7,7 @@ import 'models/message.dart';
 
 /// The only file in this app that talks to Supabase for the message
 /// feature. Composes ListingRepository for sender-name lookups (the
-/// get_listing_owner_info RPC is generic by negotiator id, not
+/// get_negotiator_public_info RPC is generic by negotiator id, not
 /// listing-specific), same reuse precedent as CobrokeRequestRepository.
 class MessageRepository {
   MessageRepository(this._client, this._listingRepository);

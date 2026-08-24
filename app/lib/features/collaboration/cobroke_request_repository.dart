@@ -26,12 +26,26 @@ class CobrokeRequestRepository {
     });
   }
 
-  Future<void> acceptRequest(String requestId) {
-    return _client.from('cobroke_request').update({'status': 'accepted'}).eq('request_id', requestId);
+  Future<void> acceptRequest(String requestId) async {
+    final rows = await _client
+        .from('cobroke_request')
+        .update({'status': 'accepted'})
+        .eq('request_id', requestId)
+        .select();
+    if (rows.isEmpty) {
+      throw StateError('Co-broke request update was rejected (not found or not permitted)');
+    }
   }
 
-  Future<void> declineRequest(String requestId) {
-    return _client.from('cobroke_request').update({'status': 'declined'}).eq('request_id', requestId);
+  Future<void> declineRequest(String requestId) async {
+    final rows = await _client
+        .from('cobroke_request')
+        .update({'status': 'declined'})
+        .eq('request_id', requestId)
+        .select();
+    if (rows.isEmpty) {
+      throw StateError('Co-broke request update was rejected (not found or not permitted)');
+    }
   }
 
   Future<List<CobrokeRequestCandidate>> fetchReceivedRequests(String negotiatorId) async {

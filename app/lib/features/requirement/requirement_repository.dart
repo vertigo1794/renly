@@ -37,14 +37,14 @@ class RequirementRepository {
     return Requirement.fromJson(row);
   }
 
-  /// Reuses the get_listing_owner_info security-definer RPC
-  /// (0004_listing_hardening.sql) rather than a new requirement-specific
-  /// one -- it already takes any negotiator id and returns only
-  /// full_name/ren_number, nothing listing-specific about its logic. The
-  /// name is a minor accepted naming debt (see the design doc).
+  /// Reuses the get_negotiator_public_info security-definer RPC
+  /// (0004_listing_hardening.sql, renamed in 0015) rather than a new
+  /// requirement-specific one -- it already takes any negotiator id and
+  /// returns only full_name/ren_number, nothing listing-specific about its
+  /// logic.
   Future<ListingOwner> fetchRequirementOwner(String negotiatorId) async {
     final rows = await _client.rpc(
-      'get_listing_owner_info',
+      'get_negotiator_public_info',
       params: {'p_negotiator_id': negotiatorId},
     ) as List;
     if (rows.isEmpty) {
