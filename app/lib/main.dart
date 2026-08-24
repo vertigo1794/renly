@@ -43,9 +43,10 @@ Future<void> main() async {
   try {
     await Firebase.initializeApp();
     firebaseReady = true;
-  } catch (_) {
+  } catch (e) {
     // No google-services.json yet, or Firebase project not configured --
     // push notifications are simply unavailable this run.
+    debugPrint('Firebase.initializeApp() failed: $e');
   }
 
   runApp(
@@ -75,6 +76,7 @@ class _RenlyAppState extends ConsumerState<RenlyApp> {
     super.initState();
     if (!widget.firebaseReady) return;
     _registerToken();
+    Supabase.instance.client.auth.onAuthStateChange.listen((_) => _registerToken());
     FirebaseMessaging.instance.onTokenRefresh.listen((_) => _registerToken());
     FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
     FirebaseMessaging.onMessageOpenedApp.listen((message) => _navigateFromMessage(message.data));
