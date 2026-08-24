@@ -3,7 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'models/push_payload.dart';
 
 /// Calls the send-push-notification Edge Function. Never throws to a
-/// caller that treats push delivery as best-effort (Tasks 4-6) -- those
+/// caller that treats push delivery as best-effort (Tasks 5-7) -- those
 /// callers wrap this in their own try/catch and swallow failures, since a
 /// push failing must never undo or error out an already-successful
 /// primary action (a new match, a sent request, a sent message).
