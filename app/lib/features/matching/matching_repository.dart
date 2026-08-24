@@ -7,7 +7,6 @@ import '../listing/models/listing.dart';
 import '../listing/models/listing_owner.dart';
 import '../notifications/models/push_payload.dart';
 import '../notifications/push_notification_repository.dart';
-import '../notifications/recipient_resolver.dart';
 import '../requirement/models/requirement.dart';
 import '../requirement/requirement_repository.dart';
 import 'matching_engine.dart';
@@ -47,13 +46,11 @@ class MatchingRepository {
       ownerByRequirementId[requirement.requirementId] = requirement.negotiatorId;
     }
     final insertedRows = await _store(rows);
-    final recipients = resolveMatchRecipients(
-      insertedRows: insertedRows,
-      ownerKey: 'requirement_id',
-      ownerNegotiatorIdByKey: ownerByRequirementId,
-    );
-    for (final recipientId in recipients) {
-      await _notifyMatch(recipientId, ownerSide: 'requirement', listingId: listing.listingId, requirementId: null);
+    for (final row in insertedRows) {
+      final requirementId = row['requirement_id'] as String?;
+      final recipientId = requirementId == null ? null : ownerByRequirementId[requirementId];
+      if (recipientId == null) continue;
+      await _notifyMatch(recipientId, ownerSide: 'requirement', listingId: null, requirementId: requirementId);
     }
   }
 
@@ -73,13 +70,11 @@ class MatchingRepository {
       ownerByListingId[listing.listingId] = listing.negotiatorId;
     }
     final insertedRows = await _store(rows);
-    final recipients = resolveMatchRecipients(
-      insertedRows: insertedRows,
-      ownerKey: 'listing_id',
-      ownerNegotiatorIdByKey: ownerByListingId,
-    );
-    for (final recipientId in recipients) {
-      await _notifyMatch(recipientId, ownerSide: 'listing', listingId: null, requirementId: requirement.requirementId);
+    for (final row in insertedRows) {
+      final listingId = row['listing_id'] as String?;
+      final recipientId = listingId == null ? null : ownerByListingId[listingId];
+      if (recipientId == null) continue;
+      await _notifyMatch(recipientId, ownerSide: 'listing', listingId: listingId, requirementId: null);
     }
   }
 
