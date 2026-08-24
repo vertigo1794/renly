@@ -4,11 +4,16 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../auth/auth_providers.dart';
 import '../listing/listing_providers.dart';
+import '../notifications/notification_providers.dart';
 import 'message_repository.dart';
 import 'models/message.dart';
 
 final messageRepositoryProvider = Provider<MessageRepository>((ref) {
-  return MessageRepository(Supabase.instance.client, ref.watch(listingRepositoryProvider));
+  return MessageRepository(
+    Supabase.instance.client,
+    ref.watch(listingRepositoryProvider),
+    ref.watch(pushNotificationRepositoryProvider),
+  );
 });
 
 /// Same session-state read as the copies in listing_providers.dart,

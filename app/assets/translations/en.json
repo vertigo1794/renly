@@ -211,5 +211,7 @@
   "push_match_title": "New Match",
   "push_match_body": "You have a new match. Tap to view.",
   "push_cobroke_request_title": "New Co-Broke Request",
-  "push_cobroke_request_body": "Someone wants to co-broke with you. Tap to view."
+  "push_cobroke_request_body": "Someone wants to co-broke with you. Tap to view.",
+  "push_message_title": "New Message",
+  "push_message_body": "You have a new message. Tap to view."
 }
