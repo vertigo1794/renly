@@ -4,11 +4,16 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../auth/auth_providers.dart';
 import '../listing/listing_providers.dart';
+import '../notifications/notification_providers.dart';
 import 'cobroke_request_repository.dart';
 import 'models/cobroke_request_candidate.dart';
 
 final cobrokeRequestRepositoryProvider = Provider<CobrokeRequestRepository>((ref) {
-  return CobrokeRequestRepository(Supabase.instance.client, ref.watch(listingRepositoryProvider));
+  return CobrokeRequestRepository(
+    Supabase.instance.client,
+    ref.watch(listingRepositoryProvider),
+    ref.watch(pushNotificationRepositoryProvider),
+  );
 });
 
 /// Same session-state read as the copies in listing_providers.dart,

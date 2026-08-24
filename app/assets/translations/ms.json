@@ -209,5 +209,7 @@
   "requirement_active_count_label": "keperluan aktif",
   "requirement_cap_reached_message": "Anda telah mencapai had 3 keperluan aktif pelan Percuma. Naik taraf ke Profesional utk keperluan tanpa had.",
   "push_match_title": "Padanan Baru",
-  "push_match_body": "Anda ada padanan baru. Ketik untuk lihat."
+  "push_match_body": "Anda ada padanan baru. Ketik untuk lihat.",
+  "push_cobroke_request_title": "Permintaan Co-Broke Baru",
+  "push_cobroke_request_body": "Seseorang mahu co-broke dengan anda. Ketik untuk lihat."
 }

@@ -1,4 +1,5 @@
 // app/lib/features/collaboration/cobroke_request_repository.dart
+import 'package:easy_localization/easy_localization.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../listing/listing_repository.dart';
@@ -6,6 +7,9 @@ import '../listing/models/listing.dart';
 import '../listing/models/listing_owner.dart';
 import '../matching/models/match.dart';
 import '../matching/models/match_candidate.dart';
+import '../notifications/models/push_payload.dart';
+import '../notifications/push_notification_repository.dart';
+import '../notifications/recipient_resolver.dart';
 import '../requirement/models/requirement.dart';
 import 'models/cobroke_request.dart';
 import 'models/cobroke_request_candidate.dart';
@@ -14,16 +18,46 @@ import 'models/cobroke_request_candidate.dart';
 /// feature. Composes ListingRepository (for owner lookups) rather than
 /// duplicating that query, same reuse precedent as MatchingRepository.
 class CobrokeRequestRepository {
-  CobrokeRequestRepository(this._client, this._listingRepository);
+  CobrokeRequestRepository(this._client, this._listingRepository, this._pushNotificationRepository);
 
   final SupabaseClient _client;
   final ListingRepository _listingRepository;
+  final PushNotificationRepository _pushNotificationRepository;
 
   Future<void> createRequest({required String matchId, required String initiatorId}) async {
     await _client.from('cobroke_request').insert({
       'match_id': matchId,
       'initiator_id': initiatorId,
     });
+    await _notifyNewRequest(matchId: matchId, initiatorId: initiatorId);
+  }
+
+  Future<void> _notifyNewRequest({required String matchId, required String initiatorId}) async {
+    try {
+      final matchRow = await _client
+          .from('match')
+          .select('listing!inner(negotiator_id), requirement!inner(negotiator_id)')
+          .eq('match_id', matchId)
+          .single();
+      final listingNegotiatorId = (matchRow['listing'] as Map<String, dynamic>)['negotiator_id'] as String;
+      final requirementNegotiatorId = (matchRow['requirement'] as Map<String, dynamic>)['negotiator_id'] as String;
+      final recipientId = resolveOtherPartyInMatch(
+        actorId: initiatorId,
+        listingNegotiatorId: listingNegotiatorId,
+        requirementNegotiatorId: requirementNegotiatorId,
+      );
+      if (recipientId == null) return;
+      await _pushNotificationRepository.sendPushNotification(PushPayload(
+        recipientNegotiatorId: recipientId,
+        category: 'cobroke_request',
+        title: 'push_cobroke_request_title'.tr(),
+        body: 'push_cobroke_request_body'.tr(),
+        deepLinkData: const {},
+      ));
+    } catch (_) {
+      // Push delivery is best-effort -- a failure here must never undo or
+      // surface as an error for the request that was already created.
+    }
   }
 
   Future<void> acceptRequest(String requestId) async {
