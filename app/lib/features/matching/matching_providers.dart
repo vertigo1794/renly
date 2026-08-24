@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../auth/auth_providers.dart';
 import '../listing/listing_providers.dart';
+import '../notifications/notification_providers.dart';
 import '../requirement/requirement_providers.dart';
 import 'matching_repository.dart';
 import 'models/match_candidate.dart';
@@ -13,6 +14,7 @@ final matchingRepositoryProvider = Provider<MatchingRepository>((ref) {
     Supabase.instance.client,
     ref.watch(listingRepositoryProvider),
     ref.watch(requirementRepositoryProvider),
+    ref.watch(pushNotificationRepositoryProvider),
   );
 });
 

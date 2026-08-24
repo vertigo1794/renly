@@ -207,5 +207,7 @@
   "listing_active_count_label": "active listings",
   "listing_cap_reached_message": "You've reached the Free plan's limit of 3 active listings. Upgrade to Professional for unlimited listings.",
   "requirement_active_count_label": "active requirements",
-  "requirement_cap_reached_message": "You've reached the Free plan's limit of 3 active requirements. Upgrade to Professional for unlimited requirements."
+  "requirement_cap_reached_message": "You've reached the Free plan's limit of 3 active requirements. Upgrade to Professional for unlimited requirements.",
+  "push_match_title": "New Match",
+  "push_match_body": "You have a new match. Tap to view."
 }

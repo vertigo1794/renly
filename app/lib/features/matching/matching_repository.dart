@@ -1,9 +1,13 @@
 // app/lib/features/matching/matching_repository.dart
+import 'package:easy_localization/easy_localization.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../listing/listing_repository.dart';
 import '../listing/models/listing.dart';
 import '../listing/models/listing_owner.dart';
+import '../notifications/models/push_payload.dart';
+import '../notifications/push_notification_repository.dart';
+import '../notifications/recipient_resolver.dart';
 import '../requirement/models/requirement.dart';
 import '../requirement/requirement_repository.dart';
 import 'matching_engine.dart';
@@ -15,15 +19,22 @@ import 'models/match_candidate.dart';
 /// duplicating their queries (fetching opposing open records, fetching
 /// owner info) -- matching is inherently cross-feature.
 class MatchingRepository {
-  MatchingRepository(this._client, this._listingRepository, this._requirementRepository);
+  MatchingRepository(
+    this._client,
+    this._listingRepository,
+    this._requirementRepository,
+    this._pushNotificationRepository,
+  );
 
   final SupabaseClient _client;
   final ListingRepository _listingRepository;
   final RequirementRepository _requirementRepository;
+  final PushNotificationRepository _pushNotificationRepository;
 
   Future<void> computeAndStoreMatchesForListing(Listing listing) async {
     final requirements = await _requirementRepository.fetchBoardRequirements();
     final rows = <Map<String, dynamic>>[];
+    final ownerByRequirementId = <String, String>{};
     for (final requirement in requirements) {
       if (requirement.negotiatorId == listing.negotiatorId) continue;
       final score = MatchingEngine.score(listing, requirement);
@@ -33,13 +44,23 @@ class MatchingRepository {
         'requirement_id': requirement.requirementId,
         'score': score,
       });
+      ownerByRequirementId[requirement.requirementId] = requirement.negotiatorId;
     }
-    await _store(rows);
+    final insertedRows = await _store(rows);
+    final recipients = resolveMatchRecipients(
+      insertedRows: insertedRows,
+      ownerKey: 'requirement_id',
+      ownerNegotiatorIdByKey: ownerByRequirementId,
+    );
+    for (final recipientId in recipients) {
+      await _notifyMatch(recipientId, ownerSide: 'requirement', listingId: listing.listingId, requirementId: null);
+    }
   }
 
   Future<void> computeAndStoreMatchesForRequirement(Requirement requirement) async {
     final listings = await _listingRepository.fetchMarketplaceListings();
     final rows = <Map<String, dynamic>>[];
+    final ownerByListingId = <String, String>{};
     for (final listing in listings) {
       if (listing.negotiatorId == requirement.negotiatorId) continue;
       final score = MatchingEngine.score(listing, requirement);
@@ -49,17 +70,58 @@ class MatchingRepository {
         'requirement_id': requirement.requirementId,
         'score': score,
       });
+      ownerByListingId[listing.listingId] = listing.negotiatorId;
     }
-    await _store(rows);
+    final insertedRows = await _store(rows);
+    final recipients = resolveMatchRecipients(
+      insertedRows: insertedRows,
+      ownerKey: 'listing_id',
+      ownerNegotiatorIdByKey: ownerByListingId,
+    );
+    for (final recipientId in recipients) {
+      await _notifyMatch(recipientId, ownerSide: 'listing', listingId: null, requirementId: requirement.requirementId);
+    }
   }
 
-  Future<void> _store(List<Map<String, dynamic>> rows) async {
-    if (rows.isEmpty) return;
-    await _client.from('match').upsert(
+  /// ownerSide/listingId/requirementId describe which screen the
+  /// RECIPIENT should land on (their own side of the match), not the side
+  /// that was just posted -- see deep_link.dart's deepLinkRouteFor.
+  Future<void> _notifyMatch(
+    String recipientId, {
+    required String ownerSide,
+    required String? listingId,
+    required String? requirementId,
+  }) async {
+    try {
+      await _pushNotificationRepository.sendPushNotification(PushPayload(
+        recipientNegotiatorId: recipientId,
+        category: 'match',
+        title: 'push_match_title'.tr(),
+        body: 'push_match_body'.tr(),
+        deepLinkData: {
+          'owner_side': ownerSide,
+          'listing_id': ?listingId,
+          'requirement_id': ?requirementId,
+        },
+      ));
+    } catch (_) {
+      // Push delivery is best-effort -- a failure here must never undo or
+      // surface as an error for the match that was already stored.
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> _store(List<Map<String, dynamic>> rows) async {
+    if (rows.isEmpty) return [];
+    // .select() after an ignoreDuplicates upsert only returns rows that
+    // were genuinely inserted -- PostgREST's RETURNING skips rows the
+    // ON CONFLICT DO NOTHING clause suppressed. Without this, every
+    // re-computation would re-notify recipients for matches that already
+    // existed.
+    return _client.from('match').upsert(
           rows,
           onConflict: 'listing_id,requirement_id',
           ignoreDuplicates: true,
-        );
+        ).select();
   }
 
   Future<List<MatchCandidate>> fetchMatchesForListing(String listingId) async {
