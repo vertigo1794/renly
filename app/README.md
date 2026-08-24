@@ -151,3 +151,21 @@ Repeat all four checks for requirements specifically -- do not assume the mirror
 ## Milestone 14 setup (backlog cleanup: negotiator-info RPC rename)
 
 Run `supabase/migrations/0015_rename_negotiator_info_rpc.sql` in the Supabase SQL Editor after 0001-0014. Cosmetic only -- renames the `get_listing_owner_info()` RPC (created in `0004_listing_hardening.sql`) to `get_negotiator_public_info()`, since it's been reused by Requirement and Messaging for a while now and was never listing-specific. `ALTER FUNCTION ... RENAME TO` preserves the function body, security definer setting, and grants, so there's nothing else to re-apply. No manual dashboard step, no app-visible behavior change -- a smoke test (open a listing or requirement you don't own, confirm the owner's name/REN number still shows) is enough to confirm the rename didn't break anything.
+
+## Milestone 15 setup (push notifications)
+
+Two Supabase-side steps, plus a Firebase project and Android config the app didn't need before:
+
+1. **Run the migration.** Supabase dashboard -> SQL Editor -> New query -> paste the entire contents of `supabase/migrations/0016_fcm_device_token.sql` -> Run. Creates `fcm_device_token` and its 3 RLS policies.
+2. **Create a Firebase project** (console.firebase.google.com) for this app -- a separate project from Supabase, free tier is enough. Add an Android app to it using this project's application id, `com.renly.renly` (see `app/android/app/build.gradle.kts`'s `applicationId`). Download the generated `google-services.json` and place it at `app/android/app/google-services.json` (already gitignored -- this file is never committed).
+3. **Create a Service Account** for that Firebase project (Firebase console -> Project Settings -> Service Accounts -> Generate new private key), which downloads a JSON file. Set its full contents as an Edge Function secret **in your own terminal**, never pasted into a chat -- same handling as the Stripe secret key/webhook signing secret from Milestone 12:
+   ```bash
+   supabase secrets set FIREBASE_SERVICE_ACCOUNT_JSON="$(cat path/to/downloaded-service-account.json)"
+   ```
+4. **Deploy the Edge Function:**
+   ```bash
+   supabase functions deploy send-push-notification
+   ```
+   No `--no-verify-jwt` needed here -- unlike `stripe-webhook`, this function is only ever called by an already-authenticated app client.
+
+**Manual verification -- requires a Google-Play-image Android emulator or a real device, NOT the plain emulator this project's other pending verifications use.** FCM push delivery does not work without Google Play Services present. See the "Testing approach" section of `docs/superpowers/specs/2026-08-24-renly-push-notifications-design.md` for the full 8-step verification checklist (new match, tap-to-deep-link, preference-off suppression, co-broke request, message delivery in 3 app states, and stale-token self-cleanup).
