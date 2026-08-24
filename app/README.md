@@ -154,16 +154,18 @@ Run `supabase/migrations/0015_rename_negotiator_info_rpc.sql` in the Supabase SQ
 
 ## Milestone 15 setup (push notifications)
 
-Two Supabase-side steps, plus a Firebase project and Android config the app didn't need before:
+Three Supabase-side steps, plus a Firebase project and Android config the app didn't need before:
 
-1. **Run the migration.** Supabase dashboard -> SQL Editor -> New query -> paste the entire contents of `supabase/migrations/0016_fcm_device_token.sql` -> Run. Creates `fcm_device_token`, its 3 RLS policies, and a column-scoped INSERT grant.
+1. **Run the migrations, in order.** Supabase dashboard -> SQL Editor -> New query.
+   1. Paste the entire contents of `supabase/migrations/0016_fcm_device_token.sql` and Run. Creates `fcm_device_token`, its 3 RLS policies, and a column-scoped INSERT grant.
 
-   After running, verify the grant with this query -- expect INSERT listed for exactly `negotiator_id`/`token`, and NO row for `token_id`/`created_at` (those stay server-generated only):
-   ```sql
-   select grantee, privilege_type, column_name
-   from information_schema.column_privileges
-   where table_name = 'fcm_device_token' and grantee = 'authenticated';
-   ```
+      After running, verify the grant with this query -- expect INSERT listed for exactly `negotiator_id`/`token`, and NO row for `token_id`/`created_at` (those stay server-generated only):
+      ```sql
+      select grantee, privilege_type, column_name
+      from information_schema.column_privileges
+      where table_name = 'fcm_device_token' and grantee = 'authenticated';
+      ```
+   2. Then, in a new query, paste the entire contents of `supabase/migrations/0017_get_other_party_in_match.sql` and Run. Creates the `get_other_party_in_match()` security-definer function that `CobrokeRequestRepository`/`MessageRepository` call to resolve a push's recipient -- without it, co-broke-request and message push notifications fail silently (the client's best-effort `catch` swallows the RPC-not-found error) the instant either party's listing/requirement leaves active/open status. Not optional.
 2. **Create a Firebase project** (console.firebase.google.com) for this app -- a separate project from Supabase, free tier is enough. Add an Android app to it using this project's application id, `com.renly.renly` (see `app/android/app/build.gradle.kts`'s `applicationId`). Download the generated `google-services.json` and place it at `app/android/app/google-services.json` (already gitignored -- this file is never committed).
 3. **Create a Service Account** for that Firebase project (Firebase console -> Project Settings -> Service Accounts -> Generate new private key), which downloads a JSON file. Set its full contents as an Edge Function secret **in your own terminal**, never pasted into a chat -- same handling as the Stripe secret key/webhook signing secret from Milestone 12:
    ```bash

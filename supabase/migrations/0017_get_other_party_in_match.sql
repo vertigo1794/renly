@@ -9,8 +9,9 @@
 -- requirement fulfilled/withdrawn, the OTHER party's client can no
 -- longer see that row at all -- the query silently returns zero rows and
 -- push notifications for that conversation permanently stop. Same
--- failure class this project already solved for get_listing_owner_info
--- (0004_listing_hardening.sql) and is_agreement_party (0011_rating.sql):
+-- failure class this project already solved for get_negotiator_public_info
+-- (0004_listing_hardening.sql, renamed in 0015) and is_agreement_party
+-- (0011_rating.sql):
 -- a narrowly-scoped SECURITY DEFINER function that only ever returns a
 -- negotiator_id already implicitly visible to the caller via the match
 -- they're a legitimate party to.
