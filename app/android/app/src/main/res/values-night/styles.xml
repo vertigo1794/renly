@@ -2,7 +2,7 @@
 <resources>
     <!-- Theme applied to the Android Window while the process is starting when the OS's Dark Mode setting is on -->
     <!-- Same AppCompat/MaterialComponents lineage requirement as the light
-         values/styles.xml -- see the longer note there. This is the dark
+         values/styles.xml - see the longer note there. This is the dark
          counterpart, so it uses the plain (dark) MaterialComponents theme. -->
     <style name="LaunchTheme" parent="Theme.MaterialComponents.NoActionBar">
         <!-- Show a splash screen on the activity. Automatically removed when
