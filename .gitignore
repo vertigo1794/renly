@@ -58,6 +58,7 @@ build/
 .env
 **/google-services.json
 **/GoogleService-Info.plist
+*firebase-adminsdk*.json
 
 # graphify (local knowledge-graph tool output, regenerable)
 graphify-out/
