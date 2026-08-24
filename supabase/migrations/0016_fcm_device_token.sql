@@ -30,3 +30,6 @@ create policy fcm_device_token_insert_own on fcm_device_token
 drop policy if exists fcm_device_token_delete_own on fcm_device_token;
 create policy fcm_device_token_delete_own on fcm_device_token
   for delete to authenticated using (negotiator_id = auth.uid());
+
+revoke insert on fcm_device_token from authenticated;
+grant insert (negotiator_id, token) on fcm_device_token to authenticated;
