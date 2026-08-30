@@ -2,7 +2,10 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
+import '../../core/theme/app_colors.dart';
+import '../../core/widgets/brutalist_button.dart';
 import 'models/rating.dart';
 import 'rating_providers.dart';
 
@@ -90,9 +93,9 @@ class _RateDialogState extends ConsumerState<RateDialog> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate(5, (index) {
               final starValue = index + 1;
-              return IconButton(
-                icon: Icon(starValue <= _stars ? Icons.star : Icons.star_border),
-                onPressed: _submitting ? null : () => setState(() => _stars = starValue),
+              return _BrutalistStar(
+                selected: starValue <= _stars,
+                onTap: _submitting ? null : () => setState(() => _stars = starValue),
               );
             }),
           ),
@@ -108,15 +111,41 @@ class _RateDialogState extends ConsumerState<RateDialog> {
         ],
       ),
       actions: [
-        TextButton(
+        BrutalistButton(
+          label: 'rating_cancel'.tr(),
+          variant: BrutalistButtonVariant.secondary,
+          fullWidth: false,
           onPressed: _submitting ? null : () => Navigator.of(context).pop(),
-          child: Text('rating_cancel'.tr()),
         ),
-        ElevatedButton(
+        BrutalistButton(
+          label: 'rating_submit'.tr(),
+          fullWidth: false,
+          icon: PhosphorIcons.check(PhosphorIconsStyle.bold),
           onPressed: _submitting ? null : _submit,
-          child: Text('rating_submit'.tr()),
         ),
       ],
+    );
+  }
+}
+
+class _BrutalistStar extends StatelessWidget {
+  const _BrutalistStar({required this.selected, required this.onTap});
+
+  final bool selected;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.all(4),
+        child: Icon(
+          PhosphorIcons.star(selected ? PhosphorIconsStyle.bold : PhosphorIconsStyle.regular),
+          color: AppColors.ink,
+          size: 32,
+        ),
+      ),
     );
   }
 }
