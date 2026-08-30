@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/brutalist_card.dart';
 import '../../core/widgets/signed_photo.dart';
 import 'models/requirement.dart';
 import 'requirement_formatting.dart';
@@ -63,7 +64,20 @@ class _RequirementBoardScreenState extends ConsumerState<RequirementBoardScreen>
               data: (requirements) {
                 final filtered = _filter(requirements);
                 if (filtered.isEmpty) {
-                  return Center(child: Text('requirement_board_empty'.tr()));
+                  return Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Image.asset(
+                          'assets/illustrations/requirement_board_empty.png',
+                          height: 160,
+                          errorBuilder: (context, error, stackTrace) => const SizedBox(height: 160),
+                        ),
+                        const SizedBox(height: 16),
+                        Text('requirement_board_empty'.tr()),
+                      ],
+                    ),
+                  );
                 }
                 return RefreshIndicator(
                   onRefresh: () async => ref.invalidate(boardRequirementsProvider),
@@ -72,84 +86,87 @@ class _RequirementBoardScreenState extends ConsumerState<RequirementBoardScreen>
                     itemCount: filtered.length,
                     itemBuilder: (context, index) {
                       final requirement = filtered[index];
-                      return Card(
-                        margin: const EdgeInsets.only(bottom: 16),
-                        child: InkWell(
-                          onTap: () => context.push('/requirement-board/${requirement.requirementId}'),
-                          child: Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                if (requirement.photoUrls.isNotEmpty) ...[
-                                  ClipRRect(
-                                    borderRadius: BorderRadius.circular(8),
-                                    child: SizedBox(
-                                      width: 72,
-                                      height: 72,
-                                      child: SignedPhoto(
-                                        path: requirement.photoUrls.first,
-                                        signedUrlFetcher: ref.read(requirementRepositoryProvider).createSignedUrl,
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () => context.push('/requirement-board/${requirement.requirementId}'),
+                            borderRadius: BorderRadius.circular(12),
+                            child: BrutalistCard(
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if (requirement.photoUrls.isNotEmpty) ...[
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: SizedBox(
+                                        width: 72,
+                                        height: 72,
+                                        child: SignedPhoto(
+                                          path: requirement.photoUrls.first,
+                                          signedUrlFetcher: ref.read(requirementRepositoryProvider).createSignedUrl,
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                ],
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        RequirementFormatting.formatBudgetRange(
-                                          requirement.budgetMin,
-                                          requirement.budgetMax,
-                                          requirement.transactionType,
+                                    const SizedBox(width: 12),
+                                  ],
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          RequirementFormatting.formatBudgetRange(
+                                            requirement.budgetMin,
+                                            requirement.budgetMax,
+                                            requirement.transactionType,
+                                          ),
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .titleMedium
+                                              ?.copyWith(color: AppColors.ink),
                                         ),
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .titleMedium
-                                            ?.copyWith(color: AppColors.ink),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        '${'listing_property_type_${requirement.propertyType}'.tr()} · '
-                                        '${'listing_transaction_type_${requirement.transactionType}'.tr()}',
-                                        style: Theme.of(context).textTheme.bodySmall,
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Row(
-                                        children: [
-                                          if (requirement.bedrooms != null) ...[
-                                            const Icon(Icons.bed, size: 16),
-                                            const SizedBox(width: 4),
-                                            Text('${requirement.bedrooms}'),
-                                            const SizedBox(width: 12),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          '${'listing_property_type_${requirement.propertyType}'.tr()} · '
+                                          '${'listing_transaction_type_${requirement.transactionType}'.tr()}',
+                                          style: Theme.of(context).textTheme.bodySmall,
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Row(
+                                          children: [
+                                            if (requirement.bedrooms != null) ...[
+                                              const Icon(Icons.bed, size: 16),
+                                              const SizedBox(width: 4),
+                                              Text('${requirement.bedrooms}'),
+                                              const SizedBox(width: 12),
+                                            ],
+                                            Flexible(
+                                              child: Text(
+                                                requirement.area,
+                                                style: Theme.of(context).textTheme.labelSmall,
+                                              ),
+                                            ),
                                           ],
-                                          Flexible(
-                                            child: Text(
-                                              requirement.area,
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Builder(builder: (context) {
+                                          final ownerAsync =
+                                              ref.watch(requirementOwnerProvider(requirement.negotiatorId));
+                                          return ownerAsync.when(
+                                            loading: () => const SizedBox.shrink(),
+                                            error: (error, stack) => const SizedBox.shrink(),
+                                            data: (owner) => Text(
+                                              '${owner.fullName} (REN: ${owner.renNumber})',
                                               style: Theme.of(context).textTheme.labelSmall,
                                             ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Builder(builder: (context) {
-                                        final ownerAsync =
-                                            ref.watch(requirementOwnerProvider(requirement.negotiatorId));
-                                        return ownerAsync.when(
-                                          loading: () => const SizedBox.shrink(),
-                                          error: (error, stack) => const SizedBox.shrink(),
-                                          data: (owner) => Text(
-                                            '${owner.fullName} (REN: ${owner.renNumber})',
-                                            style: Theme.of(context).textTheme.labelSmall,
-                                          ),
-                                        );
-                                      }),
-                                    ],
+                                          );
+                                        }),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
                         ),
