@@ -2,7 +2,9 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
+import '../../core/widgets/brutalist_button.dart';
 import '../listing/models/listing_owner.dart';
 import 'message_providers.dart';
 
@@ -136,11 +138,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    ElevatedButton(
+                    BrutalistButton(
+                      label: 'message_send'.tr(),
+                      fullWidth: false,
+                      icon: PhosphorIcons.paperPlaneRight(PhosphorIconsStyle.bold),
                       onPressed: _sending
                           ? null
                           : () => _send(currentNegotiatorId),
-                      child: Text('message_send'.tr()),
                     ),
                   ],
                 ),
