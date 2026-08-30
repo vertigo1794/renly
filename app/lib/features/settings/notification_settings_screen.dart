@@ -100,26 +100,34 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
           children: [
             BrutalistCard(
               padding: EdgeInsets.zero,
-              child: Column(
-                children: [
-                  SwitchListTile(
-                    title: Text('notification_settings_match_label'.tr()),
-                    value: _matchOverride ?? prefs.notifyMatch,
-                    onChanged: (value) => _toggle(notifyMatch: value),
-                  ),
-                  const Divider(height: 1),
-                  SwitchListTile(
-                    title: Text('notification_settings_message_label'.tr()),
-                    value: _messageOverride ?? prefs.notifyMessage,
-                    onChanged: (value) => _toggle(notifyMessage: value),
-                  ),
-                  const Divider(height: 1),
-                  SwitchListTile(
-                    title: Text('notification_settings_cobroke_request_label'.tr()),
-                    value: _cobrokeOverride ?? prefs.notifyCobrokeRequest,
-                    onChanged: (value) => _toggle(notifyCobrokeRequest: value),
-                  ),
-                ],
+              // BrutalistCard is a plain opaque Container -- a SwitchListTile's
+              // own tap ripple paints on the nearest Material ancestor, which
+              // without this wrapper is the Scaffold's, underneath the card's
+              // fill (invisible). This Material gives each row's ripple
+              // somewhere visible to paint.
+              child: Material(
+                color: Colors.transparent,
+                child: Column(
+                  children: [
+                    SwitchListTile(
+                      title: Text('notification_settings_match_label'.tr()),
+                      value: _matchOverride ?? prefs.notifyMatch,
+                      onChanged: (value) => _toggle(notifyMatch: value),
+                    ),
+                    const Divider(height: 1),
+                    SwitchListTile(
+                      title: Text('notification_settings_message_label'.tr()),
+                      value: _messageOverride ?? prefs.notifyMessage,
+                      onChanged: (value) => _toggle(notifyMessage: value),
+                    ),
+                    const Divider(height: 1),
+                    SwitchListTile(
+                      title: Text('notification_settings_cobroke_request_label'.tr()),
+                      value: _cobrokeOverride ?? prefs.notifyCobrokeRequest,
+                      onChanged: (value) => _toggle(notifyCobrokeRequest: value),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],

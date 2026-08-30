@@ -68,52 +68,60 @@ class ProfileScreen extends ConsumerWidget {
                 const SizedBox(height: 20),
                 BrutalistCard(
                   padding: EdgeInsets.zero,
-                  child: Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text('settings_section_title'.tr(), style: Theme.of(context).textTheme.titleMedium),
+                  // BrutalistCard is a plain opaque Container -- ink splashes
+                  // from a ListTile's onTap paint on the nearest Material
+                  // ancestor, which without this wrapper is the Scaffold's,
+                  // underneath the card's fill (invisible). This Material
+                  // gives each row's ripple somewhere visible to paint.
+                  child: Material(
+                    color: Colors.transparent,
+                    child: Column(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text('settings_section_title'.tr(), style: Theme.of(context).textTheme.titleMedium),
+                          ),
                         ),
-                      ),
-                      const Divider(height: 1),
-                      ListTile(
-                        leading: const Icon(Icons.notifications_active),
-                        title: Text('settings_notification_row_title'.tr()),
-                        subtitle: Text('settings_notification_row_subtitle'.tr()),
-                        trailing: const Icon(Icons.chevron_right),
-                        onTap: () => context.push('/settings/notification'),
-                      ),
-                      ListTile(
-                        leading: const Icon(Icons.manage_accounts),
-                        title: Text('settings_account_row_title'.tr()),
-                        subtitle: Text('settings_account_row_subtitle'.tr()),
-                        trailing: const Icon(Icons.chevron_right),
-                        onTap: () => context.push('/settings/account'),
-                      ),
-                      ListTile(
-                        leading: const Icon(Icons.privacy_tip),
-                        title: Text('settings_privacy_row_title'.tr()),
-                        subtitle: Text('settings_privacy_row_subtitle'.tr()),
-                        trailing: const Icon(Icons.chevron_right),
-                        onTap: () => context.push('/settings/privacy'),
-                      ),
-                      ListTile(
-                        leading: const Icon(Icons.help_outline),
-                        title: Text('settings_help_row_title'.tr()),
-                        subtitle: Text('settings_help_row_subtitle'.tr()),
-                        trailing: const Icon(Icons.chevron_right),
-                        onTap: () => context.push('/settings/help'),
-                      ),
-                      ListTile(
-                        leading: const Icon(Icons.workspace_premium),
-                        title: Text('settings_subscription_row_title'.tr()),
-                        subtitle: Text('settings_subscription_row_subtitle'.tr()),
-                        trailing: const Icon(Icons.chevron_right),
-                        onTap: () => context.push('/settings/subscription'),
-                      ),
-                    ],
+                        const Divider(height: 1),
+                        ListTile(
+                          leading: const Icon(Icons.notifications_active),
+                          title: Text('settings_notification_row_title'.tr()),
+                          subtitle: Text('settings_notification_row_subtitle'.tr()),
+                          trailing: const Icon(Icons.chevron_right),
+                          onTap: () => context.push('/settings/notification'),
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.manage_accounts),
+                          title: Text('settings_account_row_title'.tr()),
+                          subtitle: Text('settings_account_row_subtitle'.tr()),
+                          trailing: const Icon(Icons.chevron_right),
+                          onTap: () => context.push('/settings/account'),
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.privacy_tip),
+                          title: Text('settings_privacy_row_title'.tr()),
+                          subtitle: Text('settings_privacy_row_subtitle'.tr()),
+                          trailing: const Icon(Icons.chevron_right),
+                          onTap: () => context.push('/settings/privacy'),
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.help_outline),
+                          title: Text('settings_help_row_title'.tr()),
+                          subtitle: Text('settings_help_row_subtitle'.tr()),
+                          trailing: const Icon(Icons.chevron_right),
+                          onTap: () => context.push('/settings/help'),
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.workspace_premium),
+                          title: Text('settings_subscription_row_title'.tr()),
+                          subtitle: Text('settings_subscription_row_subtitle'.tr()),
+                          trailing: const Icon(Icons.chevron_right),
+                          onTap: () => context.push('/settings/subscription'),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(height: 20),
