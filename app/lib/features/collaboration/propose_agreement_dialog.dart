@@ -2,7 +2,9 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
+import '../../core/widgets/brutalist_button.dart';
 import 'agreement_providers.dart';
 
 class ProposeAgreementDialog extends ConsumerStatefulWidget {
@@ -111,13 +113,17 @@ class _ProposeAgreementDialogState extends ConsumerState<ProposeAgreementDialog>
         ),
       ),
       actions: [
-        TextButton(
+        BrutalistButton(
+          label: 'agreement_cancel'.tr(),
+          variant: BrutalistButtonVariant.secondary,
+          fullWidth: false,
           onPressed: _submitting ? null : () => Navigator.of(context).pop(),
-          child: Text('agreement_cancel'.tr()),
         ),
-        ElevatedButton(
+        BrutalistButton(
+          label: 'agreement_submit'.tr(),
+          fullWidth: false,
+          icon: PhosphorIcons.check(PhosphorIconsStyle.bold),
           onPressed: _submitting ? null : _submit,
-          child: Text('agreement_submit'.tr()),
         ),
       ],
     );
