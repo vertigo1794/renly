@@ -327,7 +327,7 @@ with:
                   Image.asset(
                     'assets/illustrations/matching_empty.png',
                     height: 160,
-                    errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                    errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
                   ),
                   const SizedBox(height: 16),
                   Text('matching_empty'.tr()),
@@ -478,7 +478,7 @@ with:
                   Image.asset(
                     'assets/illustrations/matching_empty.png',
                     height: 160,
-                    errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                    errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
                   ),
                   const SizedBox(height: 16),
                   Text('matching_empty'.tr()),
@@ -669,7 +669,7 @@ with:
                   Image.asset(
                     'assets/illustrations/matching_empty.png',
                     height: 160,
-                    errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                    errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
                   ),
                   const SizedBox(height: 16),
                   Text('matching_empty'.tr()),
@@ -740,7 +740,7 @@ with:
                 Image.asset(
                   'assets/illustrations/cobroke_request_empty.png',
                   height: 160,
-                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                  errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
                 ),
                 const SizedBox(height: 16),
                 Text('cobroke_request_empty'.tr()),
