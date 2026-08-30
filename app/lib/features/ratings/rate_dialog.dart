@@ -85,6 +85,11 @@ class _RateDialogState extends ConsumerState<RateDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
+      // On narrow phones (~360dp and below) the two BrutalistButtons can
+      // still slightly exceed the actions row's available width and fall
+      // back to AlertDialog's stacked layout -- this spacing keeps their
+      // 2.5px ink borders from touching in that fallback case.
+      actionsOverflowButtonSpacing: 8,
       title: Text('rating_dialog_title'.tr()),
       content: Column(
         mainAxisSize: MainAxisSize.min,
@@ -94,6 +99,7 @@ class _RateDialogState extends ConsumerState<RateDialog> {
             children: List.generate(5, (index) {
               final starValue = index + 1;
               return _BrutalistStar(
+                starValue: starValue,
                 selected: starValue <= _stars,
                 onTap: _submitting ? null : () => setState(() => _stars = starValue),
               );
@@ -129,21 +135,31 @@ class _RateDialogState extends ConsumerState<RateDialog> {
 }
 
 class _BrutalistStar extends StatelessWidget {
-  const _BrutalistStar({required this.selected, required this.onTap});
+  const _BrutalistStar({required this.starValue, required this.selected, required this.onTap});
 
+  final int starValue;
   final bool selected;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.all(4),
-        child: Icon(
-          PhosphorIcons.star(selected ? PhosphorIconsStyle.bold : PhosphorIconsStyle.regular),
-          color: AppColors.ink,
-          size: 32,
+    return Semantics(
+      button: true,
+      label: '${'rating_star_label'.tr()} $starValue',
+      selected: selected,
+      child: GestureDetector(
+        onTap: onTap,
+        // Padding(8) around a 32px icon gives a 48x48 tap target, meeting
+        // the Material/WCAG minimum touch-target size -- the plain
+        // IconButton this replaced guaranteed that via
+        // kMinInteractiveDimension; a bare GestureDetector does not.
+        child: Padding(
+          padding: const EdgeInsets.all(8),
+          child: Icon(
+            PhosphorIcons.star(selected ? PhosphorIconsStyle.bold : PhosphorIconsStyle.regular),
+            color: AppColors.ink,
+            size: 32,
+          ),
         ),
       ),
     );

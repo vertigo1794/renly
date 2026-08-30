@@ -52,7 +52,7 @@ The `MyRequestsScreen` error-state Retry `TextButton` (inside `_AgreementSection
 
 ## Star picker redesign
 
-`RateDialog`'s 5-star picker currently uses `IconButton(icon: Icon(Icons.star / Icons.star_border), onPressed: ...)`. Replaced with a local `_BrutalistStar` widget (private to `rate_dialog.dart`, not a shared core widget — single use site, avoids premature abstraction): a `GestureDetector` wrapping `Icon(PhosphorIcons.star(selected ? PhosphorIconsStyle.bold : PhosphorIconsStyle.regular), color: AppColors.ink, size: 32)`. No button chrome (no border/shadow/fill) — a star rating control is not a CTA button, so it does not become a `BrutalistButton`.
+`RateDialog`'s 5-star picker currently uses `IconButton(icon: Icon(Icons.star / Icons.star_border), onPressed: ...)`. Replaced with a local `_BrutalistStar` widget (private to `rate_dialog.dart`, not a shared core widget — single use site, avoids premature abstraction): a `GestureDetector` wrapping `Icon(PhosphorIcons.star(selected ? PhosphorIconsStyle.bold : PhosphorIconsStyle.regular), color: AppColors.ink, size: 32)`, `Padding(all: 8)` around the icon (48×48 touch target, matching `IconButton`'s `kMinInteractiveDimension`), and a `Semantics(button: true, label: '<localized "Star"> N', selected: ...)` wrapper — `GestureDetector` alone, unlike `IconButton`, contributes a tap action but no button role/label, so this app's first hard-shadow-free interactive control still needs explicit semantics, same lesson as `BrutalistButton`'s own accessibility fix. No button chrome (no border/shadow/fill) — a star rating control is not a CTA button, so it does not become a `BrutalistButton`.
 
 ## Card treatment
 

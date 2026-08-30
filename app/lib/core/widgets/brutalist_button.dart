@@ -36,6 +36,29 @@ class BrutalistButton extends StatelessWidget {
     final backgroundColor = _isPrimary ? AppColors.primary : Colors.transparent;
     final textStyle = Theme.of(context).textTheme.labelLarge?.copyWith(color: AppColors.ink);
 
+    final buttonCore = Container(
+      padding: fullWidth ? null : const EdgeInsets.symmetric(horizontal: 20),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        border: Border.all(color: AppColors.ink, width: 2.5),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: _isPrimary
+            ? const [BoxShadow(color: AppColors.ink, offset: Offset(4, 4), blurRadius: 0)]
+            : null,
+      ),
+      alignment: Alignment.center,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, color: textStyle?.color, size: 20),
+            const SizedBox(width: 8),
+          ],
+          Text(label, style: textStyle),
+        ],
+      ),
+    );
+
     return Semantics(
       button: true,
       enabled: isEnabled,
@@ -49,28 +72,14 @@ class BrutalistButton extends StatelessWidget {
             child: InkWell(
               onTap: onPressed,
               borderRadius: BorderRadius.circular(12),
-              child: Container(
-                padding: fullWidth ? null : const EdgeInsets.symmetric(horizontal: 20),
-                decoration: BoxDecoration(
-                  color: backgroundColor,
-                  border: Border.all(color: AppColors.ink, width: 2.5),
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: _isPrimary
-                      ? const [BoxShadow(color: AppColors.ink, offset: Offset(4, 4), blurRadius: 0)]
-                      : null,
-                ),
-                alignment: Alignment.center,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (icon != null) ...[
-                      Icon(icon, color: textStyle?.color, size: 20),
-                      const SizedBox(width: 8),
-                    ],
-                    Text(label, style: textStyle),
-                  ],
-                ),
-              ),
+              // fullWidth:false must shrink-wrap regardless of the parent's
+              // constraints (Column, Center, AlertDialog's OverflowBar, a
+              // fixed-width SizedBox, ...). Container's own `alignment`
+              // makes it expand to fill any BOUNDED parent width even when
+              // its child is narrower, so a plain Container here silently
+              // renders full-width outside a Row. IntrinsicWidth forces
+              // sizing to the child's natural width in every case.
+              child: fullWidth ? buttonCore : IntrinsicWidth(child: buttonCore),
             ),
           ),
         ),

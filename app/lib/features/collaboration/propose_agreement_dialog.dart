@@ -82,6 +82,11 @@ class _ProposeAgreementDialogState extends ConsumerState<ProposeAgreementDialog>
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
+      // On narrow phones (~360dp and below) the two BrutalistButtons can
+      // still slightly exceed the actions row's available width and fall
+      // back to AlertDialog's stacked layout -- this spacing keeps their
+      // 2.5px ink borders from touching in that fallback case.
+      actionsOverflowButtonSpacing: 8,
       title: Text('agreement_propose_title'.tr()),
       content: Form(
         key: _formKey,

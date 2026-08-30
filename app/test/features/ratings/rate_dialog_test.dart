@@ -69,4 +69,40 @@ void main() {
     expect(find.byIcon(PhosphorIcons.star(PhosphorIconsStyle.bold)), findsNWidgets(2));
     expect(find.byIcon(PhosphorIcons.star(PhosphorIconsStyle.regular)), findsNWidgets(3));
   });
+
+  testWidgets('each star meets the 48x48 minimum touch target and exposes button semantics', (tester) async {
+    final handle = tester.ensureSemantics();
+    await tester.pumpWidget(_wrap(
+      child: Builder(
+        builder: (context) => ElevatedButton(
+          onPressed: () => showDialog<void>(
+            context: context,
+            builder: (_) => const RateDialog(agreementId: 'agr-1', raterId: 'n-1', ratedId: 'n-2'),
+          ),
+          child: const Text('open'),
+        ),
+      ),
+    ));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+
+    final firstStarIcon = find.byIcon(PhosphorIcons.star(PhosphorIconsStyle.bold)).first;
+    final starDetector = find.ancestor(of: firstStarIcon, matching: find.byType(GestureDetector));
+    final size = tester.getSize(starDetector);
+    expect(size.width, greaterThanOrEqualTo(48));
+    expect(size.height, greaterThanOrEqualTo(48));
+
+    expect(
+      tester.getSemantics(starDetector),
+      matchesSemantics(
+        label: 'Star 1',
+        isButton: true,
+        hasTapAction: true,
+        isSelected: true,
+        hasSelectedState: true,
+      ),
+    );
+    handle.dispose();
+  });
 }

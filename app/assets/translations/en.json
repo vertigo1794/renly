@@ -146,6 +146,7 @@
   "profile_sign_out": "Sign Out",
   "profile_save_success": "Profile updated",
   "rating_dialog_title": "Rate this collaboration",
+  "rating_star_label": "Star",
   "rating_review_label": "Review (optional)",
   "rating_submit": "Submit",
   "rating_cancel": "Cancel",

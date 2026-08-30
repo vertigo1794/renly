@@ -136,7 +136,9 @@ class _RequestList extends ConsumerWidget {
                       Text(_statusLabel(candidate.request.status)),
                       if (isReceived && candidate.request.status == 'pending') ...[
                         const SizedBox(height: 8),
-                        Row(
+                        Wrap(
+                          spacing: 12,
+                          runSpacing: 8,
                           children: [
                             BrutalistButton(
                               label: 'cobroke_request_accept'.tr(),
@@ -157,7 +159,6 @@ class _RequestList extends ConsumerWidget {
                                 }
                               },
                             ),
-                            const SizedBox(width: 12),
                             BrutalistButton(
                               label: 'cobroke_request_decline'.tr(),
                               variant: BrutalistButtonVariant.secondary,
@@ -283,7 +284,9 @@ class _AgreementSection extends ConsumerWidget {
                 Text(agreement.terms!),
               ],
               const SizedBox(height: 8),
-              Row(
+              Wrap(
+                spacing: 12,
+                runSpacing: 8,
                 children: [
                   BrutalistButton(
                     label: 'agreement_accept'.tr(),
@@ -302,7 +305,6 @@ class _AgreementSection extends ConsumerWidget {
                       }
                     },
                   ),
-                  const SizedBox(width: 12),
                   BrutalistButton(
                     label: 'agreement_decline'.tr(),
                     variant: BrutalistButtonVariant.secondary,

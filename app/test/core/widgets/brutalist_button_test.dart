@@ -43,15 +43,35 @@ void main() {
       // Flutter's own disabled-tap contract, not reimplemented here.
     });
 
-    testWidgets('fullWidth:false sizes to content instead of double.infinity', (tester) async {
+    testWidgets('fullWidth:false renders narrower than a wide bounded parent', (tester) async {
+      // A Center (like AlertDialog's OverflowBar / a Column) hands its child
+      // a bounded-but-loose width constraint -- the exact shape that once
+      // made Container's `alignment` silently expand a fullWidth:false
+      // button to fill the parent. Asserting the widget's constructor
+      // property (the old version of this test) can't catch that; only
+      // measuring rendered geometry can.
       await tester.pumpWidget(MaterialApp(
         home: Center(
           child: BrutalistButton(label: 'Compact', onPressed: () {}, fullWidth: false),
         ),
       ));
-      final sizedBox = tester.widget<SizedBox>(find.byType(SizedBox).first);
-      expect(sizedBox.width, isNot(double.infinity));
-      expect(sizedBox.width, isNull);
+      final width = tester.getSize(find.byType(BrutalistButton)).width;
+      expect(width, lessThan(200));
+    });
+
+    testWidgets('fullWidth:false shrink-wraps side-by-side in a Row', (tester) async {
+      await tester.pumpWidget(MaterialApp(
+        home: Row(
+          children: [
+            BrutalistButton(label: 'A', onPressed: () {}, fullWidth: false),
+            const SizedBox(width: 12),
+            BrutalistButton(label: 'B', onPressed: () {}, fullWidth: false),
+          ],
+        ),
+      ));
+      final widthA = tester.getSize(find.text('A')).width;
+      final buttonWidthA = tester.getSize(find.widgetWithText(BrutalistButton, 'A')).width;
+      expect(buttonWidthA, lessThan(widthA + 60));
     });
 
     testWidgets('icon renders before the label when provided', (tester) async {
