@@ -9,6 +9,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:renly/core/theme/app_theme.dart';
+import 'package:renly/core/widgets/brutalist_button.dart';
 import 'package:renly/features/requirement/post_requirement_screen.dart';
 import 'package:renly/features/requirement/requirement_providers.dart';
 import 'package:renly/features/subscription/models/subscription_status.dart' as subscription;
@@ -73,7 +74,7 @@ void main() {
     final scrollable = find.byType(SingleChildScrollView);
     await tester.drag(scrollable, const Offset(0, -600));
     await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(ElevatedButton, 'Post Requirement'));
+    await tester.tap(find.widgetWithText(BrutalistButton, 'Post Requirement'));
     await tester.pumpAndSettle();
 
     expect(find.text('This field is required'), findsWidgets);
@@ -94,7 +95,7 @@ void main() {
     final scrollable = find.byType(SingleChildScrollView);
     await tester.drag(scrollable, const Offset(0, -600));
     await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(ElevatedButton, 'Post Requirement'));
+    await tester.tap(find.widgetWithText(BrutalistButton, 'Post Requirement'));
     await tester.pumpAndSettle();
 
     expect(find.text('Maximum budget must be at least the minimum'), findsOneWidget);
@@ -116,7 +117,7 @@ void main() {
 
     expect(find.text("You've reached the Free plan's limit of 3 active requirements. Upgrade to Professional for unlimited requirements."), findsOneWidget);
 
-    final button = tester.widget<ElevatedButton>(find.byType(ElevatedButton));
+    final button = tester.widget<BrutalistButton>(find.byType(BrutalistButton));
     expect(button.onPressed, isNull);
   });
 
@@ -136,7 +137,7 @@ void main() {
 
     expect(find.text("You've reached the Free plan's limit of 3 active requirements. Upgrade to Professional for unlimited requirements."), findsNothing);
 
-    final button = tester.widget<ElevatedButton>(find.byType(ElevatedButton));
+    final button = tester.widget<BrutalistButton>(find.byType(BrutalistButton));
     expect(button.onPressed, isNotNull);
   });
 }
