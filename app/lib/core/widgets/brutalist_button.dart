@@ -37,7 +37,14 @@ class BrutalistButton extends StatelessWidget {
     final textStyle = Theme.of(context).textTheme.labelLarge?.copyWith(color: AppColors.ink);
 
     final buttonCore = Container(
-      padding: fullWidth ? null : const EdgeInsets.symmetric(horizontal: 20),
+      // 8, not the full-width path's implicit ~20-24: an AlertDialog's
+      // OverflowBar adds its own buttonPadding around each action, so two
+      // fullWidth:false buttons need to be lean to land side-by-side on
+      // common phone widths (verified empirically: side-by-side from
+      // ~380dp with this padding; narrower phones still fall back to
+      // AlertDialog's own stacked layout via actionsOverflowButtonSpacing,
+      // which is a legitimate Material fallback, not a bug).
+      padding: fullWidth ? null : const EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
         color: backgroundColor,
         border: Border.all(color: AppColors.ink, width: 2.5),

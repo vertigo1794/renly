@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:renly/core/widgets/brutalist_button.dart';
 
 void main() {
@@ -59,19 +60,55 @@ void main() {
       expect(width, lessThan(200));
     });
 
-    testWidgets('fullWidth:false shrink-wraps side-by-side in a Row', (tester) async {
+    testWidgets('fullWidth:false pair renders side-by-side inside a real AlertDialog', (tester) async {
+      // Regression guard for the actual reported bug shape: a bare Row
+      // never triggers Container's alignment-expansion issue (Row hands
+      // its children unbounded width), so a Row-only test can pass against
+      // a genuinely broken widget. AlertDialog's actions render through
+      // OverflowBar, which hands each action a bounded-but-loose width --
+      // the exact context that was silently broken before the
+      // IntrinsicWidth fix. Verified empirically to need >= ~380dp with
+      // this widget's current compact padding.
+      await tester.binding.setSurfaceSize(const Size(400, 800));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
       await tester.pumpWidget(MaterialApp(
-        home: Row(
-          children: [
-            BrutalistButton(label: 'A', onPressed: () {}, fullWidth: false),
-            const SizedBox(width: 12),
-            BrutalistButton(label: 'B', onPressed: () {}, fullWidth: false),
-          ],
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: Center(
+              child: ElevatedButton(
+                onPressed: () => showDialog<void>(
+                  context: context,
+                  builder: (_) => AlertDialog(
+                    actionsOverflowButtonSpacing: 8,
+                    title: const Text('Test'),
+                    actions: [
+                      BrutalistButton(
+                        label: 'Cancel',
+                        onPressed: () {},
+                        variant: BrutalistButtonVariant.secondary,
+                        fullWidth: false,
+                      ),
+                      BrutalistButton(
+                        label: 'Submit',
+                        onPressed: () {},
+                        fullWidth: false,
+                        icon: PhosphorIcons.check(PhosphorIconsStyle.bold),
+                      ),
+                    ],
+                  ),
+                ),
+                child: const Text('open'),
+              ),
+            ),
+          ),
         ),
       ));
-      final widthA = tester.getSize(find.text('A')).width;
-      final buttonWidthA = tester.getSize(find.widgetWithText(BrutalistButton, 'A')).width;
-      expect(buttonWidthA, lessThan(widthA + 60));
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+
+      final rectA = tester.getRect(find.widgetWithText(BrutalistButton, 'Cancel'));
+      final rectB = tester.getRect(find.widgetWithText(BrutalistButton, 'Submit'));
+      expect(rectA.top, rectB.top, reason: 'both actions should render on the same row, not stacked');
     });
 
     testWidgets('icon renders before the label when provided', (tester) async {
