@@ -94,16 +94,26 @@ class _RateDialogState extends ConsumerState<RateDialog> {
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(5, (index) {
-              final starValue = index + 1;
-              return _BrutalistStar(
-                starValue: starValue,
-                selected: starValue <= _stars,
-                onTap: _submitting ? null : () => setState(() => _stars = starValue),
-              );
-            }),
+          // 5 stars at the 48x48 minimum touch target (240dp total) can
+          // exceed a narrow phone's dialog content width (e.g. 360dp and
+          // below, once AlertDialog's own inset/content padding is
+          // subtracted) -- SingleChildScrollView preserves the full touch
+          // target everywhere instead of shrinking it back below 48dp to
+          // force a fit, at the cost of a scroll gesture on the narrowest
+          // screens only.
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(5, (index) {
+                final starValue = index + 1;
+                return _BrutalistStar(
+                  starValue: starValue,
+                  selected: starValue <= _stars,
+                  onTap: _submitting ? null : () => setState(() => _stars = starValue),
+                );
+              }),
+            ),
           ),
           TextField(
             controller: _reviewController,
