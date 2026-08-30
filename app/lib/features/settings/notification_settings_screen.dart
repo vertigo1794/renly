@@ -107,11 +107,13 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
                     value: _matchOverride ?? prefs.notifyMatch,
                     onChanged: (value) => _toggle(notifyMatch: value),
                   ),
+                  const Divider(height: 1),
                   SwitchListTile(
                     title: Text('notification_settings_message_label'.tr()),
                     value: _messageOverride ?? prefs.notifyMessage,
                     onChanged: (value) => _toggle(notifyMessage: value),
                   ),
+                  const Divider(height: 1),
                   SwitchListTile(
                     title: Text('notification_settings_cobroke_request_label'.tr()),
                     value: _cobrokeOverride ?? prefs.notifyCobrokeRequest,

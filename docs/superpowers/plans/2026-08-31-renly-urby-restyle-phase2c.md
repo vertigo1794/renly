@@ -13,7 +13,7 @@
 - All icons use `PhosphorIcons.X(PhosphorIconsStyle.bold)` — never `Icons.*` Material icons.
 - No functional/business-logic change to any of the 7 screens.
 - No global theme file (`app_theme.dart`/`app_colors.dart`) touched.
-- All 4 error-state Retry `TextButton`s (in `AccountSettingsScreen`, `NotificationSettingsScreen`, `SubscriptionScreen`) are out of scope — leave untouched.
+- All 3 error-state Retry `TextButton`s (in `AccountSettingsScreen`, `NotificationSettingsScreen`, `SubscriptionScreen`) are out of scope — leave untouched. (`ProfileScreen`'s error branch has no retry button at all, just plain error text.)
 - `flutter analyze` and the full `flutter test` suite must stay clean throughout every task.
 - No golden-image tests.
 - `assets/illustrations/` is already declared as a directory in `app/pubspec.yaml` — no pubspec change needed for the new `reviews_empty.png` slot.
@@ -377,7 +377,7 @@ with:
         ),
 ```
 
-(`padding: EdgeInsets.zero` since `SwitchListTile`'s own default `contentPadding` already provides spacing — matches this project's established `ListTile`-inside-`BrutalistCard` convention from Phase 2A.)
+(`padding: EdgeInsets.zero` since `SwitchListTile`'s own default `contentPadding: EdgeInsets.symmetric(horizontal: 16)` already provides spacing, landing content at the same 16px inset Phase 2A used — this is a new pattern this task introduces, not a reuse of Phase 2A's `ListTile(contentPadding: EdgeInsets.zero)`-inside-default-padded-`BrutalistCard` convention, which applied to non-tappable layout shims inside an outer `InkWell`, a different case.)
 
 - [ ] **Step 3: Run tests and analyze**
 
