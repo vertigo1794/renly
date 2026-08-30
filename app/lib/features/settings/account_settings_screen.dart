@@ -1,7 +1,9 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
+import '../../core/widgets/brutalist_button.dart';
 import '../auth/auth_validation.dart';
 import 'settings_providers.dart';
 
@@ -126,9 +128,10 @@ class _PasswordFormState extends ConsumerState<_PasswordForm> {
             Text(_submitError!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
           ],
           const SizedBox(height: 12),
-          ElevatedButton(
+          BrutalistButton(
+            label: 'account_settings_submit'.tr(),
+            icon: PhosphorIcons.check(PhosphorIconsStyle.bold),
             onPressed: _submitting ? null : _submit,
-            child: Text('account_settings_submit'.tr()),
           ),
         ],
       ),
