@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/brutalist_card.dart';
 import 'listing_formatting.dart';
 import 'listing_photo.dart';
 import 'listing_providers.dart';
@@ -66,7 +67,20 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
               data: (listings) {
                 final filtered = _filter(listings);
                 if (filtered.isEmpty) {
-                  return Center(child: Text('marketplace_empty'.tr()));
+                  return Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Image.asset(
+                          'assets/illustrations/marketplace_empty.png',
+                          height: 160,
+                          errorBuilder: (context, error, stackTrace) => const SizedBox(height: 160),
+                        ),
+                        const SizedBox(height: 16),
+                        Text('marketplace_empty'.tr()),
+                      ],
+                    ),
+                  );
                 }
                 return RefreshIndicator(
                   onRefresh: () async => ref.invalidate(marketplaceListingsProvider),
@@ -75,68 +89,71 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
                     itemCount: filtered.length,
                     itemBuilder: (context, index) {
                       final listing = filtered[index];
-                      return Card(
-                        margin: const EdgeInsets.only(bottom: 16),
-                        child: InkWell(
-                          onTap: () => context.push('/property/${listing.listingId}'),
-                          child: Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                if (listing.photoUrls.isNotEmpty) ...[
-                                  ClipRRect(
-                                    borderRadius: BorderRadius.circular(8),
-                                    child: SizedBox(
-                                      width: 72,
-                                      height: 72,
-                                      child: ListingPhoto(path: listing.photoUrls.first),
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () => context.push('/property/${listing.listingId}'),
+                            borderRadius: BorderRadius.circular(12),
+                            child: BrutalistCard(
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if (listing.photoUrls.isNotEmpty) ...[
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: SizedBox(
+                                        width: 72,
+                                        height: 72,
+                                        child: ListingPhoto(path: listing.photoUrls.first),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                  ],
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(listing.title,
+                                            style: Theme.of(context).textTheme.titleMedium),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          ListingFormatting.formatPrice(
+                                              listing.price, listing.transactionType),
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .titleMedium
+                                              ?.copyWith(color: AppColors.ink),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Row(
+                                          children: [
+                                            if (listing.bedrooms != null) ...[
+                                              const Icon(Icons.bed, size: 16),
+                                              const SizedBox(width: 4),
+                                              Text('${listing.bedrooms}'),
+                                              const SizedBox(width: 12),
+                                            ],
+                                            if (listing.bathrooms != null) ...[
+                                              const Icon(Icons.bathtub, size: 16),
+                                              const SizedBox(width: 4),
+                                              Text('${listing.bathrooms}'),
+                                              const SizedBox(width: 12),
+                                            ],
+                                            Flexible(
+                                              child: Text(
+                                                listing.area,
+                                                style: Theme.of(context).textTheme.labelSmall,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                  const SizedBox(width: 12),
                                 ],
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(listing.title,
-                                          style: Theme.of(context).textTheme.titleMedium),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        ListingFormatting.formatPrice(
-                                            listing.price, listing.transactionType),
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .titleMedium
-                                            ?.copyWith(color: AppColors.ink),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Row(
-                                        children: [
-                                          if (listing.bedrooms != null) ...[
-                                            const Icon(Icons.bed, size: 16),
-                                            const SizedBox(width: 4),
-                                            Text('${listing.bedrooms}'),
-                                            const SizedBox(width: 12),
-                                          ],
-                                          if (listing.bathrooms != null) ...[
-                                            const Icon(Icons.bathtub, size: 16),
-                                            const SizedBox(width: 4),
-                                            Text('${listing.bathrooms}'),
-                                            const SizedBox(width: 12),
-                                          ],
-                                          Flexible(
-                                            child: Text(
-                                              listing.area,
-                                              style: Theme.of(context).textTheme.labelSmall,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
+                              ),
                             ),
                           ),
                         ),
