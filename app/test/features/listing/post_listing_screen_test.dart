@@ -11,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:renly/core/theme/app_theme.dart';
 import 'package:renly/features/listing/listing_providers.dart';
 import 'package:renly/features/listing/post_listing_screen.dart';
+import 'package:renly/core/widgets/brutalist_button.dart';
 import 'package:renly/features/subscription/models/subscription_status.dart' as subscription;
 import 'package:renly/features/subscription/subscription_providers.dart' as subscription_providers;
 
@@ -74,7 +75,7 @@ void main() {
     final scrollable = find.byType(SingleChildScrollView);
     await tester.drag(scrollable, const Offset(0, -600));
     await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(ElevatedButton, 'Post Now'));
+    await tester.tap(find.widgetWithText(BrutalistButton, 'Post Now'));
     await tester.pumpAndSettle();
 
     expect(find.text('This field is required'), findsWidgets);
@@ -96,7 +97,7 @@ void main() {
 
     expect(find.text("You've reached the Free plan's limit of 3 active listings. Upgrade to Professional for unlimited listings."), findsOneWidget);
 
-    final button = tester.widget<ElevatedButton>(find.byType(ElevatedButton));
+    final button = tester.widget<BrutalistButton>(find.byType(BrutalistButton));
     expect(button.onPressed, isNull);
   });
 
@@ -116,7 +117,7 @@ void main() {
 
     expect(find.text("You've reached the Free plan's limit of 3 active listings. Upgrade to Professional for unlimited listings."), findsNothing);
 
-    final button = tester.widget<ElevatedButton>(find.byType(ElevatedButton));
+    final button = tester.widget<BrutalistButton>(find.byType(BrutalistButton));
     expect(button.onPressed, isNotNull);
   });
 }

@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../core/constants/malaysian_states.dart';
+import '../../core/widgets/brutalist_button.dart';
 import '../matching/matching_providers.dart' hide currentNegotiatorIdProvider;
 import 'listing_providers.dart';
 import '../subscription/subscription_providers.dart' hide currentNegotiatorIdProvider;
@@ -360,9 +361,9 @@ class _PostListingScreenState extends ConsumerState<PostListingScreen> {
                   Text(_submitError!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
                 ],
                 const SizedBox(height: 24),
-                ElevatedButton(
+                BrutalistButton(
+                  label: 'listing_post_now'.tr(),
                   onPressed: (_submitting || atCap) ? null : _submit,
-                  child: Text('listing_post_now'.tr()),
                 ),
               ],
             ),
