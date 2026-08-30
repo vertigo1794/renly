@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/widgets/brutalist_button.dart';
+import '../../core/widgets/brutalist_card.dart';
 import 'listing_formatting.dart';
 import 'listing_providers.dart';
 import 'listing_status_filter.dart';
@@ -56,7 +58,20 @@ class _MyInventoryScreenState extends ConsumerState<MyInventoryScreen> {
                         data: (listings) {
                           final filtered = ListingStatusFilter.byStatus(listings, _selectedStatus);
                           if (filtered.isEmpty) {
-                            return Center(child: Text('inventory_empty'.tr()));
+                            return Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Image.asset(
+                                    'assets/illustrations/my_inventory_empty.png',
+                                    height: 160,
+                                    errorBuilder: (context, error, stackTrace) => const SizedBox(height: 160),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text('inventory_empty'.tr()),
+                                ],
+                              ),
+                            );
                           }
                           return RefreshIndicator(
                             onRefresh: () async =>
@@ -66,14 +81,23 @@ class _MyInventoryScreenState extends ConsumerState<MyInventoryScreen> {
                               itemCount: filtered.length,
                               itemBuilder: (context, index) {
                                 final listing = filtered[index];
-                                return Card(
-                                  margin: const EdgeInsets.only(bottom: 16),
-                                  child: ListTile(
-                                    onTap: () => context.push('/property/${listing.listingId}'),
-                                    title: Text(listing.title),
-                                    subtitle: Text(
-                                      ListingFormatting.formatPrice(
-                                          listing.price, listing.transactionType),
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 16),
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      onTap: () => context.push('/property/${listing.listingId}'),
+                                      borderRadius: BorderRadius.circular(12),
+                                      child: BrutalistCard(
+                                        child: ListTile(
+                                          contentPadding: EdgeInsets.zero,
+                                          title: Text(listing.title),
+                                          subtitle: Text(
+                                            ListingFormatting.formatPrice(
+                                                listing.price, listing.transactionType),
+                                          ),
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 );
@@ -87,9 +111,9 @@ class _MyInventoryScreenState extends ConsumerState<MyInventoryScreen> {
           ),
           Padding(
             padding: const EdgeInsets.all(20),
-            child: ElevatedButton(
+            child: BrutalistButton(
+              label: 'inventory_post_new'.tr(),
               onPressed: () => context.push('/post-listing'),
-              child: Text('inventory_post_new'.tr()),
             ),
           ),
         ],

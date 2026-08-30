@@ -8,6 +8,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:renly/core/theme/app_theme.dart';
+import 'package:renly/core/widgets/brutalist_button.dart';
 import 'package:renly/features/listing/listing_providers.dart';
 import 'package:renly/features/listing/models/listing.dart';
 import 'package:renly/features/listing/my_inventory_screen.dart';
@@ -110,7 +111,7 @@ void main() {
 
     await tester.pumpWidget(_wrap(router));
     await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(ElevatedButton, 'Post New Listing'));
+    await tester.tap(find.widgetWithText(BrutalistButton, 'Post New Listing'));
     await tester.pumpAndSettle();
 
     expect(find.text('post-listing-screen'), findsOneWidget);
