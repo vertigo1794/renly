@@ -8,6 +8,8 @@ import 'listing_formatting.dart';
 import 'listing_photo.dart';
 import 'listing_providers.dart';
 import 'models/listing.dart';
+import '../../core/widgets/brutalist_button.dart';
+import '../../core/widgets/status_badge.dart';
 import '../subscription/subscription_providers.dart' hide currentNegotiatorIdProvider;
 
 /// Ports stitch_renly_property_agent_network/property_detail.
@@ -42,6 +44,17 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
           SnackBar(content: Text('listing_error_generic'.tr())),
         );
       }
+    }
+  }
+
+  String _statusLabel(String status) {
+    switch (status) {
+      case 'active':
+        return 'inventory_tab_active'.tr();
+      case 'sold':
+        return 'inventory_tab_sold'.tr();
+      default:
+        return 'inventory_tab_withdrawn'.tr();
     }
   }
 
@@ -94,6 +107,8 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
                   const SizedBox(height: 16),
                   Text(listing.title, style: Theme.of(context).textTheme.headlineLarge),
                   const SizedBox(height: 8),
+                  StatusBadge(label: _statusLabel(listing.status)),
+                  const SizedBox(height: 8),
                   Text(
                     ListingFormatting.formatPrice(listing.price, listing.transactionType),
                     style: Theme.of(context).textTheme.titleMedium,
@@ -140,21 +155,28 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
                   }),
                   const SizedBox(height: 24),
                   if (isOwner) ...[
-                    OutlinedButton(
+                    BrutalistButton(
+                      label: 'matching_view_matches'.tr(),
                       onPressed: () => context.push('/property/${widget.listingId}/matches'),
-                      child: Text('matching_view_matches'.tr()),
+                      variant: BrutalistButtonVariant.secondary,
                     ),
                     const SizedBox(height: 8),
-                    if (listing.status != 'sold')
-                      OutlinedButton(
+                    if (listing.status != 'sold') ...[
+                      BrutalistButton(
+                        label: 'property_mark_sold'.tr(),
                         onPressed: () => _changeStatus(listing, 'sold'),
-                        child: Text('property_mark_sold'.tr()),
+                        variant: BrutalistButtonVariant.secondary,
                       ),
-                    if (listing.status != 'withdrawn')
-                      OutlinedButton(
+                      const SizedBox(height: 8),
+                    ],
+                    if (listing.status != 'withdrawn') ...[
+                      BrutalistButton(
+                        label: 'property_withdraw'.tr(),
                         onPressed: () => _changeStatus(listing, 'withdrawn'),
-                        child: Text('property_withdraw'.tr()),
+                        variant: BrutalistButtonVariant.secondary,
                       ),
+                      const SizedBox(height: 8),
+                    ],
                     if (listing.status != 'active') ...[
                       if (atCap) ...[
                         Text(
@@ -163,9 +185,10 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
                         ),
                         const SizedBox(height: 8),
                       ],
-                      OutlinedButton(
+                      BrutalistButton(
+                        label: 'property_reactivate'.tr(),
                         onPressed: atCap ? null : () => _changeStatus(listing, 'active'),
-                        child: Text('property_reactivate'.tr()),
+                        variant: BrutalistButtonVariant.secondary,
                       ),
                     ],
                   ],
