@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/widgets/brutalist_card.dart';
 import 'models/rating_candidate.dart';
 import 'rating_providers.dart';
 
@@ -33,7 +34,20 @@ class _ReviewsList extends ConsumerWidget {
       error: (error, stack) => Center(child: Text('listing_error_generic'.tr())),
       data: (candidates) {
         if (candidates.isEmpty) {
-          return Center(child: Text('rating_reviews_empty'.tr()));
+          return Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Image.asset(
+                  'assets/illustrations/reviews_empty.png',
+                  height: 160,
+                  errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+                ),
+                const SizedBox(height: 16),
+                Text('rating_reviews_empty'.tr()),
+              ],
+            ),
+          );
         }
         return ListView.builder(
           padding: const EdgeInsets.all(20),
@@ -53,10 +67,9 @@ class _ReviewRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final rating = candidate.rating;
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: BrutalistCard(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
