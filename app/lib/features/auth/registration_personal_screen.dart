@@ -95,7 +95,7 @@ class _RegistrationPersonalScreenState extends ConsumerState<RegistrationPersona
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text('registration_personal_details_label'.tr(),
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(color: AppColors.primary)),
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(color: AppColors.ink)),
                     Text('registration_step1_progress'.tr(), style: Theme.of(context).textTheme.labelSmall),
                   ],
                 ),

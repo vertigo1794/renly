@@ -108,7 +108,7 @@ class _RequirementBoardScreenState extends ConsumerState<RequirementBoardScreen>
                                         style: Theme.of(context)
                                             .textTheme
                                             .titleMedium
-                                            ?.copyWith(color: AppColors.primary),
+                                            ?.copyWith(color: AppColors.ink),
                                       ),
                                       const SizedBox(height: 4),
                                       Text(

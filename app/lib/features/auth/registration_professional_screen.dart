@@ -111,7 +111,7 @@ class _RegistrationProfessionalScreenState extends ConsumerState<RegistrationPro
                   children: [
                     Text('registration_step2_progress'.tr(), style: Theme.of(context).textTheme.labelSmall),
                     Text('registration_professional_details_label'.tr(),
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(color: AppColors.primary)),
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(color: AppColors.ink)),
                   ],
                 ),
                 const SizedBox(height: 24),

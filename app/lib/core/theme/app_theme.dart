@@ -90,6 +90,13 @@ class AppTheme {
           textStyle: baseTextTheme.labelLarge,
         ),
       ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(foregroundColor: AppColors.ink),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(foregroundColor: AppColors.ink),
+      ),
+      progressIndicatorTheme: const ProgressIndicatorThemeData(color: AppColors.ink),
       cardTheme: CardThemeData(
         color: Colors.white,
         shape: RoundedRectangleBorder(

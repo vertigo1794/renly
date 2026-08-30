@@ -48,7 +48,7 @@ class MyMatchesScreen extends ConsumerWidget {
                       children: [
                         Text(
                           '${candidate.score}/100',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(color: AppColors.primary),
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(color: AppColors.ink),
                         ),
                         const SizedBox(height: 4),
                         if (isMyListing) ...[
