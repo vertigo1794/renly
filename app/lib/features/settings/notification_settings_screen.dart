@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/widgets/brutalist_card.dart';
 import 'settings_providers.dart';
 
 class NotificationSettingsScreen extends ConsumerStatefulWidget {
@@ -97,20 +98,27 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
         data: (prefs) => ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            SwitchListTile(
-              title: Text('notification_settings_match_label'.tr()),
-              value: _matchOverride ?? prefs.notifyMatch,
-              onChanged: (value) => _toggle(notifyMatch: value),
-            ),
-            SwitchListTile(
-              title: Text('notification_settings_message_label'.tr()),
-              value: _messageOverride ?? prefs.notifyMessage,
-              onChanged: (value) => _toggle(notifyMessage: value),
-            ),
-            SwitchListTile(
-              title: Text('notification_settings_cobroke_request_label'.tr()),
-              value: _cobrokeOverride ?? prefs.notifyCobrokeRequest,
-              onChanged: (value) => _toggle(notifyCobrokeRequest: value),
+            BrutalistCard(
+              padding: EdgeInsets.zero,
+              child: Column(
+                children: [
+                  SwitchListTile(
+                    title: Text('notification_settings_match_label'.tr()),
+                    value: _matchOverride ?? prefs.notifyMatch,
+                    onChanged: (value) => _toggle(notifyMatch: value),
+                  ),
+                  SwitchListTile(
+                    title: Text('notification_settings_message_label'.tr()),
+                    value: _messageOverride ?? prefs.notifyMessage,
+                    onChanged: (value) => _toggle(notifyMessage: value),
+                  ),
+                  SwitchListTile(
+                    title: Text('notification_settings_cobroke_request_label'.tr()),
+                    value: _cobrokeOverride ?? prefs.notifyCobrokeRequest,
+                    onChanged: (value) => _toggle(notifyCobrokeRequest: value),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
