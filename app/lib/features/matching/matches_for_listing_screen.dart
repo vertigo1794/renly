@@ -36,7 +36,7 @@ class MatchesForListingScreen extends ConsumerWidget {
                   Image.asset(
                     'assets/illustrations/matching_empty.png',
                     height: 160,
-                    errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                    errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
                   ),
                   const SizedBox(height: 16),
                   Text('matching_empty'.tr()),
