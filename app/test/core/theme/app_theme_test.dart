@@ -33,9 +33,22 @@ void main() {
   // font-loads; these throw in bare test() zones but are tolerated in testWidgets() zones.
   // Hoisting at declaration time fails with "Binding has not yet been initialized".
   group('AppTheme.light', () {
-    testWidgets('colorScheme.primary matches AppColors.primary', (WidgetTester tester) async {
-      expect(AppTheme.light.colorScheme.primary, AppColors.primary);
+    testWidgets('elevatedButtonTheme background stays the raw brand lime AppColors.primary', (
+      WidgetTester tester,
+    ) async {
+      final resolvedBackground = AppTheme.light.elevatedButtonTheme.style?.backgroundColor?.resolve(
+        <WidgetState>{},
+      );
+      expect(resolvedBackground, AppColors.primary);
     });
+
+    testWidgets(
+      'colorScheme.primary is not the bright lime brand color (must stay foreground-safe)',
+      (WidgetTester tester) async {
+        expect(AppTheme.light.colorScheme.primary, isNot(AppColors.primary));
+        expect(AppTheme.light.colorScheme.primary, AppColors.ink);
+      },
+    );
 
     testWidgets('uses Material 3', (WidgetTester tester) async {
       expect(AppTheme.light.useMaterial3, isTrue);

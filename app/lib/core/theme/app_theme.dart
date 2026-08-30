@@ -12,7 +12,7 @@ class AppTheme {
 
   static ThemeData get light {
     final colorScheme = const ColorScheme.light(
-      primary: AppColors.primary,
+      primary: AppColors.ink,
       onPrimary: AppColors.onPrimary,
       primaryContainer: AppColors.primaryContainer,
       onPrimaryContainer: AppColors.onPrimaryContainer,
