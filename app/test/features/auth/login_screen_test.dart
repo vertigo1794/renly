@@ -8,6 +8,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:renly/core/theme/app_theme.dart';
+import 'package:renly/core/widgets/brutalist_button.dart';
 import 'package:renly/features/auth/login_screen.dart';
 
 Widget _wrap(GoRouter router) {
@@ -60,7 +61,7 @@ void main() {
 
     await tester.pumpWidget(_wrap(router));
     await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(ElevatedButton, 'Log In'));
+    await tester.tap(find.widgetWithText(BrutalistButton, 'Log In'));
     await tester.pumpAndSettle();
 
     expect(find.text('This field is required'), findsWidgets);

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/widgets/brutalist_button.dart';
 import 'auth_providers.dart';
 import 'auth_validation.dart';
 
@@ -108,9 +109,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   Text(_errorMessage!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
                 ],
                 const SizedBox(height: 24),
-                ElevatedButton(
+                BrutalistButton(
+                  label: 'auth_log_in'.tr(),
                   onPressed: _submitting ? null : _submit,
-                  child: Text('auth_log_in'.tr()),
                 ),
                 const SizedBox(height: 12),
                 TextButton(
