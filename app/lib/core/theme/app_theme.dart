@@ -13,7 +13,13 @@ class AppTheme {
   static ThemeData get light {
     final colorScheme = const ColorScheme.light(
       primary: AppColors.ink,
-      onPrimary: AppColors.onPrimary,
+      // NOT AppColors.onPrimary (#000000) -- that's near-identical to
+      // `primary` above (#0A0A0A), which collapses contrast to ~1:1 for
+      // any Material default that pairs primary/onPrimary as a fill+
+      // foreground (e.g. a selected Switch's track+thumb). Decoupled from
+      // elevatedButtonTheme's black-on-lime text below, which reads the
+      // raw AppColors.onPrimary constant directly, not this resolved role.
+      onPrimary: Colors.white,
       primaryContainer: AppColors.primaryContainer,
       onPrimaryContainer: AppColors.onPrimaryContainer,
       secondary: AppColors.secondary,
@@ -97,6 +103,17 @@ class AppTheme {
         style: OutlinedButton.styleFrom(foregroundColor: AppColors.ink),
       ),
       progressIndicatorTheme: const ProgressIndicatorThemeData(color: AppColors.ink),
+      // Selected state carries the brand lime (design doc: "active nav
+      // indicator, highlight") -- unselected falls through to Material's
+      // own default (null) rather than being restyled here.
+      switchTheme: SwitchThemeData(
+        trackColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected) ? AppColors.primary : null,
+        ),
+        thumbColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected) ? AppColors.ink : null,
+        ),
+      ),
       cardTheme: CardThemeData(
         color: Colors.white,
         shape: RoundedRectangleBorder(

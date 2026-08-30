@@ -50,6 +50,15 @@ void main() {
       },
     );
 
+    testWidgets(
+      'colorScheme.onPrimary stays legible against colorScheme.primary '
+      '(regression guard: both being near-black once collapsed a selected '
+      'Switch\'s track/thumb contrast to ~1:1)',
+      (WidgetTester tester) async {
+        expect(AppTheme.light.colorScheme.onPrimary, isNot(AppTheme.light.colorScheme.primary));
+      },
+    );
+
     testWidgets('uses Material 3', (WidgetTester tester) async {
       expect(AppTheme.light.useMaterial3, isTrue);
     });
