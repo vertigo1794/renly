@@ -14,7 +14,9 @@ This is Sub-phase 2A of the Urby Restyle's Phase 2 rollout (the remaining ~17 sc
 
 ## Status badge (first real use of `AppColors.accent`)
 
-A new small reusable widget, `StatusBadge`, displays a listing's status (`active`/`sold`/`withdrawn`) or a requirement's status (`open`/`fulfilled`/`withdrawn`) as a compact pill using `AppColors.accent` (purple, `#7C3AED`) — the first real use case for this color since Phase 1 introduced it unused. Appears on every card in the 4 list screens (Marketplace, My Inventory, Requirement Board, My Requirements) and in the header of both detail screens (Property Detail, Requirement Detail).
+A new small reusable widget, `StatusBadge`, displays a listing's status (`active`/`sold`/`withdrawn`) or a requirement's status (`open`/`fulfilled`/`withdrawn`) as a compact pill using `AppColors.accent` (purple, `#7C3AED`) — the first real use case for this color since Phase 1 introduced it unused.
+
+**Placement, corrected from the brainstorm's original framing after reading the actual screens:** the badge appears ONLY in the header of the 2 detail screens (Property Detail, Requirement Detail), not on the 4 list screens' cards. `MarketplaceScreen`/`RequirementBoardScreen` only ever show active/open items (RLS-scoped), and `MyInventoryScreen`/`MyRequirementsScreen` filter their list by a selected status tab (`SegmentedButton`) -- in both cases, every card in a given list view already shares the same status, so a per-card badge would be 100% redundant (every card in the "Sold" tab would show "Sold"). The badge earns its place only where a single item's status is the primary fact worth highlighting at a glance, which is the detail screens.
 
 ## Buttons
 
