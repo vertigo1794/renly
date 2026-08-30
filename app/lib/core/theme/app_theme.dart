@@ -3,9 +3,10 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'app_colors.dart';
 
-/// Theme ported from stitch_renly_property_agent_network/lumina_prime/DESIGN.md.
-/// Typography: Syne (headlines), Hanken Grotesk (body), JetBrains Mono (data labels).
-/// Shape: 8px standard elements, 16px containers, 24px feature elements.
+/// Urby-inspired neo-brutalist theme (docs/superpowers/specs/2026-08-25-renly-urby-restyle-design.md),
+/// replacing the never-implemented Lumina Prime system.
+/// Typography: Space Grotesk throughout (headings 700-800, body 500-600).
+/// Shape: 12px radius, 2-2.5px ink borders on buttons/cards.
 class AppTheme {
   AppTheme._();
 
@@ -34,39 +35,39 @@ class AppTheme {
     );
 
     final baseTextTheme = TextTheme(
-      headlineLarge: GoogleFonts.syne(
+      headlineLarge: GoogleFonts.spaceGrotesk(
         fontSize: 32,
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.w800,
         height: 40 / 32,
         letterSpacing: -0.01 * 32,
         color: AppColors.onBackground,
       ),
-      titleMedium: GoogleFonts.hankenGrotesk(
+      titleMedium: GoogleFonts.spaceGrotesk(
         fontSize: 20,
         fontWeight: FontWeight.w600,
         height: 28 / 20,
         color: AppColors.onBackground,
       ),
-      bodyLarge: GoogleFonts.hankenGrotesk(
+      bodyLarge: GoogleFonts.spaceGrotesk(
         fontSize: 18,
-        fontWeight: FontWeight.w400,
+        fontWeight: FontWeight.w500,
         height: 26 / 18,
         color: AppColors.onBackground,
       ),
-      bodyMedium: GoogleFonts.hankenGrotesk(
+      bodyMedium: GoogleFonts.spaceGrotesk(
         fontSize: 16,
-        fontWeight: FontWeight.w400,
+        fontWeight: FontWeight.w500,
         height: 24 / 16,
         color: AppColors.onBackground,
       ),
-      labelSmall: GoogleFonts.jetBrainsMono(
+      labelSmall: GoogleFonts.spaceGrotesk(
         fontSize: 12,
         fontWeight: FontWeight.w500,
         height: 16 / 12,
         letterSpacing: 0.05 * 12,
         color: AppColors.onSurface,
       ),
-      labelLarge: GoogleFonts.hankenGrotesk(
+      labelLarge: GoogleFonts.spaceGrotesk(
         fontSize: 16,
         fontWeight: FontWeight.w700,
         height: 20 / 16,
@@ -83,7 +84,8 @@ class AppTheme {
           backgroundColor: AppColors.primary,
           foregroundColor: AppColors.onPrimary,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
+            side: const BorderSide(color: AppColors.ink, width: 2.5),
+            borderRadius: BorderRadius.circular(12),
           ),
           textStyle: baseTextTheme.labelLarge,
         ),
@@ -91,7 +93,8 @@ class AppTheme {
       cardTheme: CardThemeData(
         color: Colors.white,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: AppColors.ink, width: 2),
+          borderRadius: BorderRadius.circular(12),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(

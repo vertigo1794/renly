@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 class AppColors {
   AppColors._();
 
-  static const Color primary = Color(0xFF536600);
+  static const Color primary = Color(0xFFD2FF00);
   // DESIGN.md frontmatter says on-primary #ffffff, but the prose "Color
   // Roles" section says #000000 (text/icons on Lime buttons). White-on-lime
   // fails contrast; using black per the prose section.
@@ -27,10 +27,14 @@ class AppColors {
   static const Color errorContainer = Color(0xFFFFDAD6);
   static const Color onErrorContainer = Color(0xFF93000A);
 
-  static const Color background = Color(0xFFF9FAF7);
+  static const Color background = Color(0xFFFFFFFF);
   static const Color onBackground = Color(0xFF191C1B);
-  static const Color surface = Color(0xFFF9FAF7);
+  static const Color surface = Color(0xFFFFFFFF);
   static const Color onSurface = Color(0xFF191C1B);
   static const Color surfaceVariant = Color(0xFFE2E3E0);
   static const Color outline = Color(0xFF757A60);
+
+  // Urby-inspired neo-brutalist tokens (2026-08-25-renly-urby-restyle-design.md).
+  static const Color ink = Color(0xFF0A0A0A);
+  static const Color accent = Color(0xFF7C3AED);
 }

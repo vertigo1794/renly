@@ -11,8 +11,8 @@ void main() {
     GoogleFonts.config.allowRuntimeFetching = false;
   });
   group('AppColors', () {
-    test('primary matches Lumina Prime token #536600', () {
-      expect(AppColors.primary, const Color(0xFF536600));
+    test('primary matches Urby restyle token #D2FF00', () {
+      expect(AppColors.primary, const Color(0xFFD2FF00));
     });
 
     test('primaryContainer matches Lumina Prime token #d4ff00', () {
@@ -23,8 +23,8 @@ void main() {
       expect(AppColors.onPrimary, const Color(0xFF000000));
     });
 
-    test('background matches Lumina Prime token #f9faf7', () {
-      expect(AppColors.background, const Color(0xFFF9FAF7));
+    test('background matches Urby restyle token #FFFFFF', () {
+      expect(AppColors.background, const Color(0xFFFFFFFF));
     });
   });
 
@@ -41,12 +41,12 @@ void main() {
       expect(AppTheme.light.useMaterial3, isTrue);
     });
 
-    testWidgets('headlineLarge uses Syne font family', (WidgetTester tester) async {
-      expect(AppTheme.light.textTheme.headlineLarge?.fontFamily, contains('Syne'));
+    testWidgets('headlineLarge uses Space Grotesk font family', (WidgetTester tester) async {
+      expect(AppTheme.light.textTheme.headlineLarge?.fontFamily, contains('SpaceGrotesk'));
     });
 
-    testWidgets('bodyMedium uses Hanken Grotesk font family', (WidgetTester tester) async {
-      expect(AppTheme.light.textTheme.bodyMedium?.fontFamily, contains('Hanken'));
+    testWidgets('bodyMedium uses Space Grotesk font family', (WidgetTester tester) async {
+      expect(AppTheme.light.textTheme.bodyMedium?.fontFamily, contains('SpaceGrotesk'));
     });
   });
 }
