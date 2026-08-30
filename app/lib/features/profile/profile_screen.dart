@@ -3,7 +3,10 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
+import '../../core/widgets/brutalist_button.dart';
+import '../../core/widgets/brutalist_card.dart';
 import '../auth/auth_providers.dart';
 import '../ratings/rating_providers.dart' hide currentNegotiatorIdProvider;
 import 'models/profile.dart';
@@ -63,7 +66,8 @@ class ProfileScreen extends ConsumerWidget {
                 const SizedBox(height: 20),
                 _EditForm(profile: profile),
                 const SizedBox(height: 20),
-                Card(
+                BrutalistCard(
+                  padding: EdgeInsets.zero,
                   child: Column(
                     children: [
                       Padding(
@@ -124,7 +128,10 @@ class ProfileScreen extends ConsumerWidget {
                   onSelectionChanged: (selection) => context.setLocale(Locale(selection.first)),
                 ),
                 const SizedBox(height: 32),
-                OutlinedButton(
+                BrutalistButton(
+                  label: 'profile_sign_out'.tr(),
+                  variant: BrutalistButtonVariant.secondary,
+                  icon: PhosphorIcons.signOut(PhosphorIconsStyle.bold),
                   onPressed: () async {
                     try {
                       await ref.read(authRepositoryProvider).signOut();
@@ -137,7 +144,6 @@ class ProfileScreen extends ConsumerWidget {
                       // show an error the user can't act on.
                     }
                   },
-                  child: Text('profile_sign_out'.tr()),
                 ),
               ],
             ),
@@ -156,15 +162,12 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Text(value, style: Theme.of(context).textTheme.headlineSmall),
-            Text(label),
-          ],
-        ),
+    return BrutalistCard(
+      child: Column(
+        children: [
+          Text(value, style: Theme.of(context).textTheme.headlineSmall),
+          Text(label),
+        ],
       ),
     );
   }
@@ -187,11 +190,12 @@ class _TrustScoreCard extends ConsumerWidget {
             ? 'profile_no_ratings_yet'.tr()
             : (candidates.map((c) => c.rating.stars).reduce((a, b) => a + b) / candidates.length)
                 .toStringAsFixed(1);
-        return Card(
+        return Material(
+          color: Colors.transparent,
           child: InkWell(
+            borderRadius: BorderRadius.circular(12),
             onTap: () => context.push('/reviews'),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
+            child: BrutalistCard(
               child: Column(
                 children: [
                   Text(display, style: Theme.of(context).textTheme.headlineSmall),
@@ -297,9 +301,10 @@ class _EditFormState extends ConsumerState<_EditForm> {
           Text(_submitError!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
         ],
         const SizedBox(height: 12),
-        ElevatedButton(
+        BrutalistButton(
+          label: 'profile_save'.tr(),
+          icon: PhosphorIcons.check(PhosphorIconsStyle.bold),
           onPressed: _submitting ? null : _save,
-          child: Text('profile_save'.tr()),
         ),
       ],
     );
