@@ -2,8 +2,11 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/brutalist_button.dart';
+import '../../core/widgets/brutalist_card.dart';
 import '../collaboration/send_cobroke_request_action.dart';
 import '../listing/listing_formatting.dart';
 import 'matching_providers.dart';
@@ -26,7 +29,20 @@ class MatchesForRequirementScreen extends ConsumerWidget {
         error: (error, stack) => Center(child: Text('listing_error_generic'.tr())),
         data: (matches) {
           if (matches.isEmpty) {
-            return Center(child: Text('matching_empty'.tr()));
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Image.asset(
+                    'assets/illustrations/matching_empty.png',
+                    height: 160,
+                    errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+                  ),
+                  const SizedBox(height: 16),
+                  Text('matching_empty'.tr()),
+                ],
+              ),
+            );
           }
           return ListView.builder(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
@@ -34,34 +50,38 @@ class MatchesForRequirementScreen extends ConsumerWidget {
             itemBuilder: (context, index) {
               final candidate = matches[index];
               final listing = candidate.listing;
-              return Card(
-                margin: const EdgeInsets.only(bottom: 16),
-                child: InkWell(
-                  onTap: () => context.push('/property/${listing.listingId}'),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '${candidate.score}/100',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(color: AppColors.ink),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(ListingFormatting.formatPrice(listing.price, listing.transactionType)),
-                        const SizedBox(height: 4),
-                        Text(listing.area, style: Theme.of(context).textTheme.labelSmall),
-                        const SizedBox(height: 4),
-                        Text(
-                          '${candidate.listingOwner.fullName} (REN: ${candidate.listingOwner.renNumber})',
-                          style: Theme.of(context).textTheme.labelSmall,
-                        ),
-                        const SizedBox(height: 8),
-                        ElevatedButton(
-                          onPressed: () => sendCobrokeRequest(context, ref, candidate.matchId),
-                          child: Text('cobroke_request_send'.tr()),
-                        ),
-                      ],
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () => context.push('/property/${listing.listingId}'),
+                    child: BrutalistCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${candidate.score}/100',
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(color: AppColors.ink),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(ListingFormatting.formatPrice(listing.price, listing.transactionType)),
+                          const SizedBox(height: 4),
+                          Text(listing.area, style: Theme.of(context).textTheme.labelSmall),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${candidate.listingOwner.fullName} (REN: ${candidate.listingOwner.renNumber})',
+                            style: Theme.of(context).textTheme.labelSmall,
+                          ),
+                          const SizedBox(height: 8),
+                          BrutalistButton(
+                            label: 'cobroke_request_send'.tr(),
+                            onPressed: () => sendCobrokeRequest(context, ref, candidate.matchId),
+                            icon: PhosphorIcons.handshake(PhosphorIconsStyle.bold),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
