@@ -73,11 +73,19 @@ void main() {
 
       expect(
         tester.getSemantics(find.text('Enabled')),
-        matchesSemantics(label: 'Enabled', isButton: true, isEnabled: true, hasTapAction: true),
+        matchesSemantics(
+          label: 'Enabled',
+          isButton: true,
+          isEnabled: true,
+          hasTapAction: true,
+          isFocusable: true,
+          hasEnabledState: true,
+          hasFocusAction: true,
+        ),
       );
       expect(
         tester.getSemantics(find.text('Disabled')),
-        matchesSemantics(label: 'Disabled', isButton: true, isEnabled: false),
+        matchesSemantics(label: 'Disabled', isButton: true, isEnabled: false, hasEnabledState: true),
       );
       handle.dispose();
     });
