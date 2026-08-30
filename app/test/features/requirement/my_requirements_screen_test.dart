@@ -8,6 +8,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:renly/core/theme/app_theme.dart';
+import 'package:renly/core/widgets/brutalist_button.dart';
 import 'package:renly/features/requirement/models/requirement.dart';
 import 'package:renly/features/requirement/my_requirements_screen.dart';
 import 'package:renly/features/requirement/requirement_providers.dart';
@@ -108,7 +109,7 @@ void main() {
 
     await tester.pumpWidget(_wrap(router));
     await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(ElevatedButton, 'Post New Requirement'));
+    await tester.tap(find.widgetWithText(BrutalistButton, 'Post New Requirement'));
     await tester.pumpAndSettle();
 
     expect(find.text('post-requirement-screen'), findsOneWidget);

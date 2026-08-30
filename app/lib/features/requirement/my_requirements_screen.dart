@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/widgets/brutalist_button.dart';
+import '../../core/widgets/brutalist_card.dart';
 import 'requirement_formatting.dart';
 import 'requirement_providers.dart';
 import 'requirement_status_filter.dart';
@@ -54,7 +56,20 @@ class _MyRequirementsScreenState extends ConsumerState<MyRequirementsScreen> {
                         data: (requirements) {
                           final filtered = RequirementStatusFilter.byStatus(requirements, _selectedStatus);
                           if (filtered.isEmpty) {
-                            return Center(child: Text('requirement_my_empty'.tr()));
+                            return Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Image.asset(
+                                    'assets/illustrations/my_requirements_empty.png',
+                                    height: 160,
+                                    errorBuilder: (context, error, stackTrace) => const SizedBox(height: 160),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text('requirement_my_empty'.tr()),
+                                ],
+                              ),
+                            );
                           }
                           return RefreshIndicator(
                             onRefresh: () async =>
@@ -64,18 +79,27 @@ class _MyRequirementsScreenState extends ConsumerState<MyRequirementsScreen> {
                               itemCount: filtered.length,
                               itemBuilder: (context, index) {
                                 final requirement = filtered[index];
-                                return Card(
-                                  margin: const EdgeInsets.only(bottom: 16),
-                                  child: ListTile(
-                                    onTap: () => context.push('/requirement-board/${requirement.requirementId}'),
-                                    title: Text(
-                                      RequirementFormatting.formatBudgetRange(
-                                        requirement.budgetMin,
-                                        requirement.budgetMax,
-                                        requirement.transactionType,
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 16),
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      onTap: () => context.push('/requirement-board/${requirement.requirementId}'),
+                                      borderRadius: BorderRadius.circular(12),
+                                      child: BrutalistCard(
+                                        child: ListTile(
+                                          contentPadding: EdgeInsets.zero,
+                                          title: Text(
+                                            RequirementFormatting.formatBudgetRange(
+                                              requirement.budgetMin,
+                                              requirement.budgetMax,
+                                              requirement.transactionType,
+                                            ),
+                                          ),
+                                          subtitle: Text('${requirement.area}, ${requirement.state}'),
+                                        ),
                                       ),
                                     ),
-                                    subtitle: Text('${requirement.area}, ${requirement.state}'),
                                   ),
                                 );
                               },
@@ -88,9 +112,9 @@ class _MyRequirementsScreenState extends ConsumerState<MyRequirementsScreen> {
           ),
           Padding(
             padding: const EdgeInsets.all(20),
-            child: ElevatedButton(
+            child: BrutalistButton(
+              label: 'requirement_post_new'.tr(),
               onPressed: () => context.push('/post-requirement'),
-              child: Text('requirement_post_new'.tr()),
             ),
           ),
         ],
