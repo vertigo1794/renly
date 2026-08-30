@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:renly/core/theme/app_theme.dart';
@@ -146,6 +147,8 @@ void main() {
 
     await tester.pumpWidget(_wrap(router));
     await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('matching_my_matches_link'.tr()));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('matching_my_matches_link'.tr()));
     await tester.pumpAndSettle();
 
@@ -164,6 +167,8 @@ void main() {
     ]);
 
     await tester.pumpWidget(_wrap(router));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('cobroke_request_my_requests_link'.tr()));
     await tester.pumpAndSettle();
     await tester.tap(find.text('cobroke_request_my_requests_link'.tr()));
     await tester.pumpAndSettle();
@@ -185,7 +190,7 @@ void main() {
 
     await tester.pumpWidget(_wrap(router));
     await tester.pumpAndSettle();
-    await tester.tap(find.byIcon(Icons.person));
+    await tester.tap(find.byIcon(PhosphorIcons.user(PhosphorIconsStyle.bold)));
     await tester.pumpAndSettle();
 
     expect(find.text('profile-screen'), findsOneWidget);
