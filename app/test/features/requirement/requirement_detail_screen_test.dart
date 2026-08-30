@@ -8,6 +8,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:renly/core/theme/app_theme.dart';
+import 'package:renly/core/widgets/brutalist_button.dart';
 import 'package:renly/features/listing/models/listing_owner.dart';
 import 'package:renly/features/requirement/models/requirement.dart';
 import 'package:renly/features/requirement/requirement_detail_screen.dart';
@@ -139,8 +140,8 @@ void main() {
 
     expect(find.text("You've reached the Free plan's limit of 3 active requirements. Upgrade to Professional for unlimited requirements."), findsOneWidget);
 
-    final reactivateButton = tester.widget<OutlinedButton>(
-      find.ancestor(of: find.text('requirement_reactivate'.tr()), matching: find.byType(OutlinedButton)),
+    final reactivateButton = tester.widget<BrutalistButton>(
+      find.widgetWithText(BrutalistButton, 'requirement_reactivate'.tr()),
     );
     expect(reactivateButton.onPressed, isNull);
   });
@@ -165,8 +166,8 @@ void main() {
 
     expect(find.text("You've reached the Free plan's limit of 3 active requirements. Upgrade to Professional for unlimited requirements."), findsNothing);
 
-    final reactivateButton = tester.widget<OutlinedButton>(
-      find.ancestor(of: find.text('requirement_reactivate'.tr()), matching: find.byType(OutlinedButton)),
+    final reactivateButton = tester.widget<BrutalistButton>(
+      find.widgetWithText(BrutalistButton, 'requirement_reactivate'.tr()),
     );
     expect(reactivateButton.onPressed, isNotNull);
   });

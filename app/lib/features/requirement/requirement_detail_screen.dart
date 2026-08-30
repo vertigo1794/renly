@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/widgets/brutalist_button.dart';
 import '../../core/widgets/signed_photo.dart';
+import '../../core/widgets/status_badge.dart';
 import 'models/requirement.dart';
 import 'requirement_formatting.dart';
 import 'requirement_providers.dart';
@@ -21,6 +23,17 @@ class RequirementDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _RequirementDetailScreenState extends ConsumerState<RequirementDetailScreen> {
+  String _statusLabel(String status) {
+    switch (status) {
+      case 'open':
+        return 'requirement_tab_open'.tr();
+      case 'fulfilled':
+        return 'requirement_tab_fulfilled'.tr();
+      default:
+        return 'inventory_tab_withdrawn'.tr();
+    }
+  }
+
   /// Takes the requirement (not just the new status) so the two list
   /// providers can be invalidated too -- otherwise a requirement marked
   /// fulfilled here stays on the board and in My Requirements' Open tab
@@ -100,6 +113,8 @@ class _RequirementDetailScreenState extends ConsumerState<RequirementDetailScree
                     style: Theme.of(context).textTheme.headlineLarge,
                   ),
                   const SizedBox(height: 8),
+                  StatusBadge(label: _statusLabel(requirement.status)),
+                  const SizedBox(height: 8),
                   Text(
                     '${'listing_property_type_${requirement.propertyType}'.tr()} · '
                     '${'listing_transaction_type_${requirement.transactionType}'.tr()}',
@@ -137,21 +152,28 @@ class _RequirementDetailScreenState extends ConsumerState<RequirementDetailScree
                   }),
                   const SizedBox(height: 24),
                   if (isOwner) ...[
-                    OutlinedButton(
+                    BrutalistButton(
+                      label: 'matching_view_matches'.tr(),
                       onPressed: () => context.push('/requirement-board/${widget.requirementId}/matches'),
-                      child: Text('matching_view_matches'.tr()),
+                      variant: BrutalistButtonVariant.secondary,
                     ),
                     const SizedBox(height: 8),
-                    if (requirement.status != 'fulfilled')
-                      OutlinedButton(
+                    if (requirement.status != 'fulfilled') ...[
+                      BrutalistButton(
+                        label: 'requirement_mark_fulfilled'.tr(),
                         onPressed: () => _changeStatus(requirement, 'fulfilled'),
-                        child: Text('requirement_mark_fulfilled'.tr()),
+                        variant: BrutalistButtonVariant.secondary,
                       ),
-                    if (requirement.status != 'withdrawn')
-                      OutlinedButton(
+                      const SizedBox(height: 8),
+                    ],
+                    if (requirement.status != 'withdrawn') ...[
+                      BrutalistButton(
+                        label: 'requirement_withdraw'.tr(),
                         onPressed: () => _changeStatus(requirement, 'withdrawn'),
-                        child: Text('requirement_withdraw'.tr()),
+                        variant: BrutalistButtonVariant.secondary,
                       ),
+                      const SizedBox(height: 8),
+                    ],
                     if (requirement.status != 'open') ...[
                       if (atCap) ...[
                         Text(
@@ -160,9 +182,10 @@ class _RequirementDetailScreenState extends ConsumerState<RequirementDetailScree
                         ),
                         const SizedBox(height: 8),
                       ],
-                      OutlinedButton(
+                      BrutalistButton(
+                        label: 'requirement_reactivate'.tr(),
                         onPressed: atCap ? null : () => _changeStatus(requirement, 'open'),
-                        child: Text('requirement_reactivate'.tr()),
+                        variant: BrutalistButtonVariant.secondary,
                       ),
                     ],
                   ],
