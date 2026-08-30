@@ -5,8 +5,10 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/widgets/brutalist_button.dart';
 import 'models/subscription_status.dart';
 import 'subscription_providers.dart';
 
@@ -173,7 +175,11 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                 else ...[
                   Text('subscription_processing_timeout'.tr()),
                   const SizedBox(height: 12),
-                  ElevatedButton(onPressed: _refresh, child: Text('subscription_refresh_button'.tr())),
+                  BrutalistButton(
+                    label: 'subscription_refresh_button'.tr(),
+                    icon: PhosphorIcons.arrowClockwise(PhosphorIconsStyle.bold),
+                    onPressed: _refresh,
+                  ),
                 ],
               ] else if (status.tier == 'professional') ...[
                 Text('subscription_professional_tier_label'.tr(), style: Theme.of(context).textTheme.titleLarge),
@@ -188,16 +194,18 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                   ),
                 ],
                 const SizedBox(height: 20),
-                ElevatedButton(
+                BrutalistButton(
+                  label: 'subscription_manage_button'.tr(),
+                  icon: PhosphorIcons.gear(PhosphorIconsStyle.bold),
                   onPressed: _submitting ? null : _manageSubscription,
-                  child: Text('subscription_manage_button'.tr()),
                 ),
               ] else ...[
                 Text('subscription_free_tier_label'.tr(), style: Theme.of(context).textTheme.titleLarge),
                 const SizedBox(height: 20),
-                ElevatedButton(
+                BrutalistButton(
+                  label: 'subscription_upgrade_button'.tr(),
+                  icon: PhosphorIcons.crown(PhosphorIconsStyle.bold),
                   onPressed: _submitting ? null : _upgrade,
-                  child: Text('subscription_upgrade_button'.tr()),
                 ),
               ],
               if (_submitError != null) ...[
