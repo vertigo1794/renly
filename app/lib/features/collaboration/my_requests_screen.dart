@@ -3,7 +3,10 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
+import '../../core/widgets/brutalist_button.dart';
+import '../../core/widgets/brutalist_card.dart';
 import 'agreement_providers.dart' hide currentNegotiatorIdProvider;
 import 'cobroke_request_providers.dart';
 import 'models/cobroke_request_candidate.dart';
@@ -90,7 +93,20 @@ class _RequestList extends ConsumerWidget {
       error: (error, stack) => Center(child: Text('listing_error_generic'.tr())),
       data: (requests) {
         if (requests.isEmpty) {
-          return Center(child: Text('cobroke_request_empty'.tr()));
+          return Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Image.asset(
+                  'assets/illustrations/cobroke_request_empty.png',
+                  height: 160,
+                  errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+                ),
+                const SizedBox(height: 16),
+                Text('cobroke_request_empty'.tr()),
+              ],
+            ),
+          );
         }
         return RefreshIndicator(
           onRefresh: () async => ref.invalidate(provider),
@@ -104,10 +120,9 @@ class _RequestList extends ConsumerWidget {
               final counterpartyNegotiatorId =
                   isMyListing ? candidate.match.requirement.negotiatorId : candidate.match.listing.negotiatorId;
 
-              return Card(
-                margin: const EdgeInsets.only(bottom: 16),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: BrutalistCard(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -123,7 +138,10 @@ class _RequestList extends ConsumerWidget {
                         const SizedBox(height: 8),
                         Row(
                           children: [
-                            ElevatedButton(
+                            BrutalistButton(
+                              label: 'cobroke_request_accept'.tr(),
+                              fullWidth: false,
+                              icon: PhosphorIcons.check(PhosphorIconsStyle.bold),
                               onPressed: () async {
                                 try {
                                   await ref
@@ -138,10 +156,13 @@ class _RequestList extends ConsumerWidget {
                                   }
                                 }
                               },
-                              child: Text('cobroke_request_accept'.tr()),
                             ),
                             const SizedBox(width: 12),
-                            OutlinedButton(
+                            BrutalistButton(
+                              label: 'cobroke_request_decline'.tr(),
+                              variant: BrutalistButtonVariant.secondary,
+                              fullWidth: false,
+                              icon: PhosphorIcons.x(PhosphorIconsStyle.bold),
                               onPressed: () async {
                                 try {
                                   await ref
@@ -156,16 +177,17 @@ class _RequestList extends ConsumerWidget {
                                   }
                                 }
                               },
-                              child: Text('cobroke_request_decline'.tr()),
                             ),
                           ],
                         ),
                       ],
                       if (candidate.request.status == 'accepted') ...[
                         const SizedBox(height: 8),
-                        OutlinedButton(
+                        BrutalistButton(
+                          label: 'cobroke_request_chat_button'.tr(),
+                          variant: BrutalistButtonVariant.secondary,
+                          icon: PhosphorIcons.chatCircle(PhosphorIconsStyle.bold),
                           onPressed: () => context.push('/messages/${candidate.request.requestId}'),
-                          child: Text('cobroke_request_chat_button'.tr()),
                         ),
                         _AgreementSection(
                           requestId: candidate.request.requestId,
@@ -230,7 +252,9 @@ class _AgreementSection extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 8),
-              OutlinedButton(
+              BrutalistButton(
+                label: 'agreement_propose_button'.tr(),
+                variant: BrutalistButtonVariant.secondary,
                 onPressed: () => showDialog<void>(
                   context: context,
                   barrierDismissible: false,
@@ -239,7 +263,6 @@ class _AgreementSection extends ConsumerWidget {
                     initiatorId: currentNegotiatorId!,
                   ),
                 ),
-                child: Text('agreement_propose_button'.tr()),
               ),
             ],
           );
@@ -262,7 +285,10 @@ class _AgreementSection extends ConsumerWidget {
               const SizedBox(height: 8),
               Row(
                 children: [
-                  ElevatedButton(
+                  BrutalistButton(
+                    label: 'agreement_accept'.tr(),
+                    fullWidth: false,
+                    icon: PhosphorIcons.check(PhosphorIconsStyle.bold),
                     onPressed: () async {
                       try {
                         await ref.read(agreementRepositoryProvider).acceptAgreement(agreement.agreementId);
@@ -275,10 +301,13 @@ class _AgreementSection extends ConsumerWidget {
                         }
                       }
                     },
-                    child: Text('agreement_accept'.tr()),
                   ),
                   const SizedBox(width: 12),
-                  OutlinedButton(
+                  BrutalistButton(
+                    label: 'agreement_decline'.tr(),
+                    variant: BrutalistButtonVariant.secondary,
+                    fullWidth: false,
+                    icon: PhosphorIcons.x(PhosphorIconsStyle.bold),
                     onPressed: () async {
                       try {
                         await ref.read(agreementRepositoryProvider).declineAgreement(agreement.agreementId);
@@ -291,7 +320,6 @@ class _AgreementSection extends ConsumerWidget {
                         }
                       }
                     },
-                    child: Text('agreement_decline'.tr()),
                   ),
                 ],
               ),
@@ -359,19 +387,24 @@ class _RatingSection extends ConsumerWidget {
       error: (error, stack) => const SizedBox.shrink(),
       data: (rating) {
         if (rating == null) {
-          return OutlinedButton(
+          return BrutalistButton(
+            label: 'rating_rate_button'.tr(),
+            variant: BrutalistButtonVariant.secondary,
+            icon: PhosphorIcons.star(PhosphorIconsStyle.bold),
             onPressed: () => showDialog<void>(
               context: context,
               barrierDismissible: false,
               builder: (_) => RateDialog(agreementId: agreementId, raterId: raterId, ratedId: ratedId),
             ),
-            child: Text('rating_rate_button'.tr()),
           );
         }
 
         final withinEditWindow = DateTime.now().difference(rating.createdAt) < const Duration(hours: 24);
         if (withinEditWindow) {
-          return OutlinedButton(
+          return BrutalistButton(
+            label: 'rating_edit_button'.tr(),
+            variant: BrutalistButtonVariant.secondary,
+            icon: PhosphorIcons.star(PhosphorIconsStyle.bold),
             onPressed: () => showDialog<void>(
               context: context,
               barrierDismissible: false,
@@ -382,7 +415,6 @@ class _RatingSection extends ConsumerWidget {
                 existingRating: rating,
               ),
             ),
-            child: Text('rating_edit_button'.tr()),
           );
         }
 
