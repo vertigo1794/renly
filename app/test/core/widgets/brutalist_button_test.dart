@@ -42,5 +42,44 @@ void main() {
       // No exception thrown, no state to assert -- InkWell(onTap: null) is
       // Flutter's own disabled-tap contract, not reimplemented here.
     });
+
+    testWidgets('fullWidth:false sizes to content instead of double.infinity', (tester) async {
+      await tester.pumpWidget(MaterialApp(
+        home: Center(
+          child: BrutalistButton(label: 'Compact', onPressed: () {}, fullWidth: false),
+        ),
+      ));
+      final sizedBox = tester.widget<SizedBox>(find.byType(SizedBox).first);
+      expect(sizedBox.width, isNot(double.infinity));
+      expect(sizedBox.width, isNull);
+    });
+
+    testWidgets('icon renders before the label when provided', (tester) async {
+      await tester.pumpWidget(MaterialApp(
+        home: BrutalistButton(label: 'Send', onPressed: () {}, icon: Icons.send),
+      ));
+      expect(find.byIcon(Icons.send), findsOneWidget);
+      expect(find.text('Send'), findsOneWidget);
+    });
+
+    testWidgets('exposes button semantics matching the enabled state', (tester) async {
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(MaterialApp(
+        home: Column(children: [
+          BrutalistButton(label: 'Enabled', onPressed: () {}),
+          const BrutalistButton(label: 'Disabled', onPressed: null),
+        ]),
+      ));
+
+      expect(
+        tester.getSemantics(find.text('Enabled')),
+        matchesSemantics(label: 'Enabled', isButton: true, isEnabled: true, hasTapAction: true),
+      );
+      expect(
+        tester.getSemantics(find.text('Disabled')),
+        matchesSemantics(label: 'Disabled', isButton: true, isEnabled: false),
+      );
+      handle.dispose();
+    });
   });
 }

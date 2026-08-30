@@ -9,18 +9,24 @@ enum BrutalistButtonVariant { primary, secondary }
 /// primary is lime-filled with a solid offset "hard shadow" and an ink
 /// border; secondary is outline-only with no shadow, visually
 /// lighter-weight for less prominent actions. Both use the same 56px-tall
-/// full-width touch target this app's auth buttons already established.
+/// touch target this app's auth buttons already established -- full-width
+/// by default, or content-sized via `fullWidth: false` for side-by-side
+/// pairs and compact inline placements.
 class BrutalistButton extends StatelessWidget {
   const BrutalistButton({
     required this.label,
     required this.onPressed,
     this.variant = BrutalistButtonVariant.primary,
+    this.fullWidth = true,
+    this.icon,
     super.key,
   });
 
   final String label;
   final VoidCallback? onPressed;
   final BrutalistButtonVariant variant;
+  final bool fullWidth;
+  final IconData? icon;
 
   bool get _isPrimary => variant == BrutalistButtonVariant.primary;
 
@@ -30,27 +36,41 @@ class BrutalistButton extends StatelessWidget {
     final backgroundColor = _isPrimary ? AppColors.primary : Colors.transparent;
     final textStyle = Theme.of(context).textTheme.labelLarge?.copyWith(color: AppColors.ink);
 
-    return Opacity(
-      opacity: isEnabled ? 1.0 : 0.5,
-      child: SizedBox(
-        width: double.infinity,
-        height: 56,
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: onPressed,
-            borderRadius: BorderRadius.circular(12),
-            child: Container(
-              decoration: BoxDecoration(
-                color: backgroundColor,
-                border: Border.all(color: AppColors.ink, width: 2.5),
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: _isPrimary
-                    ? const [BoxShadow(color: AppColors.ink, offset: Offset(4, 4), blurRadius: 0)]
-                    : null,
+    return Semantics(
+      button: true,
+      enabled: isEnabled,
+      child: Opacity(
+        opacity: isEnabled ? 1.0 : 0.5,
+        child: SizedBox(
+          width: fullWidth ? double.infinity : null,
+          height: 56,
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onPressed,
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                padding: fullWidth ? null : const EdgeInsets.symmetric(horizontal: 20),
+                decoration: BoxDecoration(
+                  color: backgroundColor,
+                  border: Border.all(color: AppColors.ink, width: 2.5),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: _isPrimary
+                      ? const [BoxShadow(color: AppColors.ink, offset: Offset(4, 4), blurRadius: 0)]
+                      : null,
+                ),
+                alignment: Alignment.center,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (icon != null) ...[
+                      Icon(icon, color: textStyle?.color, size: 20),
+                      const SizedBox(width: 8),
+                    ],
+                    Text(label, style: textStyle),
+                  ],
+                ),
               ),
-              alignment: Alignment.center,
-              child: Text(label, style: textStyle),
             ),
           ),
         ),
