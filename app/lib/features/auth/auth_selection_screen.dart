@@ -4,15 +4,17 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/brutalist_button.dart';
 
-/// Ports stitch_renly_property_agent_network/login_register_selection_english_official_style.
+/// Ports stitch_renly_property_agent_network/login_register_selection_english_official_style,
+/// restyled per docs/superpowers/specs/2026-08-25-renly-urby-restyle-design.md.
 class AuthSelectionScreen extends StatelessWidget {
   const AuthSelectionScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.primaryContainer,
+      backgroundColor: AppColors.surface,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -21,41 +23,39 @@ class AuthSelectionScreen extends StatelessWidget {
             children: [
               Text(
                 'app_name'.tr(),
-                style: Theme.of(context).textTheme.headlineLarge?.copyWith(color: Colors.black),
+                style: Theme.of(context).textTheme.headlineLarge?.copyWith(color: AppColors.ink),
               ),
               const SizedBox(height: 12),
               Text(
                 'auth_tagline'.tr(),
                 textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.black),
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: AppColors.ink),
               ),
-              const SizedBox(height: 64),
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: Colors.black,
-                    shape: const StadiumBorder(),
-                  ),
-                  onPressed: () => context.push('/register/personal'),
-                  child: Text('auth_create_account'.tr()),
-                ),
+              const SizedBox(height: 32),
+              Image.asset(
+                'assets/illustrations/auth_hero.png',
+                height: 200,
+                // No artwork has been dropped into assets/illustrations/ yet
+                // (see this task's brief -- this is the code path only, not
+                // the asset itself). Without an errorBuilder, the missing
+                // asset throws inside Image's async ImageStream pipeline and
+                // that exception reaches FlutterError.reportError, which
+                // flutter_test treats as an unhandled exception and fails
+                // the test -- even though nothing here is actually broken.
+                // Degrading gracefully to empty space keeps the slot's
+                // layout height stable until real art lands.
+                errorBuilder: (context, error, stackTrace) => const SizedBox(height: 200),
+              ),
+              const SizedBox(height: 32),
+              BrutalistButton(
+                label: 'auth_create_account'.tr(),
+                onPressed: () => context.push('/register/personal'),
               ),
               const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: OutlinedButton(
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.black,
-                    side: const BorderSide(color: Colors.black, width: 2),
-                    shape: const StadiumBorder(),
-                  ),
-                  onPressed: () => context.push('/login'),
-                  child: Text('auth_log_in'.tr()),
-                ),
+              BrutalistButton(
+                label: 'auth_log_in'.tr(),
+                onPressed: () => context.push('/login'),
+                variant: BrutalistButtonVariant.secondary,
               ),
             ],
           ),

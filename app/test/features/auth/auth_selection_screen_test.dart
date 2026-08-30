@@ -8,6 +8,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:renly/core/theme/app_theme.dart';
+import 'package:renly/core/widgets/brutalist_button.dart';
 import 'package:renly/features/auth/auth_selection_screen.dart';
 
 Widget _wrap(GoRouter router) {
@@ -59,8 +60,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Collaborate smarter, close faster.'), findsOneWidget);
-    expect(find.widgetWithText(ElevatedButton, 'Create account'), findsOneWidget);
-    expect(find.widgetWithText(OutlinedButton, 'Log In'), findsOneWidget);
+    expect(find.widgetWithText(BrutalistButton, 'Create account'), findsOneWidget);
+    expect(find.widgetWithText(BrutalistButton, 'Log In'), findsOneWidget);
   });
 
   testWidgets('tapping Create account navigates to /register/personal', (tester) async {
@@ -72,7 +73,7 @@ void main() {
 
     await tester.pumpWidget(_wrap(router));
     await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(ElevatedButton, 'Create account'));
+    await tester.tap(find.widgetWithText(BrutalistButton, 'Create account'));
     await tester.pumpAndSettle();
 
     expect(find.text('personal-step'), findsOneWidget);
@@ -87,7 +88,7 @@ void main() {
 
     await tester.pumpWidget(_wrap(router));
     await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(OutlinedButton, 'Log In'));
+    await tester.tap(find.widgetWithText(BrutalistButton, 'Log In'));
     await tester.pumpAndSettle();
 
     expect(find.text('login-screen'), findsOneWidget);
