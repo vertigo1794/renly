@@ -1,7 +1,48 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:renly/core/router/app_router.dart';
 
 void main() {
+  group('CurrentLocationObserver', () {
+    // go_router's own Page.name is the raw route template (e.g.
+    // '/messages/:requestId'), never the resolved location -- the observer
+    // must substitute the matched path parameters (carried in
+    // RouteSettings.arguments) back into the template itself.
+    MaterialPageRoute<void> routeFor(String template, Map<String, String> args) {
+      return MaterialPageRoute<void>(
+        settings: RouteSettings(name: template, arguments: args),
+        builder: (_) => const SizedBox.shrink(),
+      );
+    }
+
+    test('didPush resolves a templated path with its matched parameter', () {
+      final observer = CurrentLocationObserver();
+      observer.didPush(routeFor('/messages/:requestId', {'requestId': '8c6c81ba'}), null);
+      expect(observer.currentLocation.value, '/messages/8c6c81ba');
+    });
+
+    test('didPush with no path parameters keeps the template as-is', () {
+      final observer = CurrentLocationObserver();
+      observer.didPush(routeFor('/my-requests', {}), null);
+      expect(observer.currentLocation.value, '/my-requests');
+    });
+
+    test('didPop restores the previous route location', () {
+      final observer = CurrentLocationObserver();
+      observer.didPush(routeFor('/messages/:requestId', {'requestId': 'X1'}), null);
+      final previous = routeFor('/my-requests', {});
+      observer.didPop(routeFor('/messages/:requestId', {'requestId': 'X1'}), previous);
+      expect(observer.currentLocation.value, '/my-requests');
+    });
+
+    test('a route with no settings name is ignored, keeping the last known location', () {
+      final observer = CurrentLocationObserver();
+      observer.didPush(routeFor('/my-requests', {}), null);
+      observer.didPush(MaterialPageRoute<void>(builder: (_) => const SizedBox.shrink()), null);
+      expect(observer.currentLocation.value, '/my-requests');
+    });
+  });
+
   group('computeAuthRedirect', () {
     test('unauthenticated user on / is allowed (no redirect)', () {
       expect(computeAuthRedirect(hasSession: false, location: '/'), isNull);

@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -73,6 +73,52 @@ class GoRouterRefreshStream extends ChangeNotifier {
   }
 }
 
+/// GoRouter's own `routerDelegate.currentConfiguration.uri` only reflects
+/// the last `go()`-navigated location -- it does NOT update for `push()`,
+/// which this codebase uses for every secondary screen (including
+/// ChatScreen). A NavigatorObserver sees every push/pop/replace on the
+/// actual Navigator stack regardless of which method triggered it, so it's
+/// the only reliable way to know what screen is really on top right now.
+/// [currentLocationObserver] is the single instance shared between the
+/// router (which feeds it route changes) and main.dart's foreground-message
+/// handler (which reads [currentLocation] to decide whether to suppress a
+/// push banner for the chat the recipient already has open).
+class CurrentLocationObserver extends NavigatorObserver {
+  final ValueNotifier<String?> currentLocation = ValueNotifier<String?>(null);
+
+  // go_router's own Page.name is the RAW route template ('/messages/:requestId'),
+  // never the resolved location -- see go_router's builder.dart, which sets
+  // `name: state.name ?? state.path`. The actual matched values live in
+  // Page.arguments (state.pathParameters), so the resolved location has to be
+  // rebuilt by substituting each ':param' segment in the template.
+  void _record(Route<dynamic>? route) {
+    final settings = route?.settings;
+    final template = settings?.name;
+    if (template == null || template.isEmpty) return;
+    final args = settings!.arguments;
+    if (args is! Map) {
+      currentLocation.value = template;
+      return;
+    }
+    var resolved = template;
+    for (final entry in args.entries) {
+      resolved = resolved.replaceAll(':${entry.key}', '${entry.value}');
+    }
+    currentLocation.value = resolved;
+  }
+
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) => _record(route);
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) => _record(previousRoute);
+
+  @override
+  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) => _record(newRoute);
+}
+
+final currentLocationObserver = CurrentLocationObserver();
+
 /// Built exactly ONCE per ProviderContainer. Nothing in this body may
 /// `ref.watch` -- see [GoRouterRefreshStream] for why a rebuild here is a
 /// navigation-resetting bug rather than a refresh.
@@ -83,6 +129,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/',
     refreshListenable: refreshStream,
+    observers: [currentLocationObserver],
     redirect: (context, state) {
       final hasSession = Supabase.instance.client.auth.currentSession != null;
       return computeAuthRedirect(hasSession: hasSession, location: state.matchedLocation);

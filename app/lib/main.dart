@@ -116,7 +116,7 @@ class _RenlyAppState extends ConsumerState<RenlyApp> {
   void _handleForegroundMessage(RemoteMessage message) {
     final stringData = _stringData(message.data);
     final category = stringData['category'] ?? '';
-    final currentLocation = ref.read(appRouterProvider).routerDelegate.currentConfiguration.uri.toString();
+    final currentLocation = currentLocationObserver.currentLocation.value;
     if (shouldSuppressForegroundBanner(category: category, currentRouteLocation: currentLocation, data: stringData)) {
       return;
     }
