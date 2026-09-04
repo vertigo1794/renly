@@ -143,13 +143,23 @@ flutter_native_splash:
 # text does, which is the whole reason apps commonly use a single-glyph
 # mark for icons and save the full wordmark for splash/marketing screens
 # (this app's SplashScreen and AuthSelectionScreen still use the wordmark).
-# Unlike "renly", the uppercase R needed NO optical-centering correction --
-# its ink-mass bbox center landed exactly on its 512px source canvas's
-# center (256, 256) on both axes, since a single glyph with no
-# ascender/descender or left/right letter-weight asymmetry has nothing to
-# correct for. Kept the same 78% foreground scale / 8% inset combination
-# already tuned for the wordmark (they're independent of glyph shape),
-# landing this at the same ~65% final visible size.
+#
+# First pass here (bbox-centered, 78% scale) got clipped on a real device
+# despite looking fine in a local Python simulation of the inset+mask
+# pipeline -- real launcher rendering isn't fully captured by that
+# simulation. Two real fixes, not just a smaller number: (1) "R"'s ink-mass
+# CENTROID sits ~15px left and ~9px above its own bounding-box center (the
+# thick vertical stem carries more visual weight than the lighter
+# bowl/diagonal leg) -- centering by bbox alone, which happened to look
+# plausible because the bbox itself measured symmetric, left the actual
+# visual weight off-center, the same class of bug "renly"'s wordmark hit
+# for the opposite reason (its bbox was NOT symmetric). Fixed by centering
+# on the ink-mass centroid instead, verified post-render at 0.16px/0.02px
+# off true canvas center. (2) Reduced foreground scale from 78% to 55% of
+# its own 1024px canvas -- combined with the existing 8% inset, final
+# visible size drops to ~46% of the circle, comfortably inside a >=20%
+# margin on every side (verified: 21.1% minimum), leaving real headroom
+# against whatever the previous ~65% target didn't account for.
 #
 # `image_path` is the flat pre-composited fallback for iOS and pre-8
 # Android, neither of which support the adaptive foreground/background
