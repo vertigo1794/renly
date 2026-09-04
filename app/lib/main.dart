@@ -17,11 +17,15 @@ import 'features/notifications/notification_providers.dart';
 
 Future<void> main() async {
   final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
-  // Keeps the native splash (same lime background + logo as SplashScreen,
-  // see pubspec.yaml's flutter_native_splash config) on screen through
+  // Keeps the native splash (white bg + square logo tile, see
+  // pubspec.yaml's flutter_native_splash config) on screen through
   // Flutter's engine boot and this async init, so there is no unbranded
-  // gap before SplashScreen's own first frame. Removed inside
-  // SplashScreen.initState once that first frame is ready to show.
+  // gap before SplashScreen's own first frame is ready underneath it.
+  // Removed below, a fixed 600ms after runApp() -- deliberately separate
+  // from SplashScreen's own on-screen duration (see splash_screen.dart),
+  // since these two delays now control two visually distinct screens
+  // (native splash, then the Flutter-side lime splash) rather than one
+  // combined handoff.
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
   await EasyLocalization.ensureInitialized();
   await dotenv.load(fileName: '.env');
@@ -64,6 +68,13 @@ Future<void> main() async {
       child: ProviderScope(child: RenlyApp(firebaseReady: firebaseReady)),
     ),
   );
+
+  // runApp() doesn't block on the first frame actually painting, but by
+  // 600ms the engine has always long since rendered it -- removing any
+  // earlier risks a brief blank frame between the native splash going
+  // away and SplashScreen's own Scaffold appearing underneath it.
+  await Future.delayed(const Duration(milliseconds: 600));
+  FlutterNativeSplash.remove();
 }
 
 class RenlyApp extends ConsumerStatefulWidget {
