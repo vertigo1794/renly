@@ -109,61 +109,58 @@ flutter:
   # see https://flutter.dev/to/font-from-package
 
 # Consumed by `dart run flutter_native_splash:create`. White background +
-# the solid lime app-icon tile (renly_logo_tile.png, a square roughly-1:1
-# asset -- still logo-only, no branding/tagline image, since a thin
-# letter-spaced strip is what caused the squashing on Android 12+ before;
-# see the note in SplashScreen for that whole icon-slot-sizing story).
-# Android draws splash bitmaps at their own source pixel width / 4 as the
-# on-screen dp size (see flutter_native_splash's _saveImageAndroid, which
-# scales every density bucket relative to a 4x/xxxhdpi baseline) -- this
-# asset is 1024px vs the 512px wordmark used before, so the on-screen logo
-# comes out roughly double the size with no extra crop/scale step needed.
+# the solid lime tile carrying Stitch's uppercase-R monogram
+# (renly_r_logo_tile.png, padded to ~66% of its own 1024px canvas the
+# same way renly_logo_tile.png -- the wordmark version this replaces --
+# was, so Android 12+'s circular icon mask has margin to crop into
+# instead of the glyph itself). Still logo-only, no branding/tagline
+# image, since a thin letter-spaced strip is what caused the squashing
+# on Android 12+ before; see the note in SplashScreen for that whole
+# icon-slot-sizing story. Android draws splash bitmaps at their own
+# source pixel width / 4 as the on-screen dp size (see
+# flutter_native_splash's _saveImageAndroid, which scales every density
+# bucket relative to a 4x/xxxhdpi baseline) -- this asset is 1024px, same
+# as the wordmark tile it replaces, so on-screen size is unchanged.
 flutter_native_splash:
   color: "#FFFFFF"
-  image: assets/illustrations/renly_logo_tile.png
+  image: assets/illustrations/renly_r_logo_tile.png
   android_12:
     color: "#FFFFFF"
-    image: assets/illustrations/renly_logo_tile.png
+    image: assets/illustrations/renly_r_logo_tile.png
 
 # Consumed by `dart run flutter_launcher_icons`. Unlike the native splash's
 # SplashScreen API (which forces whatever single image it's given through
 # its own icon-slot mask with no real way to control the composition), this
 # is Android's actual Adaptive Icon system -- built specifically to take a
-# transparent foreground (renly_icon_foreground.png, the wordmark text
-# alone) over a solid background color and composite/mask them correctly
-# for whatever shape a given launcher uses (circle on this project's
-# emulator, squircle/rounded-square elsewhere -- all handled correctly by
-# the OS, not fought against). The foreground is positioned at 78% scale
-# (paired with adaptive_icon_foreground_inset below to land the FINAL
-# visible size around 65-70% of the circle) using OPTICAL centering on
-# BOTH axes, not a bounding-box center: vertically, "renly"'s 'y'
-# descender extends much further below the baseline than the 'l' ascender
-# extends above it, so centering by the full glyph bbox put the
-# visually-dense x-height band noticeably above true center once masked
-# -- fixed by centering on the midpoint between the ascender-top and
-# baseline instead. Horizontally, the same class of bug showed up as a
-# rightward shift: the word's ink-mass centroid sat ~30px right of its
-# own bbox's geometric center (more visual weight in "nly" than "re"), so
-# equal LEFT/RIGHT bbox margins is not the same thing as visually
-# centered -- fixed by centering on the column-wise ink-mass centroid
-# instead of the bbox midpoint (verified post-render: final centroid sits
-# 0.16px off true canvas center, essentially pixel-perfect).
-# `image_path` is the flat
-# pre-composited fallback (renly_icon_flat.png) for iOS and pre-8 Android,
-# neither of which support the adaptive foreground/background split -- iOS
-# always applies its own system-wide rounded-square mask to a plain square
-# image, never a true circle; that's an Apple platform convention, not a
-# limitation of this config.
+# transparent foreground over a solid background color and composite/mask
+# them correctly for whatever shape a given launcher uses (circle on this
+# project's emulator, squircle/rounded-square elsewhere -- all handled
+# correctly by the OS, not fought against).
+#
+# Switched from the "renly" wordmark to Stitch's uppercase-R monogram
+# (renly_r_icon_foreground.png/renly_r_icon_flat.png): a monogram reads far
+# more legibly at actual launcher-icon sizes than 5 letters of running
+# text does, which is the whole reason apps commonly use a single-glyph
+# mark for icons and save the full wordmark for splash/marketing screens
+# (this app's SplashScreen and AuthSelectionScreen still use the wordmark).
+# Unlike "renly", the uppercase R needed NO optical-centering correction --
+# its ink-mass bbox center landed exactly on its 512px source canvas's
+# center (256, 256) on both axes, since a single glyph with no
+# ascender/descender or left/right letter-weight asymmetry has nothing to
+# correct for. Kept the same 78% foreground scale / 8% inset combination
+# already tuned for the wordmark (they're independent of glyph shape),
+# landing this at the same ~65% final visible size.
+#
+# `image_path` is the flat pre-composited fallback for iOS and pre-8
+# Android, neither of which support the adaptive foreground/background
+# split -- iOS always applies its own system-wide rounded-square mask to a
+# plain square image, never a true circle; that's an Apple platform
+# convention, not a limitation of this config.
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: assets/illustrations/renly_icon_flat.png
+  image_path: assets/illustrations/renly_r_icon_flat.png
   min_sdk_android: 21
   adaptive_icon_background: "#D4FF00"
-  adaptive_icon_foreground: assets/illustrations/renly_icon_foreground.png
-  # The generator's own default inset (16%) shrinks the foreground by an
-  # ADDITIONAL 32% on top of whatever our own asset already leaves as
-  # margin -- halving it here is most of how "renly" grows from ~37% to
-  # ~65% of the visible circle, the other half being the foreground
-  # asset's own scale (78% of its 1024px canvas, up from 55%).
+  adaptive_icon_foreground: assets/illustrations/renly_r_icon_foreground.png
   adaptive_icon_foreground_inset: 8

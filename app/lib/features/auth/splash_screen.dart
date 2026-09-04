@@ -19,8 +19,9 @@ import '../../core/theme/app_colors.dart';
 ///
 /// The native splash (pubspec.yaml's flutter_native_splash config) is a
 /// DELIBERATELY different screen, not a seamless twin of this one: white
-/// background, the solid app-icon-style square tile (renly_logo_tile.png)
-/// rather than this widget's transparent text-only wordmark. main.dart
+/// background, the solid lime tile carrying Stitch's uppercase-R monogram
+/// (renly_r_logo_tile.png, also the app's launcher icon) rather than this
+/// widget's transparent text-only wordmark. main.dart
 /// removes that native splash a fixed 600ms after runApp() -- this widget
 /// is what's underneath it by then, and it stays up on its own for a
 /// further 1.8s before navigating to '/onboarding'. These are two
