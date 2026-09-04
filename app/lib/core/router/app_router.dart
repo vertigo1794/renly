@@ -8,6 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../features/auth/auth_selection_screen.dart';
 import '../../features/auth/home_placeholder_screen.dart';
 import '../../features/auth/login_screen.dart';
+import '../../features/auth/onboarding_screen.dart';
 import '../../features/auth/splash_screen.dart';
 import '../../features/auth/registration_personal_screen.dart';
 import '../../features/auth/registration_professional_screen.dart';
@@ -33,7 +34,14 @@ import '../../features/settings/notification_settings_screen.dart';
 import '../../features/settings/privacy_screen.dart';
 import '../../features/subscription/subscription_screen.dart';
 
-const _publicRoutes = {'/splash', '/', '/login', '/register/personal', '/register/professional'};
+const _publicRoutes = {
+  '/splash',
+  '/onboarding',
+  '/',
+  '/login',
+  '/register/personal',
+  '/register/professional',
+};
 
 /// Pure redirect decision, unit-tested independently of GoRouter/Riverpod:
 /// an unauthenticated session may only reach the public auth/registration
@@ -137,6 +145,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     },
     routes: [
       GoRoute(path: '/splash', builder: (context, state) => const SplashScreen()),
+      GoRoute(path: '/onboarding', builder: (context, state) => const OnboardingScreen()),
       GoRoute(path: '/', builder: (context, state) => const AuthSelectionScreen()),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(

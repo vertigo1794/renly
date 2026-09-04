@@ -27,7 +27,7 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
     Future.delayed(widget.duration, () {
-      if (mounted) context.go('/');
+      if (mounted) context.go('/onboarding');
     });
   }
 

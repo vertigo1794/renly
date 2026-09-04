@@ -63,13 +63,13 @@ void main() {
     await tester.pumpAndSettle();
   });
 
-  testWidgets('navigates to / once the duration elapses', (tester) async {
+  testWidgets('navigates to /onboarding once the duration elapses', (tester) async {
     final router = GoRouter(routes: [
       GoRoute(
         path: '/splash',
         builder: (context, state) => const SplashScreen(duration: Duration(milliseconds: 10)),
       ),
-      GoRoute(path: '/', builder: (context, state) => const Text('auth-selection')),
+      GoRoute(path: '/onboarding', builder: (context, state) => const Text('onboarding')),
     ], initialLocation: '/splash');
 
     await tester.pumpWidget(_wrap(router));
@@ -77,6 +77,6 @@ void main() {
     await tester.pump(const Duration(milliseconds: 20));
     await tester.pumpAndSettle();
 
-    expect(find.text('auth-selection'), findsOneWidget);
+    expect(find.text('onboarding'), findsOneWidget);
   });
 }

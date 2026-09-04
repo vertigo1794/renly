@@ -48,6 +48,10 @@ void main() {
       expect(computeAuthRedirect(hasSession: false, location: '/splash'), isNull);
     });
 
+    test('unauthenticated user on /onboarding is allowed', () {
+      expect(computeAuthRedirect(hasSession: false, location: '/onboarding'), isNull);
+    });
+
     test('unauthenticated user on / is allowed (no redirect)', () {
       expect(computeAuthRedirect(hasSession: false, location: '/'), isNull);
     });
