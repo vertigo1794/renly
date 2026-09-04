@@ -92,7 +92,43 @@ void main() {
     expect(find.text('Cross-Agency Collaboration'), findsNothing);
   });
 
-  testWidgets('tapping Next on the last slide navigates to /', (tester) async {
+  testWidgets('the last slide shows Get Started (not Next) with a bold "REN Verified"', (tester) async {
+    final router = GoRouter(routes: [
+      GoRoute(path: '/onboarding', builder: (context, state) => const OnboardingScreen()),
+      GoRoute(path: '/', builder: (context, state) => const Placeholder()),
+    ], initialLocation: '/onboarding');
+
+    await tester.pumpWidget(_wrap(router));
+    await tester.pumpAndSettle();
+    // Slides 1 -> 2 -> 3 via Next.
+    await tester.tap(find.widgetWithText(BrutalistButton, 'Next'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(BrutalistButton, 'Next'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Transparent & Verified'), findsOneWidget);
+    expect(find.widgetWithText(BrutalistButton, 'Get Started'), findsOneWidget);
+    expect(find.widgetWithText(BrutalistButton, 'Next'), findsNothing);
+
+    // The body is a single RichText with "REN Verified" as its own bold
+    // span -- not plain text -- matching Stitch's own emphasis on it.
+    final allSpans = <TextSpan>[];
+    void collect(InlineSpan? span) {
+      if (span is TextSpan) {
+        allSpans.add(span);
+        span.children?.forEach(collect);
+      }
+    }
+
+    for (final element in find.byType(RichText).evaluate()) {
+      collect((element.widget as RichText).text);
+    }
+    final boldSpan = allSpans.where((s) => s.text == 'REN Verified').firstOrNull;
+    expect(boldSpan, isNotNull, reason: 'spans found: ${allSpans.map((s) => s.text).toList()}');
+    expect(boldSpan!.style?.fontWeight, FontWeight.bold);
+  });
+
+  testWidgets('tapping Get Started on the last slide navigates to /', (tester) async {
     final router = GoRouter(routes: [
       GoRoute(path: '/onboarding', builder: (context, state) => const OnboardingScreen()),
       GoRoute(path: '/', builder: (context, state) => const Text('auth-selection')),
@@ -100,11 +136,12 @@ void main() {
 
     await tester.pumpWidget(_wrap(router));
     await tester.pumpAndSettle();
-    // Two slides now -- advance past the first before checking the
-    // final-slide Next behaviour.
+    // Advance through all 3 slides before checking the final action.
     await tester.tap(find.widgetWithText(BrutalistButton, 'Next'));
     await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(BrutalistButton, 'Next'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(BrutalistButton, 'Get Started'));
     await tester.pumpAndSettle();
 
     expect(find.text('auth-selection'), findsOneWidget);

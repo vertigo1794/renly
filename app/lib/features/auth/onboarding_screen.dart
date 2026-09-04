@@ -44,7 +44,23 @@ const _slides = [
     titleKey: 'onboarding_2_title',
     bodyKey: 'onboarding_2_body',
   ),
+  OnboardingSlideData(
+    imageAsset: 'assets/illustrations/onboarding_3_verified.png',
+    titleKey: 'onboarding_3_title',
+    bodyKey: 'onboarding_3_body',
+  ),
 ];
+
+/// Splits `text` on `**bold**` markers into spans, matching Stitch's own
+/// emphasis on "REN Verified" in slide 3 -- a plain Text can't carry
+/// per-segment weight, and this keeps the convention available to any
+/// future slide's body copy without a one-off widget for just this case.
+List<InlineSpan> _richBody(String text, TextStyle? baseStyle, TextStyle? boldStyle) {
+  final parts = text.split('**');
+  return [
+    for (var i = 0; i < parts.length; i++) TextSpan(text: parts[i], style: i.isOdd ? boldStyle : baseStyle),
+  ];
+}
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -104,12 +120,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           style: Theme.of(context).textTheme.headlineLarge?.copyWith(color: AppColors.ink),
                         ),
                         const SizedBox(height: 12),
-                        Text(
-                          slide.bodyKey.tr(),
-                          textAlign: TextAlign.center,
-                          style: Theme.of(
-                            context,
-                          ).textTheme.bodyLarge?.copyWith(color: AppColors.ink.withValues(alpha: 0.8)),
+                        Builder(
+                          builder: (context) {
+                            final baseStyle = Theme.of(
+                              context,
+                            ).textTheme.bodyLarge?.copyWith(color: AppColors.ink.withValues(alpha: 0.8));
+                            final boldStyle = baseStyle?.copyWith(fontWeight: FontWeight.bold, color: AppColors.ink);
+                            return Text.rich(
+                              TextSpan(children: _richBody(slide.bodyKey.tr(), baseStyle, boldStyle)),
+                              textAlign: TextAlign.center,
+                            );
+                          },
                         ),
                       ],
                     ),
@@ -138,7 +159,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   ),
                   const SizedBox(height: 24),
                   BrutalistButton(
-                    label: 'onboarding_next'.tr(),
+                    label: (_page == _slides.length - 1 ? 'onboarding_get_started' : 'onboarding_next').tr(),
                     icon: PhosphorIcons.arrowRight(PhosphorIconsStyle.bold),
                     onPressed: _next,
                   ),
