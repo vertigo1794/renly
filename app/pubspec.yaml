@@ -59,6 +59,7 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -123,3 +124,25 @@ flutter_native_splash:
   android_12:
     color: "#FFFFFF"
     image: assets/illustrations/renly_logo_tile.png
+
+# Consumed by `dart run flutter_launcher_icons`. Unlike the native splash's
+# SplashScreen API (which forces whatever single image it's given through
+# its own icon-slot mask with no real way to control the composition), this
+# is Android's actual Adaptive Icon system -- built specifically to take a
+# transparent foreground (renly_icon_foreground.png, the wordmark text
+# alone, pre-centered and padded to the same ~62% safe-zone ratio used for
+# the splash tile) over a solid background color and composite/mask them
+# correctly for whatever shape a given launcher uses (circle on this
+# project's emulator, squircle/rounded-square elsewhere -- all handled
+# correctly by the OS, not fought against). `image_path` is the flat
+# pre-composited fallback (renly_icon_flat.png) for iOS and pre-8 Android,
+# neither of which support the adaptive foreground/background split -- iOS
+# always applies its own system-wide rounded-square mask to a plain square
+# image, never a true circle; that's an Apple platform convention, not a
+# limitation of this config.
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: assets/illustrations/renly_icon_flat.png
+  adaptive_icon_background: "#D4FF00"
+  adaptive_icon_foreground: assets/illustrations/renly_icon_foreground.png
