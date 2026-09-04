@@ -21,22 +21,18 @@ import '../../core/theme/app_colors.dart';
 /// The native splash (pubspec.yaml's flutter_native_splash config) is a
 /// DELIBERATELY different screen, not a seamless twin of this one: white
 /// background, the solid app-icon-style square tile (renly_logo_tile.png)
-/// rather than this widget's transparent text-only wordmark. Two reasons
-/// it isn't just "this same design, earlier": (1) the user's own request
-/// for this native-splash iteration was specifically a white background
-/// with the square logo, not a lime match; (2) Android 12+'s SplashScreen
-/// API expects a roughly-square icon-shaped asset for anything it lays
-/// out itself (image OR branding image) -- handing it a wide wordmark, or
-/// worse a thin letter-spaced tagline strip, gets non-uniformly scaled to
-/// fit that slot and comes out visibly squashed on real devices, so the
-/// tagline (and the lime full-bleed look) can only render safely here in
-/// Flutter's own layout system, once the engine is actually up.
+/// rather than this widget's transparent text-only wordmark. That handoff
+/// no longer matters much in practice -- there is no artificial delay of
+/// any kind here any more (no Future.delayed, no Timer): the moment this
+/// widget's own first frame is painted, it removes the native splash AND
+/// navigates to '/onboarding' in the same post-frame callback, so this
+/// screen itself is never actually visible to the user. It still exists
+/// (rather than folding this into main.dart directly) because
+/// FlutterNativeSplash.remove() needs a real widget's first frame to hand
+/// off from -- main.dart's preserve() has no frame of its own to signal
+/// readiness with.
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({this.duration = const Duration(milliseconds: 1200), super.key});
-
-  /// How long the splash stays up before navigating to '/onboarding'.
-  /// Overridable so widget tests don't have to wait out the real delay.
-  final Duration duration;
+  const SplashScreen({super.key});
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -46,15 +42,13 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    // Hand off from the native splash (white bg + square logo tile, see
-    // pubspec.yaml's flutter_native_splash config) the moment this widget's
-    // own first frame is actually painted -- not synchronously here, since
-    // main.dart's preserve() is still holding it up until then. Unlike the
-    // earlier single-native-splash design, this handoff IS a visible
-    // transition on purpose (white -> lime, small tile -> full wordmark);
-    // it isn't trying to look seamless.
-    WidgetsBinding.instance.addPostFrameCallback((_) => FlutterNativeSplash.remove());
-    Future.delayed(widget.duration, () {
+    // No Future.delayed/Timer of any kind -- the post-frame callback fires
+    // as soon as this widget's first frame is painted, the earliest point
+    // at which removing the native splash and navigating is actually safe
+    // (context.go() needs the widget in the tree, which isn't guaranteed
+    // yet inside initState itself).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      FlutterNativeSplash.remove();
       if (mounted) context.go('/onboarding');
     });
   }

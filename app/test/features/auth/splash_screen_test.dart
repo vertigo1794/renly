@@ -41,41 +41,39 @@ void main() {
     rootBundle.clear();
   });
 
-  testWidgets('renders the wordmark image and tagline immediately', (tester) async {
+  testWidgets('renders the wordmark image and tagline on its first frame', (tester) async {
     final router = GoRouter(routes: [
-      GoRoute(
-        path: '/splash',
-        builder: (context, state) => const SplashScreen(duration: Duration(milliseconds: 10)),
-      ),
-      GoRoute(path: '/', builder: (context, state) => const Placeholder()),
+      GoRoute(path: '/splash', builder: (context, state) => const SplashScreen()),
+      GoRoute(path: '/onboarding', builder: (context, state) => const Placeholder()),
     ], initialLocation: '/splash');
 
+    // No duration to override any more. MaterialApp.router/GoRouter needs
+    // one pump beyond pumpWidget() itself before SplashScreen's first
+    // frame actually builds (confirmed empirically: pumpWidget() alone
+    // still shows the Router's own placeholder, not SplashScreen) -- the
+    // post-frame callback that removes the native splash and navigates
+    // away fires at the end of THAT frame, but go_router's own route
+    // change doesn't visually land until a further pump, leaving this one
+    // pump as a real, if narrow, window onto SplashScreen's own content.
     await tester.pumpWidget(_wrap(router));
-    await tester.pump();
     await tester.pump();
 
     final image = tester.widget<Image>(find.byType(Image));
     expect((image.image as AssetImage).assetName, 'assets/illustrations/renly_wordmark.png');
     expect(find.text('PROPERTY COLLABORATION PLATFORM'), findsOneWidget);
 
-    // Flush the pending navigation Timer before the test ends -- flutter_test
-    // asserts no timers are left pending at teardown, regardless of whether
-    // they'd fire harmlessly.
+    // Flush the post-frame callback and resulting navigation before the
+    // test ends, so nothing is left pending at teardown.
     await tester.pumpAndSettle();
   });
 
-  testWidgets('navigates to /onboarding once the duration elapses', (tester) async {
+  testWidgets('navigates to /onboarding immediately, with no delay', (tester) async {
     final router = GoRouter(routes: [
-      GoRoute(
-        path: '/splash',
-        builder: (context, state) => const SplashScreen(duration: Duration(milliseconds: 10)),
-      ),
+      GoRoute(path: '/splash', builder: (context, state) => const SplashScreen()),
       GoRoute(path: '/onboarding', builder: (context, state) => const Text('onboarding')),
     ], initialLocation: '/splash');
 
     await tester.pumpWidget(_wrap(router));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 20));
     await tester.pumpAndSettle();
 
     expect(find.text('onboarding'), findsOneWidget);
