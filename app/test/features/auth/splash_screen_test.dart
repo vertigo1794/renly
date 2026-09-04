@@ -41,7 +41,7 @@ void main() {
     rootBundle.clear();
   });
 
-  testWidgets('renders the wordmark and tagline immediately', (tester) async {
+  testWidgets('renders the wordmark image and tagline immediately', (tester) async {
     final router = GoRouter(routes: [
       GoRoute(
         path: '/splash',
@@ -54,7 +54,8 @@ void main() {
     await tester.pump();
     await tester.pump();
 
-    expect(find.text('renly'), findsOneWidget);
+    final image = tester.widget<Image>(find.byType(Image));
+    expect((image.image as AssetImage).assetName, 'assets/illustrations/renly_wordmark.png');
     expect(find.text('PROPERTY COLLABORATION PLATFORM'), findsOneWidget);
 
     // Flush the pending navigation Timer before the test ends -- flutter_test

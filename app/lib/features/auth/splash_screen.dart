@@ -11,6 +11,11 @@ import '../../core/theme/app_colors.dart';
 /// bottom -- using this app's own Space Grotesk type scale rather than
 /// Stitch's Lumina-Prime-era Syne/JetBrains Mono, which this project
 /// replaced outright (see app_theme.dart).
+///
+/// The wordmark itself is the actual Stitch-generated logo asset (its own
+/// lime fill already matches AppColors.primaryContainer exactly, so it
+/// blends into the Scaffold behind it) rather than rendered text -- unlike
+/// every other onboarding/auth screen title, this one IS the brand mark.
 class SplashScreen extends StatefulWidget {
   const SplashScreen({this.duration = const Duration(milliseconds: 1100), super.key});
 
@@ -38,13 +43,17 @@ class _SplashScreenState extends State<SplashScreen> {
       body: Stack(
         children: [
           Center(
-            child: Text(
-              'app_name'.tr(),
-              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                    color: AppColors.ink,
-                    fontSize: 48,
-                    height: 1,
-                  ),
+            child: Image.asset(
+              'assets/illustrations/renly_wordmark.png',
+              width: 220,
+              errorBuilder: (context, error, stackTrace) => Text(
+                'app_name'.tr(),
+                style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                      color: AppColors.ink,
+                      fontSize: 48,
+                      height: 1,
+                    ),
+              ),
             ),
           ),
           Positioned(
