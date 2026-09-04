@@ -22,14 +22,14 @@ import '../../core/theme/app_colors.dart';
 /// DELIBERATELY different screen, not a seamless twin of this one: white
 /// background, the solid app-icon-style square tile (renly_logo_tile.png)
 /// rather than this widget's transparent text-only wordmark. It stays up
-/// for a fixed 800ms (held via main.dart's FlutterNativeSplash.preserve())
+/// for a fixed 2s (held via main.dart's FlutterNativeSplash.preserve())
 /// before this widget removes it and navigates straight on to
 /// '/onboarding' -- this screen's own UI still exists (rather than
 /// folding the remove()+navigate call into main.dart directly) because
 /// FlutterNativeSplash.remove() needs a real widget's first frame to hand
-/// off from, not because its own Scaffold is meant to be seen; 800ms
-/// rarely leaves a visible gap between the native splash disappearing and
-/// '/onboarding' appearing.
+/// off from, not because its own Scaffold is meant to be seen; at this
+/// duration there's rarely a visible gap between the native splash
+/// disappearing and '/onboarding' appearing.
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -47,7 +47,7 @@ class _SplashScreenState extends State<SplashScreen> {
     // painted, i.e. the earliest point context.go() is guaranteed to have
     // a mounted widget to act on.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Future.delayed(const Duration(milliseconds: 800), () {
+      Future.delayed(const Duration(seconds: 2), () {
         FlutterNativeSplash.remove();
         if (mounted) context.go('/onboarding');
       });
