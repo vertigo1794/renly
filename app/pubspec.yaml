@@ -107,18 +107,19 @@ flutter:
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
 
-# Consumed by `dart run flutter_native_splash:create`. Logo only, no
-# branding/tagline image and no `fullscreen: true` -- Android 12+'s
-# SplashScreen API expects a roughly-square icon-shaped asset for anything
-# it lays out itself (the main image OR a branding image) and will
-# non-uniformly scale a wide/thin asset to fit that slot, which showed up
-# as a visibly squashed splash on-device. The tagline is rendered as a
-# real Flutter Text widget instead, in SplashScreen
-# (lib/features/auth/splash_screen.dart) -- Flutter's own layout has no
-# such icon-slot constraint, so nothing there can distort.
+# Consumed by `dart run flutter_native_splash:create`. White background +
+# the solid lime app-icon tile (renly_logo_tile.png, a square roughly-1:1
+# asset -- still logo-only, no branding/tagline image, since a thin
+# letter-spaced strip is what caused the squashing on Android 12+ before;
+# see the note in SplashScreen for that whole icon-slot-sizing story).
+# Android draws splash bitmaps at their own source pixel width / 4 as the
+# on-screen dp size (see flutter_native_splash's _saveImageAndroid, which
+# scales every density bucket relative to a 4x/xxxhdpi baseline) -- this
+# asset is 1024px vs the 512px wordmark used before, so the on-screen logo
+# comes out roughly double the size with no extra crop/scale step needed.
 flutter_native_splash:
-  color: "#CCFF00"
-  image: assets/illustrations/renly_wordmark.png
+  color: "#FFFFFF"
+  image: assets/illustrations/renly_logo_tile.png
   android_12:
-    color: "#CCFF00"
-    image: assets/illustrations/renly_wordmark.png
+    color: "#FFFFFF"
+    image: assets/illustrations/renly_logo_tile.png

@@ -18,18 +18,21 @@ import '../../core/theme/app_colors.dart';
 /// blends into the Scaffold behind it) rather than rendered text -- unlike
 /// every other onboarding/auth screen title, this one IS the brand mark.
 ///
-/// The native splash (pubspec.yaml's flutter_native_splash config) only
-/// shows this same logo on the same lime color -- no tagline baked into a
-/// second image. Android 12+'s SplashScreen API expects a roughly-square
-/// icon-shaped asset for anything it lays out itself (image OR branding
-/// image); handing it a wide wordmark, or worse a thin letter-spaced
-/// tagline strip, gets non-uniformly scaled to fit that slot and comes out
-/// visibly squashed on real devices. Flutter's own layout system has no
-/// such constraint, so the tagline is rendered here instead, once the
-/// engine is actually up -- this screen exists specifically to carry the
-/// part of the design native splash APIs can't lay out safely.
+/// The native splash (pubspec.yaml's flutter_native_splash config) is a
+/// DELIBERATELY different screen, not a seamless twin of this one: white
+/// background, the solid app-icon-style square tile (renly_logo_tile.png)
+/// rather than this widget's transparent text-only wordmark. Two reasons
+/// it isn't just "this same design, earlier": (1) the user's own request
+/// for this native-splash iteration was specifically a white background
+/// with the square logo, not a lime match; (2) Android 12+'s SplashScreen
+/// API expects a roughly-square icon-shaped asset for anything it lays
+/// out itself (image OR branding image) -- handing it a wide wordmark, or
+/// worse a thin letter-spaced tagline strip, gets non-uniformly scaled to
+/// fit that slot and comes out visibly squashed on real devices, so the
+/// tagline (and the lime full-bleed look) can only render safely here in
+/// Flutter's own layout system, once the engine is actually up.
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({this.duration = const Duration(milliseconds: 2500), super.key});
+  const SplashScreen({this.duration = const Duration(seconds: 2), super.key});
 
   /// How long the splash stays up before navigating to '/onboarding'.
   /// Overridable so widget tests don't have to wait out the real delay.
@@ -43,11 +46,13 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    // Hand off from the native splash (same wordmark + lime background,
-    // see pubspec.yaml's flutter_native_splash config) the moment this
-    // widget's own first frame is actually painted -- not synchronously
-    // here, since main.dart's preserve() is still holding it up until
-    // then. Because both look identical, the swap is invisible.
+    // Hand off from the native splash (white bg + square logo tile, see
+    // pubspec.yaml's flutter_native_splash config) the moment this widget's
+    // own first frame is actually painted -- not synchronously here, since
+    // main.dart's preserve() is still holding it up until then. Unlike the
+    // earlier single-native-splash design, this handoff IS a visible
+    // transition on purpose (white -> lime, small tile -> full wordmark);
+    // it isn't trying to look seamless.
     WidgetsBinding.instance.addPostFrameCallback((_) => FlutterNativeSplash.remove());
     Future.delayed(widget.duration, () {
       if (mounted) context.go('/onboarding');
