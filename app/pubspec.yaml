@@ -133,8 +133,10 @@ flutter_native_splash:
 # alone) over a solid background color and composite/mask them correctly
 # for whatever shape a given launcher uses (circle on this project's
 # emulator, squircle/rounded-square elsewhere -- all handled correctly by
-# the OS, not fought against). The foreground is positioned at 55% scale
-# using an OPTICAL vertical center, not a bounding-box center: "renly"'s
+# the OS, not fought against). The foreground is positioned at 78% scale
+# (paired with adaptive_icon_foreground_inset below to land the FINAL
+# visible size around 65-70% of the circle) using an OPTICAL vertical
+# center, not a bounding-box center: "renly"'s
 # 'y' descender extends much further below the baseline than the 'l'
 # ascender extends above it, so centering by the full glyph bbox (as done
 # initially) put the visually-dense x-height band noticeably above true
@@ -153,3 +155,9 @@ flutter_launcher_icons:
   min_sdk_android: 21
   adaptive_icon_background: "#D4FF00"
   adaptive_icon_foreground: assets/illustrations/renly_icon_foreground.png
+  # The generator's own default inset (16%) shrinks the foreground by an
+  # ADDITIONAL 32% on top of whatever our own asset already leaves as
+  # margin -- halving it here is most of how "renly" grows from ~37% to
+  # ~65% of the visible circle, the other half being the foreground
+  # asset's own scale (78% of its 1024px canvas, up from 55%).
+  adaptive_icon_foreground_inset: 8
