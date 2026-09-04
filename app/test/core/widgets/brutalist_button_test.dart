@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:renly/core/theme/app_colors.dart';
 import 'package:renly/core/widgets/brutalist_button.dart';
 
 void main() {
@@ -27,6 +28,20 @@ void main() {
       final decoration = container.decoration! as BoxDecoration;
       expect(decoration.boxShadow, isNull);
       expect(decoration.color, Colors.transparent);
+    });
+
+    testWidgets('dark variant applies an ink fill, a hard shadow, and lime text', (tester) async {
+      await tester.pumpWidget(MaterialApp(
+        home: BrutalistButton(label: 'Dark', onPressed: () {}, variant: BrutalistButtonVariant.dark),
+      ));
+      final container = tester.widget<Container>(find.byType(Container));
+      final decoration = container.decoration! as BoxDecoration;
+      expect(decoration.color, AppColors.ink);
+      expect(decoration.boxShadow, isNotNull);
+      expect(decoration.boxShadow!.single.offset, const Offset(4, 4));
+
+      final text = tester.widget<Text>(find.text('Dark'));
+      expect(text.style?.color, AppColors.primaryContainer);
     });
 
     testWidgets('calls onPressed when tapped', (tester) async {
