@@ -1,0 +1,67 @@
+// app/lib/features/auth/splash_screen.dart
+import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../core/theme/app_colors.dart';
+
+/// Ports the Stitch "Splash Screen - Updated Logo" design (project
+/// "Renly Property Agent Network") to the Urby neo-brutalist system --
+/// lime background, bold wordmark, small caps tagline pinned near the
+/// bottom -- using this app's own Space Grotesk type scale rather than
+/// Stitch's Lumina-Prime-era Syne/JetBrains Mono, which this project
+/// replaced outright (see app_theme.dart).
+class SplashScreen extends StatefulWidget {
+  const SplashScreen({this.duration = const Duration(milliseconds: 1100), super.key});
+
+  /// How long the splash stays up before navigating to '/'. Overridable so
+  /// widget tests don't have to wait out the real delay.
+  final Duration duration;
+
+  @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> {
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(widget.duration, () {
+      if (mounted) context.go('/');
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.primaryContainer,
+      body: Stack(
+        children: [
+          Center(
+            child: Text(
+              'app_name'.tr(),
+              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                    color: AppColors.ink,
+                    fontSize: 48,
+                    height: 1,
+                  ),
+            ),
+          ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 48,
+            child: Text(
+              'splash_tagline'.tr().toUpperCase(),
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: AppColors.onPrimaryContainer,
+                    letterSpacing: 2,
+                  ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
