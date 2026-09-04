@@ -39,6 +39,11 @@ const _slides = [
     titleKey: 'onboarding_1_title',
     bodyKey: 'onboarding_1_body',
   ),
+  OnboardingSlideData(
+    imageAsset: 'assets/illustrations/onboarding_2_matching.png',
+    titleKey: 'onboarding_2_title',
+    bodyKey: 'onboarding_2_body',
+  ),
 ];
 
 class OnboardingScreen extends StatefulWidget {

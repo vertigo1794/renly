@@ -75,13 +75,34 @@ void main() {
     expect(find.text('auth-selection'), findsOneWidget);
   });
 
-  testWidgets('tapping Next on the last (only) slide navigates to /', (tester) async {
+  testWidgets('tapping Next on a non-last slide advances to the next slide', (tester) async {
+    final router = GoRouter(routes: [
+      GoRoute(path: '/onboarding', builder: (context, state) => const OnboardingScreen()),
+      GoRoute(path: '/', builder: (context, state) => const Placeholder()),
+    ], initialLocation: '/onboarding');
+
+    await tester.pumpWidget(_wrap(router));
+    await tester.pumpAndSettle();
+    expect(find.text('Cross-Agency Collaboration'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(BrutalistButton, 'Next'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Smart Listing Matching'), findsOneWidget);
+    expect(find.text('Cross-Agency Collaboration'), findsNothing);
+  });
+
+  testWidgets('tapping Next on the last slide navigates to /', (tester) async {
     final router = GoRouter(routes: [
       GoRoute(path: '/onboarding', builder: (context, state) => const OnboardingScreen()),
       GoRoute(path: '/', builder: (context, state) => const Text('auth-selection')),
     ], initialLocation: '/onboarding');
 
     await tester.pumpWidget(_wrap(router));
+    await tester.pumpAndSettle();
+    // Two slides now -- advance past the first before checking the
+    // final-slide Next behaviour.
+    await tester.tap(find.widgetWithText(BrutalistButton, 'Next'));
     await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(BrutalistButton, 'Next'));
     await tester.pumpAndSettle();
