@@ -21,16 +21,15 @@ import '../../core/theme/app_colors.dart';
 /// The native splash (pubspec.yaml's flutter_native_splash config) is a
 /// DELIBERATELY different screen, not a seamless twin of this one: white
 /// background, the solid app-icon-style square tile (renly_logo_tile.png)
-/// rather than this widget's transparent text-only wordmark. That handoff
-/// no longer matters much in practice -- there is no artificial delay of
-/// any kind here any more (no Future.delayed, no Timer): the moment this
-/// widget's own first frame is painted, it removes the native splash AND
-/// navigates to '/onboarding' in the same post-frame callback, so this
-/// screen itself is never actually visible to the user. It still exists
-/// (rather than folding this into main.dart directly) because
+/// rather than this widget's transparent text-only wordmark. It stays up
+/// for a fixed 800ms (held via main.dart's FlutterNativeSplash.preserve())
+/// before this widget removes it and navigates straight on to
+/// '/onboarding' -- this screen's own UI still exists (rather than
+/// folding the remove()+navigate call into main.dart directly) because
 /// FlutterNativeSplash.remove() needs a real widget's first frame to hand
-/// off from -- main.dart's preserve() has no frame of its own to signal
-/// readiness with.
+/// off from, not because its own Scaffold is meant to be seen; 800ms
+/// rarely leaves a visible gap between the native splash disappearing and
+/// '/onboarding' appearing.
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -42,14 +41,16 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    // No Future.delayed/Timer of any kind -- the post-frame callback fires
-    // as soon as this widget's first frame is painted, the earliest point
-    // at which removing the native splash and navigating is actually safe
-    // (context.go() needs the widget in the tree, which isn't guaranteed
-    // yet inside initState itself).
+    // The post-frame callback (rather than calling this directly in
+    // initState) is what makes the delayed remove()+navigate below safe to
+    // schedule -- it guarantees this widget's first frame has actually
+    // painted, i.e. the earliest point context.go() is guaranteed to have
+    // a mounted widget to act on.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      FlutterNativeSplash.remove();
-      if (mounted) context.go('/onboarding');
+      Future.delayed(const Duration(milliseconds: 800), () {
+        FlutterNativeSplash.remove();
+        if (mounted) context.go('/onboarding');
+      });
     });
   }
 

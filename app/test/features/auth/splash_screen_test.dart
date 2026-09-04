@@ -62,18 +62,28 @@ void main() {
     expect((image.image as AssetImage).assetName, 'assets/illustrations/renly_wordmark.png');
     expect(find.text('PROPERTY COLLABORATION PLATFORM'), findsOneWidget);
 
-    // Flush the post-frame callback and resulting navigation before the
-    // test ends, so nothing is left pending at teardown.
+    // Flush the 800ms delay and the resulting navigation before the test
+    // ends. pumpAndSettle() alone won't do it: nothing rebuilds while the
+    // Future.delayed is pending, so it sees no scheduled frame and
+    // considers itself "settled" well before the fake clock actually
+    // reaches 800ms -- pump() past that mark explicitly first.
+    await tester.pump(const Duration(milliseconds: 800));
     await tester.pumpAndSettle();
   });
 
-  testWidgets('navigates to /onboarding immediately, with no delay', (tester) async {
+  testWidgets('navigates to /onboarding after the 800ms native-splash delay', (tester) async {
     final router = GoRouter(routes: [
       GoRoute(path: '/splash', builder: (context, state) => const SplashScreen()),
       GoRoute(path: '/onboarding', builder: (context, state) => const Text('onboarding')),
     ], initialLocation: '/splash');
 
     await tester.pumpWidget(_wrap(router));
+    await tester.pump();
+    expect(find.text('onboarding'), findsNothing);
+
+    // Same reasoning as above: pumpAndSettle() alone never advances the
+    // fake clock far enough to fire the 800ms Future.delayed.
+    await tester.pump(const Duration(milliseconds: 800));
     await tester.pumpAndSettle();
 
     expect(find.text('onboarding'), findsOneWidget);
