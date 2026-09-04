@@ -1,6 +1,7 @@
 // app/lib/features/auth/splash_screen.dart
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
@@ -31,6 +32,12 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
+    // Hand off from the native splash (same wordmark + lime background,
+    // see pubspec.yaml's flutter_native_splash config) the moment this
+    // widget's own first frame is actually painted -- not synchronously
+    // here, since main.dart's preserve() is still holding it up until
+    // then. Because both look identical, the swap is invisible.
+    WidgetsBinding.instance.addPostFrameCallback((_) => FlutterNativeSplash.remove());
     Future.delayed(widget.duration, () {
       if (mounted) context.go('/onboarding');
     });

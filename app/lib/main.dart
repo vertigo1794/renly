@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -15,7 +16,13 @@ import 'features/notifications/foreground_suppression.dart';
 import 'features/notifications/notification_providers.dart';
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  // Keeps the native splash (same lime background + wordmark as
+  // SplashScreen, see pubspec.yaml's flutter_native_splash config) on
+  // screen through Flutter's engine boot and this async init, so there is
+  // no unbranded gap before SplashScreen's own first frame. Removed inside
+  // SplashScreen.initState once that first frame is ready to show.
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
   await EasyLocalization.ensureInitialized();
   await dotenv.load(fileName: '.env');
 

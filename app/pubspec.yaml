@@ -43,6 +43,10 @@ dependencies:
   firebase_core: ^4.13.0
   firebase_messaging: ^16.5.0
   phosphor_flutter: ^2.1.0
+  # Regular dependency, not dev-only: FlutterNativeSplash.preserve()/remove()
+  # are called from main.dart/splash_screen.dart at runtime, not just from
+  # the `dart run flutter_native_splash:create` generator.
+  flutter_native_splash: ^2.4.7
 
 dev_dependencies:
   flutter_test:
@@ -102,3 +106,15 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+# Consumed by `dart run flutter_native_splash:create`. Uses the same
+# transparent-background wordmark PNG as the Flutter-side SplashScreen
+# widget (lib/features/auth/splash_screen.dart) on the same lime color, so
+# the native pre-engine splash and the Flutter splash look identical --
+# no visible pop-in when FlutterNativeSplash.remove() hands off between them.
+flutter_native_splash:
+  color: "#CCFF00"
+  image: assets/illustrations/renly_wordmark.png
+  android_12:
+    color: "#CCFF00"
+    image: assets/illustrations/renly_wordmark.png
