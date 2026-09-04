@@ -17,7 +17,7 @@ import '../../core/theme/app_colors.dart';
 /// blends into the Scaffold behind it) rather than rendered text -- unlike
 /// every other onboarding/auth screen title, this one IS the brand mark.
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({this.duration = const Duration(milliseconds: 1100), super.key});
+  const SplashScreen({this.duration = const Duration(seconds: 3), super.key});
 
   /// How long the splash stays up before navigating to '/'. Overridable so
   /// widget tests don't have to wait out the real delay.

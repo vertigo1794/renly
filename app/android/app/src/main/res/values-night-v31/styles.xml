@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark-mode counterpart of values-v31/styles.xml -- see that file for
+         why windowSplashScreenBackground/AnimatedIcon are set. Resource
+         qualifiers don't combine across separate night/ and v31/ folders, so
+         this dedicated night-v31 folder is required for API 31+ dark mode to
+         pick up both the dark theme parent AND the splash overrides. -->
+    <style name="LaunchTheme" parent="Theme.MaterialComponents.NoActionBar">
+        <item name="android:windowBackground">@drawable/launch_background</item>
+        <item name="android:windowSplashScreenBackground">@color/splash_background</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@android:color/transparent</item>
+    </style>
+    <style name="NormalTheme" parent="Theme.MaterialComponents.NoActionBar">
+        <item name="android:windowBackground">?android:colorBackground</item>
+    </style>
+</resources>
