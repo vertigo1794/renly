@@ -44,6 +44,10 @@ void main() {
   });
 
   group('computeAuthRedirect', () {
+    test('unauthenticated user on /splash is allowed', () {
+      expect(computeAuthRedirect(hasSession: false, location: '/splash'), isNull);
+    });
+
     test('unauthenticated user on /onboarding is allowed', () {
       expect(computeAuthRedirect(hasSession: false, location: '/onboarding'), isNull);
     });

@@ -17,11 +17,11 @@ import 'features/notifications/notification_providers.dart';
 
 Future<void> main() async {
   final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
-  // Keeps the native splash (logo + tagline baked in, see pubspec.yaml's
-  // flutter_native_splash config) on screen through engine boot, the async
-  // init below, and the fixed 2s wait -- there is no separate Flutter-side
-  // splash widget/route to hand off to. The native splash IS the splash;
-  // by the time runApp() below ever paints a frame, it's already onboarding.
+  // Keeps the native splash (same lime background + logo as SplashScreen,
+  // see pubspec.yaml's flutter_native_splash config) on screen through
+  // Flutter's engine boot and this async init, so there is no unbranded
+  // gap before SplashScreen's own first frame. Removed inside
+  // SplashScreen.initState once that first frame is ready to show.
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
   await EasyLocalization.ensureInitialized();
   await dotenv.load(fileName: '.env');
@@ -55,13 +55,6 @@ Future<void> main() async {
     // push notifications are simply unavailable this run.
     debugPrint('Firebase.initializeApp() failed: $e');
   }
-
-  // Fixed minimum splash duration, on top of whatever the init above took
-  // -- matches the previous Flutter-side SplashScreen widget's own
-  // Future.delayed pattern, just moved here now that the native splash
-  // covers this whole window by itself.
-  await Future.delayed(const Duration(seconds: 2));
-  FlutterNativeSplash.remove();
 
   runApp(
     EasyLocalization(

@@ -107,22 +107,18 @@ flutter:
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
 
-# Consumed by `dart run flutter_native_splash:create`. There is no separate
-# Flutter-side splash screen/route any more -- this native splash (image +
-# branding) IS the whole splash, held up for a fixed 2s in main.dart via
-# FlutterNativeSplash.preserve()/remove(). `branding` + `branding_mode:
-# bottom` (not one big composite image) pins the tagline near the screen's
-# bottom edge on every device size, the same way Android 12+'s own
-# SplashScreen API's windowSplashScreenBrandingImage slot works -- a single
-# image sized to one specific screen's aspect ratio would drift on others.
+# Consumed by `dart run flutter_native_splash:create`. Logo only, no
+# branding/tagline image and no `fullscreen: true` -- Android 12+'s
+# SplashScreen API expects a roughly-square icon-shaped asset for anything
+# it lays out itself (the main image OR a branding image) and will
+# non-uniformly scale a wide/thin asset to fit that slot, which showed up
+# as a visibly squashed splash on-device. The tagline is rendered as a
+# real Flutter Text widget instead, in SplashScreen
+# (lib/features/auth/splash_screen.dart) -- Flutter's own layout has no
+# such icon-slot constraint, so nothing there can distort.
 flutter_native_splash:
   color: "#CCFF00"
   image: assets/illustrations/renly_wordmark.png
-  branding: assets/illustrations/splash_tagline.png
-  branding_mode: bottom
-  fullscreen: true
   android_12:
     color: "#CCFF00"
     image: assets/illustrations/renly_wordmark.png
-    branding: assets/illustrations/splash_tagline.png
-    branding_mode: bottom

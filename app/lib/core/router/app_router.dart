@@ -9,6 +9,7 @@ import '../../features/auth/auth_selection_screen.dart';
 import '../../features/auth/home_placeholder_screen.dart';
 import '../../features/auth/login_screen.dart';
 import '../../features/auth/onboarding_screen.dart';
+import '../../features/auth/splash_screen.dart';
 import '../../features/auth/registration_personal_screen.dart';
 import '../../features/auth/registration_professional_screen.dart';
 import '../../features/auth/verification_pending_screen.dart';
@@ -34,6 +35,7 @@ import '../../features/settings/privacy_screen.dart';
 import '../../features/subscription/subscription_screen.dart';
 
 const _publicRoutes = {
+  '/splash',
   '/onboarding',
   '/',
   '/login',
@@ -134,7 +136,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   ref.onDispose(refreshStream.dispose);
 
   return GoRouter(
-    initialLocation: '/onboarding',
+    initialLocation: '/splash',
     refreshListenable: refreshStream,
     observers: [currentLocationObserver],
     redirect: (context, state) {
@@ -142,6 +144,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       return computeAuthRedirect(hasSession: hasSession, location: state.matchedLocation);
     },
     routes: [
+      GoRoute(path: '/splash', builder: (context, state) => const SplashScreen()),
       GoRoute(path: '/onboarding', builder: (context, state) => const OnboardingScreen()),
       GoRoute(path: '/', builder: (context, state) => const AuthSelectionScreen()),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
