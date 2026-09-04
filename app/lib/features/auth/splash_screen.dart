@@ -32,7 +32,7 @@ import '../../core/theme/app_colors.dart';
 /// tagline (and the lime full-bleed look) can only render safely here in
 /// Flutter's own layout system, once the engine is actually up.
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({this.duration = const Duration(seconds: 2), super.key});
+  const SplashScreen({this.duration = const Duration(milliseconds: 1200), super.key});
 
   /// How long the splash stays up before navigating to '/onboarding'.
   /// Overridable so widget tests don't have to wait out the real delay.
