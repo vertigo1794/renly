@@ -107,14 +107,22 @@ flutter:
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
 
-# Consumed by `dart run flutter_native_splash:create`. Uses the same
-# transparent-background wordmark PNG as the Flutter-side SplashScreen
-# widget (lib/features/auth/splash_screen.dart) on the same lime color, so
-# the native pre-engine splash and the Flutter splash look identical --
-# no visible pop-in when FlutterNativeSplash.remove() hands off between them.
+# Consumed by `dart run flutter_native_splash:create`. There is no separate
+# Flutter-side splash screen/route any more -- this native splash (image +
+# branding) IS the whole splash, held up for a fixed 2s in main.dart via
+# FlutterNativeSplash.preserve()/remove(). `branding` + `branding_mode:
+# bottom` (not one big composite image) pins the tagline near the screen's
+# bottom edge on every device size, the same way Android 12+'s own
+# SplashScreen API's windowSplashScreenBrandingImage slot works -- a single
+# image sized to one specific screen's aspect ratio would drift on others.
 flutter_native_splash:
   color: "#CCFF00"
   image: assets/illustrations/renly_wordmark.png
+  branding: assets/illustrations/splash_tagline.png
+  branding_mode: bottom
+  fullscreen: true
   android_12:
     color: "#CCFF00"
     image: assets/illustrations/renly_wordmark.png
+    branding: assets/illustrations/splash_tagline.png
+    branding_mode: bottom
