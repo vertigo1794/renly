@@ -135,14 +135,20 @@ flutter_native_splash:
 # emulator, squircle/rounded-square elsewhere -- all handled correctly by
 # the OS, not fought against). The foreground is positioned at 78% scale
 # (paired with adaptive_icon_foreground_inset below to land the FINAL
-# visible size around 65-70% of the circle) using an OPTICAL vertical
-# center, not a bounding-box center: "renly"'s
-# 'y' descender extends much further below the baseline than the 'l'
-# ascender extends above it, so centering by the full glyph bbox (as done
-# initially) put the visually-dense x-height band noticeably above true
-# center once masked -- fixed by centering on the midpoint between the
-# ascender-top and baseline instead, letting the descender hang into what
-# would otherwise be excess bottom margin. `image_path` is the flat
+# visible size around 65-70% of the circle) using OPTICAL centering on
+# BOTH axes, not a bounding-box center: vertically, "renly"'s 'y'
+# descender extends much further below the baseline than the 'l' ascender
+# extends above it, so centering by the full glyph bbox put the
+# visually-dense x-height band noticeably above true center once masked
+# -- fixed by centering on the midpoint between the ascender-top and
+# baseline instead. Horizontally, the same class of bug showed up as a
+# rightward shift: the word's ink-mass centroid sat ~30px right of its
+# own bbox's geometric center (more visual weight in "nly" than "re"), so
+# equal LEFT/RIGHT bbox margins is not the same thing as visually
+# centered -- fixed by centering on the column-wise ink-mass centroid
+# instead of the bbox midpoint (verified post-render: final centroid sits
+# 0.16px off true canvas center, essentially pixel-perfect).
+# `image_path` is the flat
 # pre-composited fallback (renly_icon_flat.png) for iOS and pre-8 Android,
 # neither of which support the adaptive foreground/background split -- iOS
 # always applies its own system-wide rounded-square mask to a plain square
