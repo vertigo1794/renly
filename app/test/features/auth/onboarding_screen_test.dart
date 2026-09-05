@@ -90,7 +90,7 @@ void main() {
     expect(find.text('CO-BROKE NETWORK'), findsNothing);
   });
 
-  testWidgets('slide 3 has no badge pill (no badgeKey provided yet)', (tester) async {
+  testWidgets('slide 3 shows its own badge pill, distinct from slides 1 and 2', (tester) async {
     final router = GoRouter(routes: [
       GoRoute(path: '/onboarding', builder: (context, state) => const OnboardingScreen()),
       GoRoute(path: '/', builder: (context, state) => const Placeholder()),
@@ -104,6 +104,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Transparent & Verified'), findsOneWidget);
+    expect(find.text('VERIFIED & TRUSTED'), findsOneWidget);
     expect(find.text('SMART MATCHING'), findsNothing);
     expect(find.text('CO-BROKE NETWORK'), findsNothing);
   });

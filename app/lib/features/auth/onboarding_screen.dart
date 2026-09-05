@@ -9,13 +9,13 @@ import '../../core/widgets/brutalist_button.dart';
 
 /// One onboarding slide's content. `titleKey`/`bodyKey` are easy_localization
 /// keys, not raw strings, so every slide stays bilingual EN/MS like the rest
-/// of the app. `badgeKey` is optional and nullable rather than required: it
-/// was added when slide 1 got its Stitch-sourced badge pill ("Co-Broke
-/// Network"), slide 2 got its own ("Smart Matching") when ITS refreshed
-/// mockup arrived, but slide 3 hasn't had its badge copy fed in yet (this
-/// project's Stitch screens arrive one at a time) -- leaving it null simply
-/// hides the badge on that slide rather than inventing copy for a design
-/// that hasn't been provided.
+/// of the app. `badgeKey` stayed nullable (not required) through the rollout
+/// across all 3 slides' own Stitch redesigns arriving one at a time -- it
+/// only hides the badge on a slide that hasn't had its own badge copy fed
+/// in yet, rather than forcing every slide to invent copy the moment ANY
+/// slide gained a badge. All 3 slides have real badge copy as of this
+/// writing, but a future 4th slide added before its own redesign lands
+/// would hit the same null-hides-it path.
 class OnboardingSlideData {
   const OnboardingSlideData({
     required this.imageAsset,
@@ -67,6 +67,7 @@ const _slides = [
     imageAsset: 'assets/illustrations/onboarding_3_verified.png',
     titleKey: 'onboarding_3_title',
     bodyKey: 'onboarding_3_body',
+    badgeKey: 'onboarding_3_badge',
   ),
 ];
 
