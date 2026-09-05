@@ -97,13 +97,26 @@ class AuthSelectionScreen extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.center,
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const RStarBadge(),
+                              // 25% larger than SplashScreen's default
+                              // (64->80) -- this screen's own title reads
+                              // as this app's primary brand moment, unlike
+                              // the splash's smaller in-motion badge.
+                              // RStarBadge's padding/border-radius/optical
+                              // translate all scale with `size`, so the R
+                              // and star glyphs stay proportional inside
+                              // the bigger box with no separate tuning.
+                              const RStarBadge(size: 80),
                               const SizedBox(width: 14),
                               Text(
                                 'app_name'.tr(),
                                 style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                                       color: AppColors.ink,
-                                      fontSize: 48,
+                                      // Same 25% scale-up as the badge
+                                      // (48->60) so the wordmark stays
+                                      // visually matched to the bigger box
+                                      // rather than the two drifting out of
+                                      // proportion with each other.
+                                      fontSize: 60,
                                       height: 1,
                                     ),
                               ),
