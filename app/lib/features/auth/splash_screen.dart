@@ -4,7 +4,6 @@ import 'dart:ui' as ui;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../core/theme/app_colors.dart';
 
@@ -30,12 +29,20 @@ import '../../core/theme/app_colors.dart';
 /// blobs), since the flat lime background already matches the rest of the
 /// app's brand screens.
 ///
-/// The badge glyph is a bold white "R" with a small white star overlapping
-/// its bottom-right corner, a deliberate Rockstar Games-style monogram
-/// treatment requested directly (not sourced from the Stitch mockup, which
-/// used a plain lime "R") -- both `splash_tagline`/`splash_subtitle` l10n
-/// keys and the bottom-pinned tagline text were removed in the same round,
-/// for a plain/minimal splash with nothing below the logo.
+/// The badge glyph is the real Stitch-generated "Renly - Rockstar Style Logo
+/// Refined" vector artwork (screen ID `8f8646d4f24a4540972123e2f372e7fc`,
+/// itself a direct follow-up ask, not part of the original Kinetic-Reveal
+/// mockup) -- a hand-tuned italic "R" with an authentic bevel-cut counter
+/// plus a 5-point star tucked into its bottom-right corner, replacing the
+/// earlier system-font `Text('R')` + generic `PhosphorIcons.star()`
+/// approximation. Downloaded as SVG (this screen's `htmlCode` field carries
+/// `image/svg+xml`, not markup), then rasterized to a transparent PNG with
+/// the R recolored black->white (the source SVG drew it black for its own
+/// lime background; this badge's own background is ink/black) and cropped
+/// tight to its ink bbox with a small breathing margin --
+/// `renly_r_star_badge.png`. Both `splash_tagline`/`splash_subtitle` l10n
+/// keys and the bottom-pinned tagline text were removed in the round before
+/// this one, for a plain/minimal splash with nothing below the logo.
 ///
 /// The native splash (pubspec.yaml's flutter_native_splash config) is a
 /// DELIBERATELY different screen, not a seamless twin of this one: white
@@ -103,25 +110,20 @@ class _SplashScreenState extends State<SplashScreen> {
                   child: Container(
                     width: 64,
                     height: 64,
+                    padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(color: AppColors.ink, borderRadius: BorderRadius.circular(16)),
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        Text(
-                          'R',
-                          style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w900,
-                                fontSize: 32,
-                                height: 1,
-                              ),
-                        ),
-                        Positioned(
-                          right: 10,
-                          bottom: 10,
-                          child: Icon(PhosphorIcons.star(PhosphorIconsStyle.fill), color: Colors.white, size: 14),
-                        ),
-                      ],
+                    child: Image.asset(
+                      'assets/illustrations/renly_r_star_badge.png',
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) => Text(
+                        'R',
+                        style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w900,
+                              fontSize: 32,
+                              height: 1,
+                            ),
+                      ),
                     ),
                   ),
                 ),

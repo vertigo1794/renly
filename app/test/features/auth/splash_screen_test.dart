@@ -5,7 +5,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:renly/core/theme/app_theme.dart';
@@ -42,7 +41,7 @@ void main() {
     rootBundle.clear();
   });
 
-  testWidgets('renders the R badge (with its star accent) and wordmark text on its first frame', (tester) async {
+  testWidgets('renders the R-star badge image and wordmark text on its first frame', (tester) async {
     final router = GoRouter(routes: [
       GoRoute(path: '/splash', builder: (context, state) => const SplashScreen()),
       GoRoute(path: '/onboarding', builder: (context, state) => const Placeholder()),
@@ -59,9 +58,9 @@ void main() {
     // their AnimatedScale/AnimatedOpacity values change once the ~700ms
     // reveal fires, not their presence in the tree. The splash is
     // deliberately plain below the logo now -- no tagline text at all.
-    expect(find.text('R'), findsOneWidget);
+    final image = tester.widget<Image>(find.byType(Image));
+    expect((image.image as AssetImage).assetName, 'assets/illustrations/renly_r_star_badge.png');
     expect(find.text('renly'), findsOneWidget);
-    expect(find.byIcon(PhosphorIcons.star(PhosphorIconsStyle.fill)), findsOneWidget);
 
     // Flush the 3.5s delay and the resulting navigation before the test
     // ends. pumpAndSettle() alone won't do it: nothing rebuilds while the
