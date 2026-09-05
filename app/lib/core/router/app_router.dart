@@ -1,12 +1,13 @@
 import 'dart:async';
 
-import 'package:flutter/widgets.dart';
+import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../features/auth/auth_selection_screen.dart';
-import '../../features/auth/home_placeholder_screen.dart';
 import '../../features/auth/login_screen.dart';
 import '../../features/auth/onboarding_screen.dart';
 import '../../features/auth/splash_screen.dart';
@@ -14,7 +15,9 @@ import '../../features/auth/registration_personal_screen.dart';
 import '../../features/auth/registration_professional_screen.dart';
 import '../../features/auth/verification_pending_screen.dart';
 import '../../features/collaboration/chat_screen.dart';
+import '../../features/collaboration/conversation_list_screen.dart';
 import '../../features/collaboration/my_requests_screen.dart';
+import '../../features/home/main_dashboard_screen.dart';
 import '../../features/listing/marketplace_screen.dart';
 import '../../features/listing/my_inventory_screen.dart';
 import '../../features/listing/post_listing_screen.dart';
@@ -165,8 +168,23 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/verification-pending',
         builder: (context, state) => const VerificationPendingScreen(),
       ),
-      GoRoute(path: '/home', builder: (context, state) => const HomePlaceholderScreen()),
-      GoRoute(path: '/marketplace', builder: (context, state) => const MarketplaceScreen()),
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) => _MainShell(navigationShell: navigationShell),
+        branches: [
+          StatefulShellBranch(
+            routes: [GoRoute(path: '/home', builder: (context, state) => const MainDashboardScreen())],
+          ),
+          StatefulShellBranch(
+            routes: [GoRoute(path: '/marketplace', builder: (context, state) => const MarketplaceScreen())],
+          ),
+          StatefulShellBranch(
+            routes: [GoRoute(path: '/chat', builder: (context, state) => const ConversationListScreen())],
+          ),
+          StatefulShellBranch(
+            routes: [GoRoute(path: '/profile', builder: (context, state) => const ProfileScreen())],
+          ),
+        ],
+      ),
       GoRoute(path: '/my-inventory', builder: (context, state) => const MyInventoryScreen()),
       GoRoute(path: '/post-listing', builder: (context, state) => const PostListingScreen()),
       GoRoute(
@@ -197,7 +215,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/messages/:requestId',
         builder: (context, state) => ChatScreen(requestId: state.pathParameters['requestId']!),
       ),
-      GoRoute(path: '/profile', builder: (context, state) => const ProfileScreen()),
       GoRoute(path: '/reviews', builder: (context, state) => const ReviewsScreen()),
       GoRoute(path: '/notifications', builder: (context, state) => const NotificationListScreen()),
       GoRoute(path: '/settings/notification', builder: (context, state) => const NotificationSettingsScreen()),
@@ -208,3 +225,49 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     ],
   );
 });
+
+/// The Scaffold shared by all 4 bottom-nav branches (Home/Market/Chat/
+/// Profile): hosts the [StatefulNavigationShell]'s IndexedStack body, the
+/// bottom nav bar (tapping a destination calls [StatefulNavigationShell.
+/// goBranch], which preserves each branch's own navigation stack), and the
+/// centered Post FAB shortcut to `/post-listing`.
+class _MainShell extends StatelessWidget {
+  const _MainShell({required this.navigationShell});
+
+  final StatefulNavigationShell navigationShell;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: navigationShell,
+      bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
+        currentIndex: navigationShell.currentIndex,
+        onTap: (index) => navigationShell.goBranch(index),
+        items: [
+          BottomNavigationBarItem(
+            icon: Icon(PhosphorIcons.house(PhosphorIconsStyle.bold)),
+            label: 'nav_home'.tr(),
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(PhosphorIcons.storefront(PhosphorIconsStyle.bold)),
+            label: 'nav_market'.tr(),
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(PhosphorIcons.chatCircle(PhosphorIconsStyle.bold)),
+            label: 'nav_chat'.tr(),
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(PhosphorIcons.user(PhosphorIconsStyle.bold)),
+            label: 'nav_profile'.tr(),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => context.push('/post-listing'),
+        child: Icon(PhosphorIcons.plusCircle(PhosphorIconsStyle.bold)),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+    );
+  }
+}

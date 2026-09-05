@@ -253,5 +253,9 @@
   "dashboard_quick_action_my_inventory": "Inventori Saya",
   "dashboard_recent_listings_title": "Penyenaraian Terkini",
   "dashboard_view_all": "Lihat Semua",
-  "dashboard_recent_listings_empty": "Belum ada penyenaraian."
+  "dashboard_recent_listings_empty": "Belum ada penyenaraian.",
+  "nav_home": "Utama",
+  "nav_market": "Pasaran",
+  "nav_chat": "Sembang",
+  "nav_profile": "Profil"
 }

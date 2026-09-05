@@ -11,9 +11,10 @@ import '../notifications/notification_providers.dart';
 import '../profile/profile_providers.dart';
 
 /// The Home branch's root screen in the bottom-nav shell (Task 8 wires this
-/// in, replacing HomePlaceholderScreen). Shows a welcome header (negotiator's
-/// name from myProfileProvider), quick-action shortcuts to the other tabs,
-/// and a horizontal carousel of recent marketplace listings.
+/// in as the router's `/home` builder, replacing the old placeholder
+/// screen). Shows a welcome header (negotiator's name from
+/// myProfileProvider), quick-action shortcuts to the other tabs, and a
+/// horizontal carousel of recent marketplace listings.
 class MainDashboardScreen extends ConsumerWidget {
   const MainDashboardScreen({super.key});
 

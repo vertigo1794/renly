@@ -253,5 +253,9 @@
   "dashboard_quick_action_my_inventory": "My Inventory",
   "dashboard_recent_listings_title": "Recent Listings",
   "dashboard_view_all": "View All",
-  "dashboard_recent_listings_empty": "No listings yet."
+  "dashboard_recent_listings_empty": "No listings yet.",
+  "nav_home": "Home",
+  "nav_market": "Market",
+  "nav_chat": "Chat",
+  "nav_profile": "Profile"
 }

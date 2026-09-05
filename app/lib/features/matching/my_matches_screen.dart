@@ -13,7 +13,7 @@ import '../requirement/requirement_formatting.dart';
 import 'matching_providers.dart';
 
 /// All matches touching the negotiator's own listings or requirements,
-/// either side. Reached via "My Matches" on HomePlaceholderScreen.
+/// either side. Reached via "My Matches" on the Home tab (MainDashboardScreen).
 class MyMatchesScreen extends ConsumerWidget {
   const MyMatchesScreen({super.key});
 
