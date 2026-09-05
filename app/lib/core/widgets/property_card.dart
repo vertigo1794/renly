@@ -14,9 +14,12 @@ import 'status_badge.dart';
 /// directly in its ListView.builder, so the Marketplace list and the
 /// Dashboard's Recent Listings carousel render identically and never drift.
 /// Bed/bathtub icons switched from marketplace_screen.dart's original
-/// Icons.bed/Icons.bathtub to PhosphorIcons while extracting -- this app's
-/// icon convention everywhere else already uses PhosphorIcons, this file
-/// was simply never updated when that convention was established.
+/// Icons.bed/Icons.bathtub to PhosphorIcons here, to match this widget's own
+/// new code (and this milestone's PhosphorIcons-only constraint for
+/// new/changed icons). This is NOT app-wide yet:
+/// property_detail_screen.dart, requirement_detail_screen.dart and
+/// requirement_board_screen.dart still render Icons.bed/Icons.bathtub --
+/// converting those is a separate, not-yet-done cleanup.
 class PropertyCard extends StatelessWidget {
   const PropertyCard({required this.listing, required this.onTap, super.key});
 

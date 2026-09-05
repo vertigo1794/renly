@@ -189,6 +189,24 @@ Deno.serve(async (req) => {
     // is a separate channel from push delivery; it should exist as long as
     // the recipient is a real negotiator, independent of whether a device
     // actually received anything.
+    //
+    // KNOWN LIMITATION (accepted for now, follow-up task tracked):
+    // this function still does NOT verify that the CALLER is a legitimate
+    // party to the match/request/conversation named in the payload (see the
+    // existing unverified-caller note earlier in this file). That gap is
+    // strictly worse since this insert was added: previously the worst a
+    // forged call could do was show one unwanted transient push banner;
+    // now the same forged call also writes a DURABLE row into another
+    // user's in-app Notification Center, with attacker-chosen
+    // title/body/category/deep_link_data, addressed by a caller-supplied
+    // recipient_negotiator_id. Any signed-in user could in principle inject
+    // arbitrary notifications into any other user's feed by invoking this
+    // function directly.
+    // Accepted for now: single-org internal app, no external threat-model
+    // change from this milestone. The real fix -- server-side verification
+    // that auth.uid() is an actual party to the referenced entity before
+    // either sending or inserting -- is a deliberate follow-up, not a
+    // gap to be patched at the call sites.
     const { error: notificationInsertError } = await adminClient.from("notification").insert({
       recipient_id: recipient_negotiator_id,
       category,

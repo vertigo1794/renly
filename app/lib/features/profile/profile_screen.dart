@@ -37,147 +37,163 @@ class ProfileScreen extends ConsumerWidget {
         child: profileAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (error, stack) => Center(child: Text('listing_error_generic'.tr())),
-          data: (profile) => SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(profile.fullName, style: Theme.of(context).textTheme.headlineMedium),
-                const SizedBox(height: 4),
-                Chip(label: Text(_statusLabel(profile.verificationStatus))),
-                const SizedBox(height: 12),
-                Text('${'profile_ren_number_label'.tr()}: ${profile.renNumber ?? '-'}'),
-                const SizedBox(height: 4),
-                Text('${'profile_agency_label'.tr()}: ${profile.agencyName ?? '-'}'),
-                const SizedBox(height: 20),
-                countsAsync.when(
-                  loading: () => const SizedBox.shrink(),
-                  error: (error, stack) => const SizedBox.shrink(),
-                  data: (counts) => Row(
-                    children: [
-                      Expanded(child: _StatCard(value: '${counts.$1}', label: 'profile_active_listings_label'.tr())),
-                      const SizedBox(width: 12),
-                      Expanded(child: _StatCard(value: '${counts.$2}', label: 'profile_deals_closed_label'.tr())),
-                      const SizedBox(width: 12),
-                      Expanded(child: _TrustScoreCard(negotiatorId: profile.negotiatorId)),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 20),
-                _EditForm(profile: profile),
-                const SizedBox(height: 20),
-                BrutalistCard(
-                  padding: EdgeInsets.zero,
-                  // BrutalistCard is a plain opaque Container -- ink splashes
-                  // from a ListTile's onTap paint on the nearest Material
-                  // ancestor, which without this wrapper is the Scaffold's,
-                  // underneath the card's fill (invisible). This Material
-                  // gives each row's ripple somewhere visible to paint.
-                  child: Material(
-                    color: Colors.transparent,
-                    child: Column(
+          // Pull-to-refresh restores what this screen lost when '/profile'
+          // became a StatefulShellRoute.indexedStack branch: as a pushed
+          // route it disposed on pop, so myProfileProvider/profileCountsProvider
+          // (both autoDispose, refetch-on-entry) refetched on the next visit.
+          // The shell keeps every branch mounted for the whole session, so
+          // without this the listing/deal counts go stale until app restart.
+          data: (profile) => RefreshIndicator(
+            onRefresh: () async {
+              ref.invalidate(myProfileProvider);
+              ref.invalidate(profileCountsProvider);
+            },
+            child: SingleChildScrollView(
+              // Required, not decoration: the profile body is often shorter
+              // than the viewport, and a non-scrollable child gives
+              // RefreshIndicator no drag gesture to attach to.
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(profile.fullName, style: Theme.of(context).textTheme.headlineMedium),
+                  const SizedBox(height: 4),
+                  Chip(label: Text(_statusLabel(profile.verificationStatus))),
+                  const SizedBox(height: 12),
+                  Text('${'profile_ren_number_label'.tr()}: ${profile.renNumber ?? '-'}'),
+                  const SizedBox(height: 4),
+                  Text('${'profile_agency_label'.tr()}: ${profile.agencyName ?? '-'}'),
+                  const SizedBox(height: 20),
+                  countsAsync.when(
+                    loading: () => const SizedBox.shrink(),
+                    error: (error, stack) => const SizedBox.shrink(),
+                    data: (counts) => Row(
                       children: [
-                        Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text('settings_section_title'.tr(), style: Theme.of(context).textTheme.titleMedium),
-                          ),
-                        ),
-                        const Divider(height: 1),
-                        ListTile(
-                          leading: const Icon(Icons.notifications_active),
-                          title: Text('settings_notification_row_title'.tr()),
-                          subtitle: Text('settings_notification_row_subtitle'.tr()),
-                          trailing: const Icon(Icons.chevron_right),
-                          onTap: () => context.push('/settings/notification'),
-                        ),
-                        ListTile(
-                          leading: const Icon(Icons.manage_accounts),
-                          title: Text('settings_account_row_title'.tr()),
-                          subtitle: Text('settings_account_row_subtitle'.tr()),
-                          trailing: const Icon(Icons.chevron_right),
-                          onTap: () => context.push('/settings/account'),
-                        ),
-                        ListTile(
-                          leading: const Icon(Icons.privacy_tip),
-                          title: Text('settings_privacy_row_title'.tr()),
-                          subtitle: Text('settings_privacy_row_subtitle'.tr()),
-                          trailing: const Icon(Icons.chevron_right),
-                          onTap: () => context.push('/settings/privacy'),
-                        ),
-                        ListTile(
-                          leading: const Icon(Icons.help_outline),
-                          title: Text('settings_help_row_title'.tr()),
-                          subtitle: Text('settings_help_row_subtitle'.tr()),
-                          trailing: const Icon(Icons.chevron_right),
-                          onTap: () => context.push('/settings/help'),
-                        ),
-                        ListTile(
-                          leading: const Icon(Icons.workspace_premium),
-                          title: Text('settings_subscription_row_title'.tr()),
-                          subtitle: Text('settings_subscription_row_subtitle'.tr()),
-                          trailing: const Icon(Icons.chevron_right),
-                          onTap: () => context.push('/settings/subscription'),
-                        ),
-                        ListTile(
-                          leading: const Icon(Icons.assignment_outlined),
-                          title: Text('profile_requirement_board_row_title'.tr()),
-                          trailing: const Icon(Icons.chevron_right),
-                          onTap: () => context.push('/requirement-board'),
-                        ),
-                        ListTile(
-                          leading: const Icon(Icons.list_alt_outlined),
-                          title: Text('profile_my_requirements_row_title'.tr()),
-                          trailing: const Icon(Icons.chevron_right),
-                          onTap: () => context.push('/my-requirements'),
-                        ),
-                        ListTile(
-                          leading: const Icon(Icons.handshake_outlined),
-                          title: Text('profile_my_matches_row_title'.tr()),
-                          trailing: const Icon(Icons.chevron_right),
-                          onTap: () => context.push('/my-matches'),
-                        ),
-                        ListTile(
-                          leading: const Icon(Icons.inbox_outlined),
-                          title: Text('profile_my_requests_row_title'.tr()),
-                          trailing: const Icon(Icons.chevron_right),
-                          onTap: () => context.push('/my-requests'),
-                        ),
+                        Expanded(child: _StatCard(value: '${counts.$1}', label: 'profile_active_listings_label'.tr())),
+                        const SizedBox(width: 12),
+                        Expanded(child: _StatCard(value: '${counts.$2}', label: 'profile_deals_closed_label'.tr())),
+                        const SizedBox(width: 12),
+                        Expanded(child: _TrustScoreCard(negotiatorId: profile.negotiatorId)),
                       ],
                     ),
                   ),
-                ),
-                const SizedBox(height: 20),
-                Text('profile_language_label'.tr(), style: Theme.of(context).textTheme.titleMedium),
-                const SizedBox(height: 8),
-                SegmentedButton<String>(
-                  segments: [
-                    ButtonSegment(value: 'en', label: Text('profile_language_en'.tr())),
-                    ButtonSegment(value: 'ms', label: Text('profile_language_ms'.tr())),
-                  ],
-                  selected: {context.locale.languageCode},
-                  onSelectionChanged: (selection) => context.setLocale(Locale(selection.first)),
-                ),
-                const SizedBox(height: 32),
-                BrutalistButton(
-                  label: 'profile_sign_out'.tr(),
-                  variant: BrutalistButtonVariant.secondary,
-                  icon: PhosphorIcons.signOut(PhosphorIconsStyle.bold),
-                  onPressed: () async {
-                    try {
-                      await ref.read(authRepositoryProvider).signOut();
-                    } catch (_) {
-                      // Sign-out already clears the local session before any
-                      // network call and swallows most HTTP errors -- a
-                      // rethrow here would only be a transport failure after
-                      // the local session is already gone, so the redirect
-                      // to '/' still happens regardless. Swallow rather than
-                      // show an error the user can't act on.
-                    }
-                  },
-                ),
-              ],
+                  const SizedBox(height: 20),
+                  _EditForm(profile: profile),
+                  const SizedBox(height: 20),
+                  BrutalistCard(
+                    padding: EdgeInsets.zero,
+                    // BrutalistCard is a plain opaque Container -- ink splashes
+                    // from a ListTile's onTap paint on the nearest Material
+                    // ancestor, which without this wrapper is the Scaffold's,
+                    // underneath the card's fill (invisible). This Material
+                    // gives each row's ripple somewhere visible to paint.
+                    child: Material(
+                      color: Colors.transparent,
+                      child: Column(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text('settings_section_title'.tr(), style: Theme.of(context).textTheme.titleMedium),
+                            ),
+                          ),
+                          const Divider(height: 1),
+                          ListTile(
+                            leading: const Icon(Icons.notifications_active),
+                            title: Text('settings_notification_row_title'.tr()),
+                            subtitle: Text('settings_notification_row_subtitle'.tr()),
+                            trailing: const Icon(Icons.chevron_right),
+                            onTap: () => context.push('/settings/notification'),
+                          ),
+                          ListTile(
+                            leading: const Icon(Icons.manage_accounts),
+                            title: Text('settings_account_row_title'.tr()),
+                            subtitle: Text('settings_account_row_subtitle'.tr()),
+                            trailing: const Icon(Icons.chevron_right),
+                            onTap: () => context.push('/settings/account'),
+                          ),
+                          ListTile(
+                            leading: const Icon(Icons.privacy_tip),
+                            title: Text('settings_privacy_row_title'.tr()),
+                            subtitle: Text('settings_privacy_row_subtitle'.tr()),
+                            trailing: const Icon(Icons.chevron_right),
+                            onTap: () => context.push('/settings/privacy'),
+                          ),
+                          ListTile(
+                            leading: const Icon(Icons.help_outline),
+                            title: Text('settings_help_row_title'.tr()),
+                            subtitle: Text('settings_help_row_subtitle'.tr()),
+                            trailing: const Icon(Icons.chevron_right),
+                            onTap: () => context.push('/settings/help'),
+                          ),
+                          ListTile(
+                            leading: const Icon(Icons.workspace_premium),
+                            title: Text('settings_subscription_row_title'.tr()),
+                            subtitle: Text('settings_subscription_row_subtitle'.tr()),
+                            trailing: const Icon(Icons.chevron_right),
+                            onTap: () => context.push('/settings/subscription'),
+                          ),
+                          ListTile(
+                            leading: const Icon(Icons.assignment_outlined),
+                            title: Text('profile_requirement_board_row_title'.tr()),
+                            trailing: const Icon(Icons.chevron_right),
+                            onTap: () => context.push('/requirement-board'),
+                          ),
+                          ListTile(
+                            leading: const Icon(Icons.list_alt_outlined),
+                            title: Text('profile_my_requirements_row_title'.tr()),
+                            trailing: const Icon(Icons.chevron_right),
+                            onTap: () => context.push('/my-requirements'),
+                          ),
+                          ListTile(
+                            leading: const Icon(Icons.handshake_outlined),
+                            title: Text('profile_my_matches_row_title'.tr()),
+                            trailing: const Icon(Icons.chevron_right),
+                            onTap: () => context.push('/my-matches'),
+                          ),
+                          ListTile(
+                            leading: const Icon(Icons.inbox_outlined),
+                            title: Text('profile_my_requests_row_title'.tr()),
+                            trailing: const Icon(Icons.chevron_right),
+                            onTap: () => context.push('/my-requests'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Text('profile_language_label'.tr(), style: Theme.of(context).textTheme.titleMedium),
+                  const SizedBox(height: 8),
+                  SegmentedButton<String>(
+                    segments: [
+                      ButtonSegment(value: 'en', label: Text('profile_language_en'.tr())),
+                      ButtonSegment(value: 'ms', label: Text('profile_language_ms'.tr())),
+                    ],
+                    selected: {context.locale.languageCode},
+                    onSelectionChanged: (selection) => context.setLocale(Locale(selection.first)),
+                  ),
+                  const SizedBox(height: 32),
+                  BrutalistButton(
+                    label: 'profile_sign_out'.tr(),
+                    variant: BrutalistButtonVariant.secondary,
+                    icon: PhosphorIcons.signOut(PhosphorIconsStyle.bold),
+                    onPressed: () async {
+                      try {
+                        await ref.read(authRepositoryProvider).signOut();
+                      } catch (_) {
+                        // Sign-out already clears the local session before any
+                        // network call and swallows most HTTP errors -- a
+                        // rethrow here would only be a transport failure after
+                        // the local session is already gone, so the redirect
+                        // to '/' still happens regardless. Swallow rather than
+                        // show an error the user can't act on.
+                      }
+                    },
+                  ),
+                ],
+              ),
             ),
           ),
         ),

@@ -6,6 +6,18 @@
 -- both deferred from their originating designs (Messaging's 0008, and the
 -- Push Notifications design's explicit "no inbox screen" scope line) until
 -- this milestone needed them for real.
+--
+-- ROLLBACK NOTE: if this migration is ever reverted, do NOT undo the two
+-- `revoke update ... from authenticated` statements below (on `message` and
+-- on `notification`). They are standalone security fixes for a latent gap
+-- inherited from 0008_messaging.sql -- Supabase's default blanket table-wide
+-- UPDATE grant to `authenticated`, which was never revoked there -- and are
+-- independent of this migration's own new schema. Re-granting blanket UPDATE
+-- would let any accepted-request party rewrite `message.body`/`sent_at`.
+-- A revert should drop ONLY the new view, table, columns and policies
+-- (`conversation_last_message`, `notification`, `message.read_at`,
+-- `message_update_read_at`, `notification_select_own`,
+-- `notification_update_read_at`) and leave the revokes in place.
 
 alter table message add column if not exists read_at timestamptz;
 

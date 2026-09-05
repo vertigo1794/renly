@@ -53,23 +53,42 @@ class ConversationListScreen extends ConsumerWidget {
             if (conversations.isEmpty) {
               return Center(child: Text('conversation_list_empty'.tr()));
             }
-            return ListView.builder(
-              padding: const EdgeInsets.all(20),
-              itemCount: conversations.length,
-              itemBuilder: (context, index) {
-                final candidate = conversations[index];
-                final isMyListing = candidate.match.listing.negotiatorId == currentNegotiatorId;
-                final counterpartyOwner =
-                    isMyListing ? candidate.match.requirementOwner : candidate.match.listingOwner;
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: _ConversationRow(
-                    requestId: candidate.request.requestId,
-                    counterpartyName: counterpartyOwner.fullName,
-                    currentNegotiatorId: currentNegotiatorId,
-                  ),
-                );
+            // Pull-to-refresh (same convention as my_requests_screen.dart /
+            // marketplace_screen.dart) is the ONLY way these two autoDispose
+            // providers get refetched from this screen: as a
+            // StatefulShellRoute.indexedStack branch root, this screen is
+            // built once and stays mounted for the whole session, so
+            // switching away to another tab and back never disposes it and
+            // never triggers the refetch-on-entry these providers were
+            // written for.
+            return RefreshIndicator(
+              onRefresh: () async {
+                ref.invalidate(receivedRequestsProvider);
+                ref.invalidate(sentRequestsProvider);
+                // Every per-row unread/last-message summary too -- ChatScreen
+                // marks a conversation read on open, but it cannot reach this
+                // file-private family provider to invalidate it, so a pull
+                // here is what clears an already-read row's unread dot.
+                ref.invalidate(_conversationSummaryProvider);
               },
+              child: ListView.builder(
+                padding: const EdgeInsets.all(20),
+                itemCount: conversations.length,
+                itemBuilder: (context, index) {
+                  final candidate = conversations[index];
+                  final isMyListing = candidate.match.listing.negotiatorId == currentNegotiatorId;
+                  final counterpartyOwner =
+                      isMyListing ? candidate.match.requirementOwner : candidate.match.listingOwner;
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: _ConversationRow(
+                      requestId: candidate.request.requestId,
+                      counterpartyName: counterpartyOwner.fullName,
+                      currentNegotiatorId: currentNegotiatorId,
+                    ),
+                  );
+                },
+              ),
             );
           },
         ),

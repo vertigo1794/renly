@@ -128,7 +128,19 @@ class _RenlyAppState extends ConsumerState<RenlyApp> {
     final stringData = _stringData(data);
     final category = stringData['category'] ?? '';
     final route = deepLinkRouteFor(category, stringData);
-    ref.read(appRouterProvider).go(route);
+    // go vs push is not interchangeable now that a StatefulShellRoute owns
+    // the 4 bottom-nav branches: `go` to a FLAT route (e.g. '/messages/:id')
+    // replaces the whole stack, tearing the shell down and stranding the
+    // negotiator on a chat screen with no bottom nav and nothing to pop back
+    // to. Push keeps the shell (and its per-branch back-stacks) underneath.
+    // A shell-branch path is the opposite case -- it must be switched to,
+    // never stacked, or a second MainShell mounts on top of the live one.
+    final router = ref.read(appRouterProvider);
+    if (isShellBranchRoute(route)) {
+      router.go(route);
+    } else {
+      router.push(route);
+    }
   }
 
   void _handleForegroundMessage(RemoteMessage message) {

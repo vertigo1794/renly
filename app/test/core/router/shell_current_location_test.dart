@@ -63,6 +63,7 @@ void main() {
           path: '/messages/:requestId',
           builder: (c, s) => placeholder('Chat ${s.pathParameters['requestId']}'),
         ),
+        GoRoute(path: '/notifications', builder: (c, s) => placeholder('Notifications')),
       ],
     );
     return (router: router, observer: observer);
@@ -116,6 +117,34 @@ void main() {
 
     // ...and therefore a foreground push for that same chat is NOT suppressed
     // any more, which is the whole reason currentLocation exists.
+    expect(
+      shouldSuppressForegroundBanner(
+        category: 'message',
+        currentRouteLocation: observer.currentLocation.value,
+        data: const {'request_id': 'req-1'},
+      ),
+      isFalse,
+    );
+  });
+
+  testWidgets('popping back from /notifications restores the active branch', (tester) async {
+    // '/notifications' is the OTHER flat route outside the shell (the bell on
+    // MainDashboardScreen pushes it), so it hits the same didPop-onto-an-
+    // unnamed-shell-page path as '/messages/:id' above. Covered explicitly
+    // because it is the one shell-adjacent route the Notification Center
+    // milestone added, and a regression here would silently mis-suppress
+    // foreground push banners the same way.
+    final (:router, :observer) = buildRouter();
+    await pumpApp(tester, router);
+
+    router.push('/notifications');
+    await tester.pumpAndSettle();
+    expect(observer.currentLocation.value, '/notifications');
+
+    router.pop();
+    await tester.pumpAndSettle();
+    expect(observer.currentLocation.value, '/home');
+
     expect(
       shouldSuppressForegroundBanner(
         category: 'message',

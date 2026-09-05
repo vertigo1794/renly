@@ -38,62 +38,82 @@ class NotificationListScreen extends ConsumerWidget {
           if (notifications.isEmpty) {
             return Center(child: Text('notification_center_empty'.tr()));
           }
-          return ListView.builder(
-            padding: const EdgeInsets.all(20),
-            itemCount: notifications.length,
-            itemBuilder: (context, index) {
-              final notification = notifications[index];
-              final isUnread = notification.readAt == null;
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(12),
-                    onTap: () {
-                      if (isUnread) {
-                        // Best-effort: mark-read runs in the background so a
-                        // failure (offline, backend hiccup) never blocks the
-                        // negotiator from opening the deep-linked screen.
-                        unawaited(() async {
-                          try {
-                            await ref.read(notificationRepositoryProvider).markRead(notification.notificationId);
-                            ref.invalidate(notificationsProvider);
-                          } catch (e) {
-                            debugPrint('markRead failed: $e');
-                          }
-                        }());
-                      }
-                      context.push(deepLinkRouteFor(notification.category, notification.deepLinkData));
-                    },
-                    child: BrutalistCard(
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Icon(_iconFor(notification.category)),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  notification.title,
-                                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                        fontWeight: isUnread ? FontWeight.bold : FontWeight.normal,
-                                      ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(notification.body),
-                              ],
+          // Pull-to-refresh is the only refetch path this screen has: it is
+          // reached from a shell branch that stays permanently mounted, and
+          // notificationsProvider is autoDispose/refetch-on-entry with no
+          // realtime subscription behind it.
+          return RefreshIndicator(
+            onRefresh: () async => ref.invalidate(notificationsProvider),
+            child: ListView.builder(
+              padding: const EdgeInsets.all(20),
+              itemCount: notifications.length,
+              itemBuilder: (context, index) {
+                final notification = notifications[index];
+                final isUnread = notification.readAt == null;
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(12),
+                      onTap: () {
+                        if (isUnread) {
+                          // Best-effort: mark-read runs in the background so a
+                          // failure (offline, backend hiccup) never blocks the
+                          // negotiator from opening the deep-linked screen.
+                          unawaited(() async {
+                            try {
+                              await ref.read(notificationRepositoryProvider).markRead(notification.notificationId);
+                              ref.invalidate(notificationsProvider);
+                            } catch (e) {
+                              debugPrint('markRead failed: $e');
+                            }
+                          }());
+                        }
+                        final route =
+                            deepLinkRouteFor(notification.category, notification.deepLinkData);
+                        // A shell-branch path must be SWITCHED TO, never
+                        // stacked: pushing '/home' would mount a second
+                        // MainShell (and a second bottom nav bar) on top of
+                        // the live one. Every other route deepLinkRouteFor
+                        // can return is a flat route outside the shell,
+                        // where push is correct -- it keeps the shell and
+                        // its nav bar underneath, with somewhere to pop to.
+                        if (isShellBranchRoute(route)) {
+                          context.go(route);
+                        } else {
+                          context.push(route);
+                        }
+                      },
+                      child: BrutalistCard(
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(_iconFor(notification.category)),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    notification.title,
+                                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                          fontWeight: isUnread ? FontWeight.bold : FontWeight.normal,
+                                        ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(notification.body),
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           );
         },
       ),
