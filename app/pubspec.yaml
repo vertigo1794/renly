@@ -128,30 +128,40 @@ flutter_native_splash:
     color: "#FFFFFF"
     image: assets/illustrations/renly_r_logo_tile.png
 
-# Consumed by `dart run flutter_launcher_icons`. DELIBERATELY reverted from
-# the previous Adaptive Icon setup (transparent foreground over a lime
-# `adaptive_icon_background`) to a single flat pre-composited image, per a
-# direct ask matching the app-in-app R* badge design (RStarBadge/
-# r_star_badge.dart, AppColors.ink background, the same
-# SVG->recolor->crop->rasterize->ink-mass-center pipeline behind
-# renly_r_star_badge.png) rather than the plain "R"-only monogram the old
-# adaptive icon used. `app_icon.png` is that same badge artwork resized to
-# ~66% of a 1024x1024 canvas (this project's established adaptive-icon
-# safe-zone ratio) and composited onto a solid `AppColors.ink` (#0A0A0A,
-# not a generic pure black) background, ink-mass centroid verified within
-# 0.5px of true canvas center post-composite.
+# Consumed by `dart run flutter_launcher_icons`. Back to a real Adaptive
+# Icon setup (superseding the single-flat-image config directly above this
+# comment in git history) so the lime `adaptive_icon_background` actually
+# shows through, per a direct ask -- the prior round's `app_icon.png` was
+# a fully OPAQUE 1024x1024 square (ink color edge-to-edge, no transparent
+# margin at all), which would have completely hidden any
+# `adaptive_icon_background` color if reused as-is for
+# `adaptive_icon_foreground`: an opaque foreground occludes 100% of the
+# background layer beneath it regardless of what color that background is.
+# Rebuilt `app_icon.png` as a real transparent PNG instead: a black
+# rounded-square badge (same `AppColors.ink`, same corner-radius ratio as
+# `RStarBadge`'s own `Container`) at 66% of the canvas -- this project's
+# established adaptive-icon safe-zone ratio -- with fully transparent
+# margin around it, so Android's mask reveals the lime background color in
+# the corners/edges instead of clipping through solid ink. The R+star glyph
+# inside the badge is contain-fit into the same proportional padding
+# `RStarBadge` uses (`EdgeInsets.all(size*10/64)`) plus its same optical
+# `Transform.translate` nudge, so this icon and the in-app badge widget
+# stay visually identical, not just similarly-themed.
 #
-# Trade-off, not an oversight: dropping `adaptive_icon_foreground`/
-# `adaptive_icon_background` means Android generates ONLY legacy flat
-# icons (no `mipmap-anydpi-v26/ic_launcher.xml`), so this image gets
-# whatever mask a given launcher applies to a plain square icon rather than
-# a foreground+background composite the OS handles correctly for any mask
-# shape (what the adaptive system existed to solve, per this project's own
-# prior R-monogram-icon lessons) -- the generous 66% safe zone is exactly
-# to absorb that same clipping risk without the adaptive split.
+# `image_path` points at the SAME file, used only for the legacy
+# pre-Android-8 fallback + iOS (neither supports the adaptive split) --
+# `remove_alpha_ios: true` flattens the transparent margin for iOS, which
+# requires fully opaque icons; without an explicit iOS background color in
+# this config, that flattening defaults to whatever `flutter_launcher_icons`
+# itself composites onto (typically white), so iOS's icon will show a
+# white margin around the badge rather than lime -- a real, accepted
+# platform gap, not a bug, since iOS's OWN system-wide rounded-square mask
+# already means it never matched Android's shape story anyway (see this
+# project's earlier icon-work comments elsewhere in this file).
 flutter_launcher_icons:
-  android: "launcher_icon"
+  android: true
   ios: true
   image_path: "assets/icon/app_icon.png"
-  min_sdk_android: 21
+  adaptive_icon_background: "#CCFF00"
+  adaptive_icon_foreground: "assets/icon/app_icon.png"
   remove_alpha_ios: true
