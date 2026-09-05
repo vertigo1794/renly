@@ -30,18 +30,22 @@ import '../../core/theme/app_colors.dart';
 /// app's brand screens.
 ///
 /// The badge glyph is the real Stitch-generated "Renly - Rockstar Style Logo
-/// Refined" vector artwork (screen ID `8f8646d4f24a4540972123e2f372e7fc`,
-/// itself a direct follow-up ask, not part of the original Kinetic-Reveal
-/// mockup) -- a hand-tuned italic "R" with an authentic bevel-cut counter
-/// plus a 5-point star tucked into its bottom-right corner, replacing the
-/// earlier system-font `Text('R')` + generic `PhosphorIcons.star()`
-/// approximation. Downloaded as SVG (this screen's `htmlCode` field carries
-/// `image/svg+xml`, not markup), then rasterized to a transparent PNG with
-/// the R recolored black->white (the source SVG drew it black for its own
-/// lime background; this badge's own background is ink/black) and cropped
-/// tight to its ink bbox with a small breathing margin --
-/// `renly_r_star_badge.png`. Both `splash_tagline`/`splash_subtitle` l10n
-/// keys and the bottom-pinned tagline text were removed in the round before
+/// Refined" vector artwork, itself a direct follow-up ask, not part of the
+/// original Kinetic-Reveal mockup -- a hand-tuned italic "R" with an
+/// authentic bevel-cut counter plus a 5-point star tucked into its
+/// bottom-right corner, replacing the earlier system-font `Text('R')` +
+/// generic `PhosphorIcons.star()` approximation. Downloaded as SVG (this
+/// screen's `htmlCode` field carries `image/svg+xml`, not markup), then
+/// rasterized to a transparent PNG with the R recolored black->white (the
+/// source SVG drew it black for its own lime background; this badge's own
+/// background is ink/black) and cropped tight to its ink bbox with a small
+/// breathing margin -- `renly_r_star_badge.png`. Re-fetched once more under
+/// a new screen ID ("Rockstar R Logo - Lowered Star") for a star-position
+/// refinement only (same R path, star polygon moved lower for cleaner
+/// separation from the R's leg) -- same re-extraction pipeline, just a
+/// different source SVG, no code changes needed since the asset filename
+/// didn't change. Both `splash_tagline`/`splash_subtitle` l10n keys and the
+/// bottom-pinned tagline text were removed in the round before
 /// this one, for a plain/minimal splash with nothing below the logo.
 ///
 /// The native splash (pubspec.yaml's flutter_native_splash config) is a
