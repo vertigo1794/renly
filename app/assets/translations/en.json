@@ -95,6 +95,7 @@
   "listing_transaction_type_sale": "Sale",
   "listing_transaction_type_rent": "Rent",
   "listing_error_generic": "Something went wrong. Please check your details and try again.",
+  "listing_status_available": "Available",
   "property_overview": "Property Overview",
   "property_location": "Location",
   "property_mark_sold": "Mark as Sold",

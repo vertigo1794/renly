@@ -3,10 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/theme/app_colors.dart';
-import '../../core/widgets/brutalist_card.dart';
-import 'listing_formatting.dart';
-import 'listing_photo.dart';
+import '../../core/widgets/property_card.dart';
 import 'listing_providers.dart';
 import 'models/listing.dart';
 
@@ -91,71 +88,9 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
                       final listing = filtered[index];
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 16),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: () => context.push('/property/${listing.listingId}'),
-                            borderRadius: BorderRadius.circular(12),
-                            child: BrutalistCard(
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  if (listing.photoUrls.isNotEmpty) ...[
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(8),
-                                      child: SizedBox(
-                                        width: 72,
-                                        height: 72,
-                                        child: ListingPhoto(path: listing.photoUrls.first),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                  ],
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(listing.title,
-                                            style: Theme.of(context).textTheme.titleMedium),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          ListingFormatting.formatPrice(
-                                              listing.price, listing.transactionType),
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .titleMedium
-                                              ?.copyWith(color: AppColors.ink),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Row(
-                                          children: [
-                                            if (listing.bedrooms != null) ...[
-                                              const Icon(Icons.bed, size: 16),
-                                              const SizedBox(width: 4),
-                                              Text('${listing.bedrooms}'),
-                                              const SizedBox(width: 12),
-                                            ],
-                                            if (listing.bathrooms != null) ...[
-                                              const Icon(Icons.bathtub, size: 16),
-                                              const SizedBox(width: 4),
-                                              Text('${listing.bathrooms}'),
-                                              const SizedBox(width: 12),
-                                            ],
-                                            Flexible(
-                                              child: Text(
-                                                listing.area,
-                                                style: Theme.of(context).textTheme.labelSmall,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
+                        child: PropertyCard(
+                          listing: listing,
+                          onTap: () => context.push('/property/${listing.listingId}'),
                         ),
                       );
                     },
