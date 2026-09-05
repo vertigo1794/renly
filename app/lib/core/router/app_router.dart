@@ -22,6 +22,7 @@ import '../../features/listing/property_detail_screen.dart';
 import '../../features/matching/matches_for_listing_screen.dart';
 import '../../features/matching/matches_for_requirement_screen.dart';
 import '../../features/matching/my_matches_screen.dart';
+import '../../features/notifications/notification_list_screen.dart';
 import '../../features/profile/profile_screen.dart';
 import '../../features/ratings/reviews_screen.dart';
 import '../../features/requirement/my_requirements_screen.dart';
@@ -198,6 +199,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(path: '/profile', builder: (context, state) => const ProfileScreen()),
       GoRoute(path: '/reviews', builder: (context, state) => const ReviewsScreen()),
+      GoRoute(path: '/notifications', builder: (context, state) => const NotificationListScreen()),
       GoRoute(path: '/settings/notification', builder: (context, state) => const NotificationSettingsScreen()),
       GoRoute(path: '/settings/account', builder: (context, state) => const AccountSettingsScreen()),
       GoRoute(path: '/settings/privacy', builder: (context, state) => const PrivacyScreen()),

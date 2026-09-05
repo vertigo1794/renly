@@ -239,5 +239,7 @@
   "push_cobroke_request_body": "Seseorang mahu co-broke dengan anda. Ketik untuk lihat.",
   "push_message_title": "Mesej Baru",
   "push_message_body": "Anda ada mesej baru. Ketik untuk lihat.",
-  "push_banner_view": "Lihat"
+  "push_banner_view": "Lihat",
+  "notification_center_title": "Notifikasi",
+  "notification_center_empty": "Belum ada notifikasi."
 }

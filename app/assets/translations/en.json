@@ -239,5 +239,7 @@
   "push_cobroke_request_body": "Someone wants to co-broke with you. Tap to view.",
   "push_message_title": "New Message",
   "push_message_body": "You have a new message. Tap to view.",
-  "push_banner_view": "View"
+  "push_banner_view": "View",
+  "notification_center_title": "Notifications",
+  "notification_center_empty": "No notifications yet."
 }
