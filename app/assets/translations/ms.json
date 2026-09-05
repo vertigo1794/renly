@@ -202,6 +202,7 @@
   "account_settings_confirm_password_label": "Sahkan Kata Laluan Baharu",
   "account_settings_submit": "Kemas Kini Kata Laluan",
   "account_settings_password_success": "Kata laluan dikemas kini",
+  "account_settings_biometric_label": "Aktifkan Log Masuk Biometrik",
   "privacy_title": "Privasi",
   "privacy_body": "Renly mengumpul nama, nombor IC, nombor telefon, nombor REN, dan agensi anda untuk mengesahkan anda sebagai negotiator hartanah berlesen. Nama dan nombor REN anda kelihatan kepada negotiator lain apabila anda menyenaraikan hartanah, memuat naik keperluan, atau menerima padanan -- ini diperlukan untuk proses co-broking berfungsi. Nombor IC dan nombor telefon anda tidak pernah ditunjukkan kepada negotiator lain; ia digunakan hanya untuk pengesahan. Penilaian dan ulasan yang anda terima kelihatan kepada mana-mana negotiator yang disahkan menggunakan aplikasi ini, sebagai isyarat kepercayaan untuk bakal rakan kerjasama.",
   "help_title": "Bantuan",

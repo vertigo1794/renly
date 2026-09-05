@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../core/widgets/brutalist_button.dart';
+import '../../core/widgets/brutalist_card.dart';
+import '../auth/auth_providers.dart';
 import '../auth/auth_validation.dart';
 import 'settings_providers.dart';
 
@@ -50,6 +52,8 @@ class AccountSettingsScreen extends ConsumerWidget {
             Text('account_settings_password_section_title'.tr(), style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 12),
             const _PasswordForm(),
+            const SizedBox(height: 20),
+            const _BiometricToggle(),
           ],
         ),
       ),
@@ -135,6 +139,69 @@ class _PasswordFormState extends ConsumerState<_PasswordForm> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _BiometricToggle extends ConsumerStatefulWidget {
+  const _BiometricToggle();
+
+  @override
+  ConsumerState<_BiometricToggle> createState() => _BiometricToggleState();
+}
+
+class _BiometricToggleState extends ConsumerState<_BiometricToggle> {
+  bool? _override;
+  bool _busy = false;
+
+  Future<void> _toggle(bool value) async {
+    setState(() => _busy = true);
+    final repository = ref.read(authRepositoryProvider);
+    try {
+      if (value) {
+        await repository.enableBiometricLogin(localizedReason: 'auth_biometric_enable_reason'.tr());
+      } else {
+        await repository.disableBiometricLogin();
+      }
+      setState(() => _override = value);
+      ref.invalidate(biometricLoginEnabledProvider);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('listing_error_generic'.tr())),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final availableAsync = ref.watch(biometricAvailableProvider);
+    final enabledAsync = ref.watch(biometricLoginEnabledProvider);
+
+    return availableAsync.when(
+      loading: () => const SizedBox.shrink(),
+      error: (error, stack) => const SizedBox.shrink(),
+      data: (available) {
+        if (!available) return const SizedBox.shrink();
+        return enabledAsync.when(
+          loading: () => const SizedBox.shrink(),
+          error: (error, stack) => const SizedBox.shrink(),
+          data: (enabled) => BrutalistCard(
+            padding: EdgeInsets.zero,
+            child: Material(
+              color: Colors.transparent,
+              child: SwitchListTile(
+                title: Text('account_settings_biometric_label'.tr()),
+                value: _override ?? enabled,
+                onChanged: _busy ? null : _toggle,
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

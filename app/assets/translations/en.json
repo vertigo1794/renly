@@ -202,6 +202,7 @@
   "account_settings_confirm_password_label": "Confirm New Password",
   "account_settings_submit": "Update Password",
   "account_settings_password_success": "Password updated",
+  "account_settings_biometric_label": "Enable Biometric Login",
   "privacy_title": "Privacy",
   "privacy_body": "Renly collects your name, IC number, phone number, REN number, and agency to verify you as a licensed real estate negotiator. Your name and REN number are visible to other negotiators when you list a property, post a requirement, or receive a match -- this is required for the co-broking process to work. Your IC number and phone number are never shown to other negotiators; they are used only for verification. Ratings and reviews you receive are visible to any verified negotiator using the app, as a trust signal for potential collaborators.",
   "help_title": "Help",

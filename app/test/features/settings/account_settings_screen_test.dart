@@ -8,11 +8,12 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:renly/core/theme/app_theme.dart';
+import 'package:renly/features/auth/auth_providers.dart';
 import 'package:renly/features/settings/account_settings_screen.dart';
 import 'package:renly/features/settings/models/identity_info.dart';
 import 'package:renly/features/settings/settings_providers.dart';
 
-Widget _wrap(GoRouter router, {IdentityInfo? info}) {
+Widget _wrap(GoRouter router, {IdentityInfo? info, List<Override> extraOverrides = const []}) {
   return ProviderScope(
     overrides: [
       currentNegotiatorIdProvider.overrideWithValue('n-1'),
@@ -20,6 +21,7 @@ Widget _wrap(GoRouter router, {IdentityInfo? info}) {
         (ref) async =>
             info ?? const IdentityInfo(icNumber: '900101-14-1234', phoneNumber: '012-3456789', renNumber: '12345'),
       ),
+      ...extraOverrides,
     ],
     child: EasyLocalization(
       supportedLocales: const [Locale('en'), Locale('ms')],
@@ -90,5 +92,38 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('validation_password_mismatch'.tr()), findsOneWidget);
+  });
+
+  testWidgets('biometric toggle hidden when unavailable', (tester) async {
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const AccountSettingsScreen()),
+    ]);
+
+    await tester.pumpWidget(_wrap(
+      router,
+      extraOverrides: [biometricAvailableProvider.overrideWith((ref) async => false)],
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Enable Biometric Login'), findsNothing);
+  });
+
+  testWidgets('biometric toggle shown and reflects enabled state when available', (tester) async {
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const AccountSettingsScreen()),
+    ]);
+
+    await tester.pumpWidget(_wrap(
+      router,
+      extraOverrides: [
+        biometricAvailableProvider.overrideWith((ref) async => true),
+        biometricLoginEnabledProvider.overrideWith((ref) async => true),
+      ],
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Enable Biometric Login'), findsOneWidget);
+    final switchTile = tester.widget<SwitchListTile>(find.byType(SwitchListTile));
+    expect(switchTile.value, isTrue);
   });
 }
