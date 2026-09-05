@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:renly/core/theme/app_theme.dart';
 import 'package:renly/core/widgets/brutalist_button.dart';
+import 'package:renly/core/widgets/r_star_badge.dart';
 import 'package:renly/features/auth/onboarding_screen.dart';
 
 Widget _wrap(GoRouter router) {
@@ -42,7 +43,7 @@ void main() {
     rootBundle.clear();
   });
 
-  testWidgets('renders the shared header (R monogram + wordmark + Skip)', (tester) async {
+  testWidgets('renders the shared header (R* badge + wordmark + Skip)', (tester) async {
     final router = GoRouter(routes: [
       GoRoute(path: '/onboarding', builder: (context, state) => const OnboardingScreen()),
       GoRoute(path: '/', builder: (context, state) => const Placeholder()),
@@ -51,7 +52,7 @@ void main() {
     await tester.pumpWidget(_wrap(router));
     await tester.pumpAndSettle();
 
-    expect(find.text('R'), findsOneWidget);
+    expect(find.byType(RStarBadge), findsOneWidget);
     expect(find.text('renly'), findsOneWidget);
     expect(find.text('SKIP'), findsOneWidget);
   });

@@ -6,6 +6,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/brutalist_button.dart';
+import '../../core/widgets/r_star_badge.dart';
 
 /// One onboarding slide's content. `titleKey`/`bodyKey` are easy_localization
 /// keys, not raw strings, so every slide stays bilingual EN/MS like the rest
@@ -41,12 +42,14 @@ class OnboardingSlideData {
 ///
 /// Slide 1 was re-fetched from Stitch under a new screen ID (the project's
 /// mockups get iterated on, not just added to) with a redesigned shared
-/// chrome: a top brand header (the "R" launcher-icon monogram + "renly"
-/// wordmark) with Skip moved up next to it, and a badge pill above each
-/// slide's title. The header renders once, outside the PageView, since
-/// it's identical across every slide, not per-slide data. The progress
-/// dots also picked up an active-dot-becomes-a-pill treatment instead of
-/// a plain filled/unfilled circle.
+/// chrome: a top brand header (a compact `RStarBadge` + "renly" wordmark --
+/// originally a plain lime circle + "R" text, later swapped for the shared
+/// R* badge widget once that design landed on the splash/login screens too)
+/// with Skip moved up next to it, and a badge pill above each slide's
+/// title. The header renders once, outside the PageView, since it's
+/// identical across every slide, not per-slide data. The progress dots
+/// also picked up an active-dot-becomes-a-pill treatment instead of a
+/// plain filled/unfilled circle.
 ///
 /// Slides are added here one at a time as each is ported from Stitch; the
 /// list below is the single source of truth for how many dots/pages show.
@@ -122,18 +125,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Container(
-                        width: 28,
-                        height: 28,
-                        decoration: const BoxDecoration(color: AppColors.primaryContainer, shape: BoxShape.circle),
-                        alignment: Alignment.center,
-                        child: Text(
-                          'R',
-                          style: Theme.of(
-                            context,
-                          ).textTheme.labelLarge?.copyWith(color: AppColors.ink, fontWeight: FontWeight.w800),
-                        ),
-                      ),
+                      // Compact RStarBadge (28px, matching this header's
+                      // prior circle footprint) replaces the plain lime
+                      // circle + "R" text -- same shared badge widget as
+                      // the splash and login/register screens, this header
+                      // renders once above the PageView so all 3 slides
+                      // pick up the change from this single call site.
+                      const RStarBadge(size: 28),
                       const SizedBox(width: 8),
                       Text(
                         'app_name'.tr(),
