@@ -5,5 +5,4 @@
          Android 12+ SplashScreen API via values-v31/styles.xml) reads as one
          continuous color instead of a white flash before the Flutter frame. -->
     <color name="splash_background">#CCFF00</color>
-	<color name="ic_launcher_background">#D4FF00</color>
 </resources>

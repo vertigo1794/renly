@@ -128,49 +128,30 @@ flutter_native_splash:
     color: "#FFFFFF"
     image: assets/illustrations/renly_r_logo_tile.png
 
-# Consumed by `dart run flutter_launcher_icons`. Unlike the native splash's
-# SplashScreen API (which forces whatever single image it's given through
-# its own icon-slot mask with no real way to control the composition), this
-# is Android's actual Adaptive Icon system -- built specifically to take a
-# transparent foreground over a solid background color and composite/mask
-# them correctly for whatever shape a given launcher uses (circle on this
-# project's emulator, squircle/rounded-square elsewhere -- all handled
-# correctly by the OS, not fought against).
+# Consumed by `dart run flutter_launcher_icons`. DELIBERATELY reverted from
+# the previous Adaptive Icon setup (transparent foreground over a lime
+# `adaptive_icon_background`) to a single flat pre-composited image, per a
+# direct ask matching the app-in-app R* badge design (RStarBadge/
+# r_star_badge.dart, AppColors.ink background, the same
+# SVG->recolor->crop->rasterize->ink-mass-center pipeline behind
+# renly_r_star_badge.png) rather than the plain "R"-only monogram the old
+# adaptive icon used. `app_icon.png` is that same badge artwork resized to
+# ~66% of a 1024x1024 canvas (this project's established adaptive-icon
+# safe-zone ratio) and composited onto a solid `AppColors.ink` (#0A0A0A,
+# not a generic pure black) background, ink-mass centroid verified within
+# 0.5px of true canvas center post-composite.
 #
-# Switched from the "renly" wordmark to Stitch's uppercase-R monogram
-# (renly_r_icon_foreground.png/renly_r_icon_flat.png): a monogram reads far
-# more legibly at actual launcher-icon sizes than 5 letters of running
-# text does, which is the whole reason apps commonly use a single-glyph
-# mark for icons and save the full wordmark for splash/marketing screens
-# (this app's SplashScreen and AuthSelectionScreen still use the wordmark).
-#
-# First pass here (bbox-centered, 78% scale) got clipped on a real device
-# despite looking fine in a local Python simulation of the inset+mask
-# pipeline -- real launcher rendering isn't fully captured by that
-# simulation. Two real fixes, not just a smaller number: (1) "R"'s ink-mass
-# CENTROID sits ~15px left and ~9px above its own bounding-box center (the
-# thick vertical stem carries more visual weight than the lighter
-# bowl/diagonal leg) -- centering by bbox alone, which happened to look
-# plausible because the bbox itself measured symmetric, left the actual
-# visual weight off-center, the same class of bug "renly"'s wordmark hit
-# for the opposite reason (its bbox was NOT symmetric). Fixed by centering
-# on the ink-mass centroid instead, verified post-render at 0.16px/0.02px
-# off true canvas center. (2) Reduced foreground scale from 78% to 55% of
-# its own 1024px canvas -- combined with the existing 8% inset, final
-# visible size drops to ~46% of the circle, comfortably inside a >=20%
-# margin on every side (verified: 21.1% minimum), leaving real headroom
-# against whatever the previous ~65% target didn't account for.
-#
-# `image_path` is the flat pre-composited fallback for iOS and pre-8
-# Android, neither of which support the adaptive foreground/background
-# split -- iOS always applies its own system-wide rounded-square mask to a
-# plain square image, never a true circle; that's an Apple platform
-# convention, not a limitation of this config.
+# Trade-off, not an oversight: dropping `adaptive_icon_foreground`/
+# `adaptive_icon_background` means Android generates ONLY legacy flat
+# icons (no `mipmap-anydpi-v26/ic_launcher.xml`), so this image gets
+# whatever mask a given launcher applies to a plain square icon rather than
+# a foreground+background composite the OS handles correctly for any mask
+# shape (what the adaptive system existed to solve, per this project's own
+# prior R-monogram-icon lessons) -- the generous 66% safe zone is exactly
+# to absorb that same clipping risk without the adaptive split.
 flutter_launcher_icons:
-  android: true
+  android: "launcher_icon"
   ios: true
-  image_path: assets/illustrations/renly_r_icon_flat.png
+  image_path: "assets/icon/app_icon.png"
   min_sdk_android: 21
-  adaptive_icon_background: "#D4FF00"
-  adaptive_icon_foreground: assets/illustrations/renly_r_icon_foreground.png
-  adaptive_icon_foreground_inset: 8
+  remove_alpha_ios: true
