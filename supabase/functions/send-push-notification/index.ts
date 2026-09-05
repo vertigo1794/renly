@@ -183,6 +183,26 @@ Deno.serve(async (req) => {
         headers: JSON_HEADERS,
       });
     }
+
+    // In-app Notification Center row -- written regardless of whether the
+    // push preference is off or no device tokens exist. The in-app history
+    // is a separate channel from push delivery; it should exist as long as
+    // the recipient is a real negotiator, independent of whether a device
+    // actually received anything.
+    const { error: notificationInsertError } = await adminClient.from("notification").insert({
+      recipient_id: recipient_negotiator_id,
+      category,
+      title,
+      body,
+      deep_link_data: sanitizedDeepLinkData ?? {},
+    });
+    if (notificationInsertError) {
+      // Never block/fail the push send over the in-app history insert --
+      // log and continue, same best-effort philosophy this whole function
+      // already applies to per-token FCM failures below.
+      console.error("send-push-notification: notification insert failed", notificationInsertError);
+    }
+
     if (negotiator[preferenceColumn] === false) {
       // Expected, common outcome -- recipient has this category muted.
       return new Response(JSON.stringify({ sent: 0, skipped: "preference_off" }), {
