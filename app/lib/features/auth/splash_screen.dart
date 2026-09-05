@@ -137,20 +137,44 @@ class _SplashScreenState extends State<SplashScreen> {
                   child: Container(
                     width: 64,
                     height: 64,
+                    // Symmetric on purpose: asymmetric padding here changes
+                    // the INNER box's own aspect ratio away from square,
+                    // which made BoxFit.contain re-scale the image (not just
+                    // shift it) -- confirmed by measuring a live screenshot
+                    // before/after, where a 4dp left/right padding
+                    // difference overshot into an 8-device-px imbalance in
+                    // the WRONG direction instead of the intended few-px
+                    // nudge. The actual rightward nudge lives on the
+                    // Transform.translate below instead, which shifts
+                    // pixels directly with no re-scaling side effect.
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(color: AppColors.ink, borderRadius: BorderRadius.circular(16)),
-                    child: Image.asset(
-                      'assets/illustrations/renly_r_star_badge.png',
-                      fit: BoxFit.contain,
-                      alignment: Alignment.center,
-                      errorBuilder: (context, error, stackTrace) => Text(
-                        'R',
-                        style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w900,
-                              fontSize: 32,
-                              height: 1,
-                            ),
+                    child: Transform.translate(
+                      // A small manual OPTICAL nudge on top of the asset's
+                      // own ink-mass centering (see the doc comment above).
+                      // Measuring a live screenshot confirmed the geometric
+                      // centering is already correct to well under 1
+                      // logical pixel -- the R's solid stroke and the
+                      // star's thin outline just don't carry equal
+                      // PERCEIVED visual weight at an identical pixel-area
+                      // centroid, so this is a deliberate optical
+                      // correction, not evidence the measurement was wrong.
+                      // Same category of fix as the app icon's own
+                      // real-device nudge (commit 3503409).
+                      offset: const Offset(1, 0),
+                      child: Image.asset(
+                        'assets/illustrations/renly_r_star_badge.png',
+                        fit: BoxFit.contain,
+                        alignment: Alignment.center,
+                        errorBuilder: (context, error, stackTrace) => Text(
+                          'R',
+                          style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w900,
+                                fontSize: 32,
+                                height: 1,
+                              ),
+                        ),
                       ),
                     ),
                   ),
