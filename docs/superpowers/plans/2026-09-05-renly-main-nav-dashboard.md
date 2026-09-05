@@ -12,7 +12,7 @@
 
 - `AppColors.primary` (`#D2FF00`) is NOT changed. `primaryContainer`/`onPrimaryContainer`/`secondary`/`error` already match the Stitch dashboard palette and are also left untouched.
 - All new/changed icons use `PhosphorIcons.x(PhosphorIconsStyle.bold)`, never `Icons.*` — **except** the 4 new rows added inside `ProfileScreen`'s existing settings-list `Column` (Task 9), which must match that exact list's own established `Icons.*` (Material) convention for visual consistency within that one list, not introduce a mixed icon set in a single section.
-- No `security definer` SQL function/view anywhere in the new migration — `conversation_last_message` is a plain view (Postgres evaluates the underlying `message` table's RLS as the querying user).
+- No `security definer` SQL function/view anywhere in the new migration — `conversation_last_message` is a view with `security_invoker = true`, so Postgres evaluates the underlying `message` table's RLS as the querying user (required on Postgres 15+; without it a view runs RLS as the view owner and silently bypasses `message_select`).
 - No `insert` RLS policy or grant on the new `notification` table for the `authenticated` role — rows are written only by `send-push-notification`'s existing service-role client.
 - `flutter analyze` and the full `flutter test` suite must stay clean after every task.
 - No golden-image tests.
@@ -64,18 +64,30 @@ create policy message_update_read_at on message for update
   )
   with check (sender_id != auth.uid());
 
--- No existing UPDATE grant on `message` (0008 only granted insert) -- this
--- is a net-new grant, not a REVOKE-then-regrant, so it cannot repeat the
--- Profile milestone's column-grant-stripping incident.
+-- 0008_messaging.sql never revoked the default blanket UPDATE grant that
+-- Supabase issues to `authenticated` on new tables (it only did a
+-- revoke-then-regrant for INSERT). That dormant grant has covered every
+-- column of `message` since 0008; 0018 is the first migration to add an
+-- UPDATE RLS policy for `message`, which makes it live. A REVOKE-then-
+-- column-grant is required here, unlike a case where no such dormant
+-- blanket grant exists, otherwise any accepted-request recipient could
+-- UPDATE `body`/`sent_at`, not just `read_at`.
+revoke update on message from authenticated;
 grant update (read_at) on message to authenticated;
 
--- Latest message per conversation. A PLAIN view (no `security definer`) --
--- Postgres evaluates the underlying `message` table's OWN RLS using the
--- QUERYING user's permissions for a plain view, so this grants no new
--- privilege beyond what message_select already allows and cannot repeat
--- this project's prior security-definer RLS incidents (Co-Broke Request,
--- Profile, Ratings/Reviews).
-create or replace view conversation_last_message as
+-- Latest message per conversation. security_invoker = true is REQUIRED,
+-- not optional decoration: since Postgres 15, a view without it runs RLS
+-- as the VIEW OWNER, not the querying session (FORCE ROW LEVEL SECURITY
+-- is not set anywhere in this schema, so ownership alone skips RLS) --
+-- meaning every authenticated user would see the latest message of EVERY
+-- conversation in the system, bypassing message_select's accepted-
+-- request-party check entirely. With security_invoker = true, Postgres
+-- evaluates the underlying `message` table's OWN RLS using the QUERYING
+-- user's permissions instead, so this grants no new privilege beyond
+-- what message_select already allows and cannot repeat this project's
+-- prior security-definer RLS incidents (Co-Broke Request, Profile,
+-- Ratings/Reviews).
+create or replace view conversation_last_message with (security_invoker = true) as
 select distinct on (request_id) request_id, sender_id, body, sent_at, read_at
 from message
 order by request_id, sent_at desc;
@@ -105,6 +117,14 @@ create policy notification_update_read_at on notification for update
   to authenticated using (recipient_id = auth.uid())
   with check (recipient_id = auth.uid());
 
+-- Same dormant-blanket-grant gap as `message` above: `notification` is a
+-- net-new table in this migration, so it still carries Supabase's default
+-- table-wide UPDATE grant to `authenticated` until explicitly revoked.
+-- WITH CHECK already pins recipient_id = auth.uid(), so without the
+-- revoke a user could only rewrite their OWN notification rows -- but
+-- could still rewrite title/body/category/deep_link_data via UPDATE, not
+-- just read_at, breaking the intended immutability of those columns.
+revoke update on notification from authenticated;
 grant update (read_at) on notification to authenticated;
 
 -- Deliberately NO insert policy/grant for `authenticated`. recipient_id is
