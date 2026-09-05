@@ -18,17 +18,30 @@ class AuthRepository {
   /// about an hour. Re-writing it on every `signedIn`/`tokenRefreshed`
   /// event is what makes biometric sign-in survive an app restart at all.
   AuthRepository(this._client) {
-    _client.auth.onAuthStateChange.listen((state) async {
-      if (state.event == AuthChangeEvent.signedIn ||
-          state.event == AuthChangeEvent.tokenRefreshed) {
-        if (await hasBiometricLoginEnabled()) {
-          final refreshToken = state.session?.refreshToken;
-          if (refreshToken != null) {
-            await _secureStorage.write(key: _biometricTokenKey, value: refreshToken);
+    _client.auth.onAuthStateChange.listen(
+      (state) async {
+        try {
+          if (state.event == AuthChangeEvent.signedIn ||
+              state.event == AuthChangeEvent.tokenRefreshed) {
+            if (await hasBiometricLoginEnabled()) {
+              final refreshToken = state.session?.refreshToken;
+              if (refreshToken != null) {
+                await _secureStorage.write(key: _biometricTokenKey, value: refreshToken);
+              }
+            }
           }
+        } catch (_) {
+          // Best-effort token-freshness sync -- a failure here (e.g. a
+          // transient secure-storage hiccup) must never crash the app; the
+          // next successful auth event will simply retry the write.
         }
-      }
-    });
+      },
+      onError: (_) {
+        // Network/stream errors on this listener (e.g. offline token
+        // refresh failures) are non-fatal for the same reason -- best-effort
+        // sync, not a required operation.
+      },
+    );
   }
 
   final SupabaseClient _client;
@@ -140,8 +153,20 @@ class AuthRepository {
   /// an interrupted/backgrounded session, NOT re-entry after an explicit
   /// sign-out; a user who signs out re-enrolls after their next
   /// email/password login.
+  ///
+  /// `disableBiometricLogin()` is wrapped in its own try/catch: a
+  /// flutter_secure_storage failure (a real Android Keystore /
+  /// EncryptedSharedPreferences failure mode) must never block the actual
+  /// sign-out below. The token about to be revoked server-side is dead
+  /// either way, and `signInWithBiometrics()`'s own failure path clears any
+  /// leftover token the next time it's used.
   Future<void> signOut() async {
-    await disableBiometricLogin();
+    try {
+      await disableBiometricLogin();
+    } catch (_) {
+      // See doc comment above -- a storage failure here must not prevent
+      // the sign-out call below from running.
+    }
     await _client.auth.signOut();
   }
 
