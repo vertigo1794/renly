@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Restyle `LoginScreen` from Stitch's premium mockup and build 2 real features it implies: a Supabase password-reset dialog, and biometric sign-in (refresh-token-based, survives explicit sign-out).
+**Goal:** Restyle `LoginScreen` from Stitch's premium mockup and build 2 real features it implies: a Supabase password-reset dialog, and biometric sign-in (auto-refreshed session token, cleared on sign-out — revised post-implementation, see the design doc's "Design correction" section; a Supabase refresh token cannot both survive `signOut()` and stay usable).
 
 **Architecture:** `local_auth` gates a `flutter_secure_storage`-held Supabase refresh token; restoring it calls `GoTrueClient.setSession`. The forgot-password dialog and Log In button both route through the same `AuthRepository`/Urby-system conventions already established elsewhere in this app.
 
@@ -12,7 +12,7 @@
 
 - Google sign-in is dropped entirely, not stubbed/disabled — no dead button anywhere.
 - No in-app "set new password" screen — password reset ends at sending the email; Supabase's own hosted page handles the rest.
-- `AuthRepository.signOut()` is NOT modified — the biometric token must survive an explicit sign-out.
+- **REVISED post-implementation**: `AuthRepository.signOut()` now DOES clear the stored biometric token before signing out (a Supabase refresh token cannot survive `signOut()` server-side revocation and stay usable — see the design doc's "Design correction"). Originally this constraint said the opposite; that was proven wrong by the final whole-branch review.
 - `LoginScreen`'s biometric button only renders when `biometricLoginEnabledProvider` resolves `true` (a stored token exists) — never shown disabled/grayed-out.
 - The password-reset dialog ALWAYS shows the same generic success message regardless of whether the email exists or the call throws (account-enumeration-safe).
 - All icons `PhosphorIcons.x(PhosphorIconsStyle.bold)`, never `Icons.*`.
