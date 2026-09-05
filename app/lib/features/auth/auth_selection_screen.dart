@@ -92,7 +92,11 @@ class AuthSelectionScreen extends StatelessWidget {
                               ],
                             ),
                           ),
-                          const SizedBox(height: 28),
+                          // Same 25% scale-up as the badge/wordmark below
+                          // (28->35) so the breathing room above the bigger
+                          // logo stays proportional to the original layout,
+                          // not a fixed gap sized for the smaller logo.
+                          const SizedBox(height: 35),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             mainAxisSize: MainAxisSize.min,
@@ -122,7 +126,10 @@ class AuthSelectionScreen extends StatelessWidget {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 20),
+                          // Same 25% scale-up as the badge/wordmark above
+                          // (20->25) for the same proportional-breathing-
+                          // room reason as the gap above the logo.
+                          const SizedBox(height: 25),
                           Text(
                             'auth_tagline'.tr(),
                             textAlign: TextAlign.center,
