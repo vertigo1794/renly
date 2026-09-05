@@ -8,6 +8,7 @@ import '../listing/listing_repository.dart';
 import '../listing/models/listing_owner.dart';
 import '../notifications/models/push_payload.dart';
 import '../notifications/push_notification_repository.dart';
+import 'models/conversation_summary.dart';
 import 'models/message.dart';
 
 /// The only file in this app that talks to Supabase for the message
@@ -90,5 +91,51 @@ class MessageRepository {
 
   Future<ListingOwner> fetchSenderName(String negotiatorId) {
     return _listingRepository.fetchListingOwner(negotiatorId);
+  }
+
+  /// Marks every unread message in this conversation that the CURRENT user
+  /// did not send as read. Relies on message_update_read_at's own RLS check
+  /// (accepted-request party, not the sender) rather than re-deriving that
+  /// check client-side -- an update to a row this policy rejects silently
+  /// updates zero rows rather than throwing, which is the correct outcome
+  /// here (e.g. calling this before the request is actually accepted yet
+  /// should be a harmless no-op, not an error).
+  Future<void> markConversationRead(String requestId, String currentNegotiatorId) async {
+    await _client
+        .from('message')
+        .update({'read_at': DateTime.now().toIso8601String()})
+        .eq('request_id', requestId)
+        .neq('sender_id', currentNegotiatorId)
+        .isFilter('read_at', null);
+  }
+
+  /// The latest message for this conversation (via the conversation_last_message
+  /// view) plus how many of the OTHER party's messages are still unread by
+  /// the current user. Returns null if the conversation has no messages yet
+  /// (a freshly-accepted request can have zero messages) -- callers must
+  /// handle that as "no preview yet", not an error.
+  Future<ConversationSummary?> fetchConversationSummary(String requestId, String currentNegotiatorId) async {
+    final lastMessageRow = await _client
+        .from('conversation_last_message')
+        .select()
+        .eq('request_id', requestId)
+        .maybeSingle();
+    if (lastMessageRow == null) return null;
+
+    final unreadCount = await _client
+        .from('message')
+        .select('message_id')
+        .eq('request_id', requestId)
+        .neq('sender_id', currentNegotiatorId)
+        .isFilter('read_at', null)
+        .count(CountOption.exact);
+
+    return ConversationSummary(
+      requestId: lastMessageRow['request_id'] as String,
+      senderId: lastMessageRow['sender_id'] as String,
+      body: lastMessageRow['body'] as String,
+      sentAt: DateTime.parse(lastMessageRow['sent_at'] as String),
+      unreadCount: unreadCount.count,
+    );
   }
 }
