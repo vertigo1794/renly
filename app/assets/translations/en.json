@@ -244,5 +244,14 @@
   "notification_center_empty": "No notifications yet.",
   "conversation_list_title": "Chat",
   "conversation_list_empty": "No conversations yet.",
-  "conversation_no_messages_yet": "No messages yet"
+  "conversation_no_messages_yet": "No messages yet",
+  "dashboard_welcome_back": "Welcome back,",
+  "dashboard_subtitle": "Market is moving. Here's your daily briefing.",
+  "dashboard_quick_actions_title": "Quick Actions",
+  "dashboard_quick_action_post_listing": "Post Listing",
+  "dashboard_quick_action_market": "Market",
+  "dashboard_quick_action_my_inventory": "My Inventory",
+  "dashboard_recent_listings_title": "Recent Listings",
+  "dashboard_view_all": "View All",
+  "dashboard_recent_listings_empty": "No listings yet."
 }

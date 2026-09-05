@@ -244,5 +244,14 @@
   "notification_center_empty": "Belum ada notifikasi.",
   "conversation_list_title": "Sembang",
   "conversation_list_empty": "Belum ada perbualan.",
-  "conversation_no_messages_yet": "Belum ada mesej"
+  "conversation_no_messages_yet": "Belum ada mesej",
+  "dashboard_welcome_back": "Selamat kembali,",
+  "dashboard_subtitle": "Pasaran sedang bergerak. Ini taklimat harian anda.",
+  "dashboard_quick_actions_title": "Tindakan Pantas",
+  "dashboard_quick_action_post_listing": "Siar Penyenaraian",
+  "dashboard_quick_action_market": "Pasaran",
+  "dashboard_quick_action_my_inventory": "Inventori Saya",
+  "dashboard_recent_listings_title": "Penyenaraian Terkini",
+  "dashboard_view_all": "Lihat Semua",
+  "dashboard_recent_listings_empty": "Belum ada penyenaraian."
 }
