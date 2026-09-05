@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -21,26 +23,60 @@ import '../../core/widgets/status_badge.dart';
 /// authoritative. No back button, matching the mockup's own reasoning
 /// (a pending screen is a dead end, standard nav is suppressed).
 ///
-/// The illustration was re-fetched from Stitch under a new screen ID
-/// ("Verification Pending - Animated Flowing Hourglass") for a much more
-/// elaborate hand-crafted hourglass -- gradient lime sand, glass specular
-/// highlights, dark cap plates with a lime accent stripe -- replacing the
-/// first pass's generic `PhosphorIcons.hourglass()`. That distinctiveness
-/// was worth downloading as a real asset rather than approximating with a
-/// stock icon a second time: extracted the mockup's own inline `<svg>`,
-/// dropped the bottom-chamber sand fill's opacity to a faint 0.15 (the
-/// full-opacity resting frame implied an already-half-emptied hourglass,
-/// which read oddly for a JUST-submitted verification), and rasterized to
-/// `verification_hourglass.png`. The mockup's flip-rotation + sand-drain/
-/// fill animations (a ~4.2s infinite CSS cycle) are skipped as decorative,
-/// same call made for the spinning ring/pulsing dot in the first pass --
-/// this is a static status page, not something time-critical.
+/// The illustration is `verification_hourglass.png` (see its own history:
+/// re-fetched from Stitch's "Verification Pending - Animated Flowing
+/// Hourglass", the mockup's own inline SVG rasterized to a real asset).
+/// Every PRIOR round rendered it static and explicitly skipped the
+/// mockup's CSS flip/sand-flow/glow animations as decorative -- this round
+/// reverses that call on a DIRECT, explicit ask for real motion, not a
+/// silent mockup detail. Built as a native Flutter animation
+/// (`AnimationController` + `AnimatedBuilder`), not the `lottie` package:
+/// no real hourglass Lottie JSON was available to source (this isn't
+/// something safe to fetch from a guessed URL), and hand-authoring a
+/// faithful Lottie JSON from scratch isn't realistic -- the user's own
+/// fallback instruction ("or build a custom AnimatedBuilder") is exactly
+/// what this is.
+///
+/// A single repeating `AnimationController` drives three effects in sync:
+/// (1) the hourglass image itself rotates a full 0->360 degrees per cycle
+/// through `Curves.easeInOutCubic` -- since the asset's sand fill is
+/// asymmetric (bright/full top chamber, faint bottom chamber), a 180
+/// rotation naturally reads as "the hourglass just flipped and is
+/// refilling" without needing to redraw/re-composite the artwork itself,
+/// and continuing on to 360 returns it to the start looking freshly
+/// flipped again; (2) a short lime "sand" dash at the hourglass's waist
+/// fades in/out in sync with the SAME cycle (strongest when upright near
+/// t=0/1, fully faded at the t=0.5 flip midpoint) to suggest sand actively
+/// flowing rather than a static image just spinning; (3) the outer ring's
+/// glow breathes via a sine wave on the same controller, independent of
+/// the rotation curve so the pulse itself stays perfectly smooth
+/// regardless of how the rotation eases.
 ///
 /// "In Progress" reuses the existing `StatusBadge` widget (already this
 /// app's own pill-status convention for listing/requirement statuses)
 /// rather than inventing a new pill style just for this screen.
-class VerificationPendingScreen extends StatelessWidget {
+class VerificationPendingScreen extends StatefulWidget {
   const VerificationPendingScreen({super.key});
+
+  @override
+  State<VerificationPendingScreen> createState() => _VerificationPendingScreenState();
+}
+
+class _VerificationPendingScreenState extends State<VerificationPendingScreen>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 4200))..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -72,56 +108,97 @@ class VerificationPendingScreen extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                SizedBox(
-                  width: 160,
-                  height: 160,
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      // Faint ambient ring, matching the mockup's own
-                      // outer aura ring (its glow/spin are the skipped
-                      // decorative animation this doc comment covers).
-                      Container(
-                        width: 160,
-                        height: 160,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(color: AppColors.primaryContainer.withValues(alpha: 0.3), width: 2),
-                        ),
-                      ),
-                      Container(
-                        width: 128,
-                        height: 128,
-                        decoration: BoxDecoration(
-                          color: AppColors.surface,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: AppColors.surfaceVariant, width: 1),
-                        ),
+                AnimatedBuilder(
+                  animation: _controller,
+                  builder: (context, child) {
+                    final t = _controller.value;
+                    final rotation = Curves.easeInOutCubic.transform(t) * 2 * math.pi;
+                    // Smooth sine-driven breathing glow -- deliberately NOT
+                    // tied to the rotation curve, so the pulse itself never
+                    // inherits the rotation's own ease-in/out feel.
+                    final glowStrength = 0.25 + 0.35 * (0.5 + 0.5 * math.sin(t * 2 * math.pi));
+                    // Sand-at-the-waist opacity: peaks upright (t near 0/1),
+                    // fades to 0 right at the t=0.5 flip midpoint.
+                    final sandOpacity = (math.cos(t * 2 * math.pi) * 0.5 + 0.5).clamp(0.0, 1.0);
+                    return SizedBox(
+                      width: 160,
+                      height: 160,
+                      child: Stack(
                         alignment: Alignment.center,
-                        child: Image.asset(
-                          'assets/illustrations/verification_hourglass.png',
-                          height: 76,
-                          errorBuilder: (context, error, stackTrace) =>
-                              Icon(PhosphorIcons.hourglass(PhosphorIconsStyle.bold), size: 56, color: AppColors.ink),
-                        ),
-                      ),
-                      Positioned(
-                        top: 4,
-                        right: 4,
-                        child: Container(
-                          width: 32,
-                          height: 32,
-                          decoration: BoxDecoration(
-                            color: AppColors.primaryContainer,
-                            shape: BoxShape.circle,
-                            border: Border.all(color: AppColors.surface, width: 2),
+                        children: [
+                          Container(
+                            width: 160,
+                            height: 160,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(color: AppColors.primaryContainer.withValues(alpha: 0.3), width: 2),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.primaryContainer.withValues(alpha: glowStrength),
+                                  blurRadius: 24,
+                                  spreadRadius: 2,
+                                ),
+                              ],
+                            ),
                           ),
-                          alignment: Alignment.center,
-                          child: Icon(PhosphorIcons.checks(PhosphorIconsStyle.bold), size: 16, color: AppColors.ink),
-                        ),
+                          Container(
+                            width: 128,
+                            height: 128,
+                            decoration: BoxDecoration(
+                              color: AppColors.surface,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: AppColors.surfaceVariant, width: 1),
+                            ),
+                            alignment: Alignment.center,
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                Transform.rotate(
+                                  angle: rotation,
+                                  child: Image.asset(
+                                    'assets/illustrations/verification_hourglass.png',
+                                    height: 76,
+                                    errorBuilder: (context, error, stackTrace) => Icon(
+                                      PhosphorIcons.hourglass(PhosphorIconsStyle.bold),
+                                      size: 56,
+                                      color: AppColors.ink,
+                                    ),
+                                  ),
+                                ),
+                                Opacity(
+                                  opacity: sandOpacity,
+                                  child: Container(
+                                    width: 3,
+                                    height: 14,
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primaryContainer,
+                                      borderRadius: BorderRadius.circular(2),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Positioned(
+                            top: 4,
+                            right: 4,
+                            child: Container(
+                              width: 32,
+                              height: 32,
+                              decoration: BoxDecoration(
+                                color: AppColors.primaryContainer,
+                                shape: BoxShape.circle,
+                                border: Border.all(color: AppColors.surface, width: 2),
+                              ),
+                              alignment: Alignment.center,
+                              child: Icon(PhosphorIcons.checks(PhosphorIconsStyle.bold),
+                                  size: 16, color: AppColors.ink),
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    );
+                  },
                 ),
                 const SizedBox(height: 24),
                 Text(

@@ -45,8 +45,14 @@ void main() {
       GoRoute(path: '/home', builder: (context, state) => const Placeholder()),
     ]);
 
+    // pumpAndSettle() would hang forever here: the hourglass's
+    // AnimationController repeats infinitely (real motion, not a
+    // one-shot), so Flutter never sees "no more frames scheduled". A
+    // couple of fixed pumps is enough to let go_router build its first
+    // real route and settle the animation into steady state.
     await tester.pumpWidget(_wrap(router));
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
 
     expect(find.text('Your Account is Being Verified'), findsOneWidget);
     expect(
@@ -63,10 +69,14 @@ void main() {
       GoRoute(path: '/home', builder: (context, state) => const Text('home-screen')),
     ]);
 
+    // Same reasoning as above: this screen's own infinite animation means
+    // pumpAndSettle() never returns, so every pump here is a fixed one.
     await tester.pumpWidget(_wrap(router));
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
     await tester.tap(find.widgetWithText(BrutalistButton, 'Back to Home'));
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
 
     expect(find.text('home-screen'), findsOneWidget);
   });
