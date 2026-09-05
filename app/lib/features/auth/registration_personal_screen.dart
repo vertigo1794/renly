@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../core/theme/app_colors.dart';
 import 'auth_providers.dart';
@@ -11,6 +12,13 @@ import 'auth_validation.dart';
 /// email/password/confirm-password fields added ahead of the mockup's own
 /// fullName/icNumber/phoneNumber fields (the mockup has no auth-credential
 /// screen at all -- see the design doc's "Gap the mockups don't cover").
+///
+/// Re-fetched from Stitch's "Registration - Personal" redesign (project
+/// "Renly Property Agent Network") -- same 3-field gap as before (still no
+/// email/password in the mockup, same fix applied), but this pass added a
+/// real visual step-progress bar (half-filled, matching the mockup's "Step
+/// 1 of 2" indicator) and per-field leading icons + hint text for the
+/// fullName/icNumber/phoneNumber fields, none of which existed before.
 class RegistrationPersonalScreen extends ConsumerStatefulWidget {
   const RegistrationPersonalScreen({super.key});
 
@@ -99,6 +107,18 @@ class _RegistrationPersonalScreenState extends ConsumerState<RegistrationPersona
                     Text('registration_step1_progress'.tr(), style: Theme.of(context).textTheme.labelSmall),
                   ],
                 ),
+                const SizedBox(height: 8),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(999),
+                  child: LinearProgressIndicator(
+                    // Step 1 of 2 -- half filled, matching the mockup's own
+                    // fixed-width progress bar (not animated/indeterminate).
+                    value: 0.5,
+                    minHeight: 8,
+                    backgroundColor: AppColors.surfaceVariant,
+                    valueColor: const AlwaysStoppedAnimation(AppColors.primaryContainer),
+                  ),
+                ),
                 const SizedBox(height: 24),
                 TextFormField(
                   key: const Key('reg_email_field'),
@@ -140,7 +160,11 @@ class _RegistrationPersonalScreenState extends ConsumerState<RegistrationPersona
                 TextFormField(
                   key: const Key('reg_full_name_field'),
                   controller: _fullNameController,
-                  decoration: InputDecoration(labelText: 'field_full_name'.tr()),
+                  decoration: InputDecoration(
+                    labelText: 'field_full_name'.tr(),
+                    hintText: 'field_full_name_hint'.tr(),
+                    prefixIcon: Icon(PhosphorIcons.user(PhosphorIconsStyle.bold)),
+                  ),
                   validator: (value) =>
                       (value == null || value.trim().isEmpty) ? 'validation_required'.tr() : null,
                 ),
@@ -148,7 +172,11 @@ class _RegistrationPersonalScreenState extends ConsumerState<RegistrationPersona
                 TextFormField(
                   key: const Key('reg_ic_number_field'),
                   controller: _icNumberController,
-                  decoration: InputDecoration(labelText: 'field_ic_number'.tr()),
+                  decoration: InputDecoration(
+                    labelText: 'field_ic_number'.tr(),
+                    hintText: 'field_ic_number_hint'.tr(),
+                    prefixIcon: Icon(PhosphorIcons.identificationCard(PhosphorIconsStyle.bold)),
+                  ),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) return 'validation_required'.tr();
                     if (!AuthValidation.isValidIcNumber(value.trim())) return 'validation_ic_invalid'.tr();
@@ -159,7 +187,11 @@ class _RegistrationPersonalScreenState extends ConsumerState<RegistrationPersona
                 TextFormField(
                   key: const Key('reg_phone_number_field'),
                   controller: _phoneNumberController,
-                  decoration: InputDecoration(labelText: 'field_phone_number'.tr()),
+                  decoration: InputDecoration(
+                    labelText: 'field_phone_number'.tr(),
+                    hintText: 'field_phone_number_hint'.tr(),
+                    prefixIcon: Icon(PhosphorIcons.deviceMobile(PhosphorIconsStyle.bold)),
+                  ),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) return 'validation_required'.tr();
                     if (!AuthValidation.isValidPhoneNumber(value.trim())) return 'validation_phone_invalid'.tr();
