@@ -41,7 +41,7 @@ void main() {
     rootBundle.clear();
   });
 
-  testWidgets('renders the wordmark image and tagline on its first frame', (tester) async {
+  testWidgets('renders the R badge, wordmark text, and tagline on its first frame', (tester) async {
     final router = GoRouter(routes: [
       GoRoute(path: '/splash', builder: (context, state) => const SplashScreen()),
       GoRoute(path: '/onboarding', builder: (context, state) => const Placeholder()),
@@ -54,21 +54,24 @@ void main() {
     await tester.pumpWidget(_wrap(router));
     await tester.pump();
 
-    final image = tester.widget<Image>(find.byType(Image));
-    expect((image.image as AssetImage).assetName, 'assets/illustrations/renly_wordmark.png');
+    // The badge and wordmark are both present from the first frame -- only
+    // their AnimatedScale/AnimatedOpacity values change once the ~700ms
+    // reveal fires, not their presence in the tree.
+    expect(find.text('R'), findsOneWidget);
+    expect(find.text('renly'), findsOneWidget);
     expect(find.text('PROPERTY COLLABORATION PLATFORM'), findsOneWidget);
     expect(find.text('MULTI-AGENT REAL ESTATE OPERATING SYSTEM'), findsOneWidget);
 
-    // Flush the 1.8s delay and the resulting navigation before the test
-    // ends. pumpAndSettle() alone won't do it: nothing rebuilds while the
+    // Flush the 2s delay and the resulting navigation before the test ends.
+    // pumpAndSettle() alone won't do it: nothing rebuilds while the
     // Future.delayed is pending, so it sees no scheduled frame and
     // considers itself "settled" well before the fake clock actually
-    // reaches 1.8s -- pump() past that mark explicitly first.
-    await tester.pump(const Duration(milliseconds: 1800));
+    // reaches 2s -- pump() past that mark explicitly first.
+    await tester.pump(const Duration(milliseconds: 2000));
     await tester.pumpAndSettle();
   });
 
-  testWidgets('navigates to /onboarding after its own 1.8s on-screen delay', (tester) async {
+  testWidgets('navigates to /onboarding after its own 2s on-screen delay', (tester) async {
     final router = GoRouter(routes: [
       GoRoute(path: '/splash', builder: (context, state) => const SplashScreen()),
       GoRoute(path: '/onboarding', builder: (context, state) => const Text('onboarding')),
@@ -79,8 +82,8 @@ void main() {
     expect(find.text('onboarding'), findsNothing);
 
     // Same reasoning as above: pumpAndSettle() alone never advances the
-    // fake clock far enough to fire the 1.8s Future.delayed.
-    await tester.pump(const Duration(milliseconds: 1800));
+    // fake clock far enough to fire the 2s Future.delayed.
+    await tester.pump(const Duration(milliseconds: 2000));
     await tester.pumpAndSettle();
 
     expect(find.text('onboarding'), findsOneWidget);
