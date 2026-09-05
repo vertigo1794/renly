@@ -10,7 +10,26 @@ import 'models/negotiator.dart';
 /// Screens call these methods; nothing else touches `SupabaseClient` for
 /// this feature.
 class AuthRepository {
-  AuthRepository(this._client);
+  /// Subscribes to Supabase's auth-state stream for the lifetime of this
+  /// repository so the stored biometric refresh token never goes stale.
+  /// Supabase ROTATES the refresh token on every use -- including
+  /// supabase_flutter's own hourly background auto-refresh -- so a token
+  /// captured once at enrollment and never updated stops working within
+  /// about an hour. Re-writing it on every `signedIn`/`tokenRefreshed`
+  /// event is what makes biometric sign-in survive an app restart at all.
+  AuthRepository(this._client) {
+    _client.auth.onAuthStateChange.listen((state) async {
+      if (state.event == AuthChangeEvent.signedIn ||
+          state.event == AuthChangeEvent.tokenRefreshed) {
+        if (await hasBiometricLoginEnabled()) {
+          final refreshToken = state.session?.refreshToken;
+          if (refreshToken != null) {
+            await _secureStorage.write(key: _biometricTokenKey, value: refreshToken);
+          }
+        }
+      }
+    });
+  }
 
   final SupabaseClient _client;
   final LocalAuthentication _localAuth = LocalAuthentication();
@@ -113,8 +132,17 @@ class AuthRepository {
     return _client.auth.signInWithPassword(email: email, password: password);
   }
 
-  Future<void> signOut() {
-    return _client.auth.signOut();
+  /// Clears the stored biometric token BEFORE signing out. GoTrue's
+  /// default (`local`) sign-out scope revokes the session's refresh token
+  /// server-side, so a token kept across sign-out would be dead anyway --
+  /// keeping it would only leave a permanently-broken Biometric button on
+  /// the login screen. Biometric sign-in is scoped as quick re-entry for
+  /// an interrupted/backgrounded session, NOT re-entry after an explicit
+  /// sign-out; a user who signs out re-enrolls after their next
+  /// email/password login.
+  Future<void> signOut() async {
+    await disableBiometricLogin();
+    await _client.auth.signOut();
   }
 
   Future<void> resetPasswordForEmail(String email) {
@@ -128,9 +156,15 @@ class AuthRepository {
   }
 
   /// Confirms the user's biometric identity, then stores the CURRENT
-  /// session's refresh token -- deliberately not cleared by signOut() (a
-  /// stored token surviving sign-out is what makes this feature useful:
-  /// "I signed out yesterday, let me back in quickly today").
+  /// session's refresh token. The constructor's `onAuthStateChange`
+  /// listener keeps that stored copy fresh from here on. Cleared by
+  /// `signOut()` -- see its doc comment for why surviving sign-out was
+  /// never actually achievable.
+  ///
+  /// The null-refreshToken guard is load-bearing: `Session.refreshToken`
+  /// is `String?`, and `FlutterSecureStorage.write` treats a null value as
+  /// a DELETE, so writing it unguarded would silently no-op the enrollment
+  /// (leaving biometric "enabled" in the UI with nothing stored).
   Future<void> enableBiometricLogin({required String localizedReason}) async {
     final authenticated = await _localAuth.authenticate(localizedReason: localizedReason);
     if (!authenticated) {
@@ -140,7 +174,11 @@ class AuthRepository {
     if (session == null) {
       throw StateError('No active session to enable biometric login for.');
     }
-    await _secureStorage.write(key: _biometricTokenKey, value: session.refreshToken);
+    final refreshToken = session.refreshToken;
+    if (refreshToken == null) {
+      throw StateError('Current session has no refresh token to store.');
+    }
+    await _secureStorage.write(key: _biometricTokenKey, value: refreshToken);
   }
 
   Future<void> disableBiometricLogin() {
@@ -152,10 +190,19 @@ class AuthRepository {
   }
 
   /// Restores the session from the stored refresh token after a successful
-  /// biometric check. If the stored token itself is invalid/expired (rare,
-  /// but real -- Supabase can revoke a refresh token server-side), clears
-  /// it so `hasBiometricLoginEnabled()` -> the Biometric button disappears
-  /// -- rather than leaving a permanently-broken button behind.
+  /// biometric check, then IMMEDIATELY re-stores the new refresh token
+  /// `setSession()`'s own response carries -- Supabase rotates the token on
+  /// this call too, so without this the very next biometric attempt would
+  /// present an already-consumed token and fail ("works once, then dies").
+  /// This overlaps with the constructor's `onAuthStateChange` listener on
+  /// purpose: the listener is the general safety net, this is the direct,
+  /// ordering-independent write for the one path that matters most. Both
+  /// are kept deliberately.
+  ///
+  /// If the stored token itself is invalid/expired (revoked server-side,
+  /// or rotated elsewhere while this device was offline), clears it so
+  /// `hasBiometricLoginEnabled()` -> false and the Biometric button
+  /// disappears -- rather than leaving a permanently-broken button behind.
   Future<AuthResponse> signInWithBiometrics({required String localizedReason}) async {
     final authenticated = await _localAuth.authenticate(localizedReason: localizedReason);
     if (!authenticated) {
@@ -166,7 +213,12 @@ class AuthRepository {
       throw StateError('No stored biometric credential.');
     }
     try {
-      return await _client.auth.setSession(token);
+      final response = await _client.auth.setSession(token);
+      final newRefreshToken = response.session?.refreshToken;
+      if (newRefreshToken != null) {
+        await _secureStorage.write(key: _biometricTokenKey, value: newRefreshToken);
+      }
+      return response;
     } catch (e) {
       await _secureStorage.delete(key: _biometricTokenKey);
       rethrow;
