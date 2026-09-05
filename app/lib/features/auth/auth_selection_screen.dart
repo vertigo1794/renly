@@ -92,7 +92,7 @@ class AuthSelectionScreen extends StatelessWidget {
                               ],
                             ),
                           ),
-                          const SizedBox(height: 48.0),
+                          const SizedBox(height: 60.0),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             mainAxisSize: MainAxisSize.min,
@@ -118,11 +118,20 @@ class AuthSelectionScreen extends StatelessWidget {
                                       // proportion with each other.
                                       fontSize: 60,
                                       height: 1,
+                                      // Tighter tracking per the reference
+                                      // screenshot's own bold/geometric
+                                      // "renly" treatment -- headlineLarge's
+                                      // own letterSpacing is relative to its
+                                      // base fontSize 32, not this text's
+                                      // own 60, so it's overridden with an
+                                      // absolute value here instead of
+                                      // inheriting a now-mismatched ratio.
+                                      letterSpacing: -1.5,
                                     ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 48.0),
+                          const SizedBox(height: 60.0),
                           Text(
                             'auth_tagline'.tr(),
                             textAlign: TextAlign.center,
