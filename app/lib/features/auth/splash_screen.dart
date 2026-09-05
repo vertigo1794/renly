@@ -41,8 +41,8 @@ import '../../core/widgets/r_star_badge.dart';
 /// splash with nothing below the logo.
 ///
 /// The native splash (pubspec.yaml's flutter_native_splash config) is a
-/// DELIBERATELY different screen, not a seamless twin of this one: white
-/// background, splash_logo.png (the R* badge alone, no "renly" text)
+/// DELIBERATELY different screen, not a seamless twin of this one: lime
+/// background, splash_logo_box.png (the R* badge alone, no "renly" text)
 /// rather than this widget's own badge+wordmark title. main.dart
 /// removes that native splash a fixed 600ms after runApp() -- this widget
 /// is what's underneath it by then, and it stays up on its own for a
