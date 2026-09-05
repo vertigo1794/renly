@@ -139,7 +139,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       // Enrollment offer must come BEFORE _handlePostSignIn -- that method
       // navigates away with context.go(), and a showDialog issued after it
       // races this screen's disposal and can silently never appear.
-      await _maybeOfferBiometricEnrollment();
+      try {
+        await _maybeOfferBiometricEnrollment();
+      } catch (_) {
+        // Enrollment-offer is best-effort UX -- a failure here (e.g. a
+        // local_auth plugin hiccup) must never block or misreport an
+        // already-successful sign-in.
+      }
       if (!mounted) return;
       await _handlePostSignIn(userId);
     } catch (_) {
