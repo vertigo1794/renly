@@ -4,21 +4,22 @@ import 'dart:ui' as ui;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../core/theme/app_colors.dart';
 
 /// Ports the Stitch "Splash Screen - Kinetic R to Renly Animation" design
 /// (project "Renly Property Agent Network") to the Urby neo-brutalist
-/// system -- lime background, bold wordmark, small caps tagline pinned near
-/// the bottom -- using this app's own Space Grotesk type scale rather than
-/// Stitch's Lumina-Prime-era Syne/Hanken Grotesk, which this project
-/// replaced outright (see app_theme.dart).
+/// system -- flat lime background, bold wordmark, no tagline text -- using
+/// this app's own Space Grotesk type scale rather than Stitch's
+/// Lumina-Prime-era Syne/Hanken Grotesk, which this project replaced
+/// outright (see app_theme.dart).
 ///
 /// This redesign replaces the prior static Image.asset wordmark with a real
 /// two-stage entrance animation, ported from Stitch's CSS transition
 /// classes: an "R" monogram badge appears first (already on-screen, ink
-/// background / lime glyph), then after a ~700ms dramatic pause the "renly"
-/// wordmark unmasks outward from behind it. A raster image can't animate a
+/// background), then after a ~700ms dramatic pause the "renly" wordmark
+/// unmasks outward from behind it. A raster image can't animate a
 /// width-reveal cleanly, so the wordmark is rendered as real text
 /// (Space Grotesk, matching this app's own type system) instead of the
 /// image asset used before -- consistent with every other screen's title
@@ -29,6 +30,13 @@ import '../../core/theme/app_colors.dart';
 /// blobs), since the flat lime background already matches the rest of the
 /// app's brand screens.
 ///
+/// The badge glyph is a bold white "R" with a small white star overlapping
+/// its bottom-right corner, a deliberate Rockstar Games-style monogram
+/// treatment requested directly (not sourced from the Stitch mockup, which
+/// used a plain lime "R") -- both `splash_tagline`/`splash_subtitle` l10n
+/// keys and the bottom-pinned tagline text were removed in the same round,
+/// for a plain/minimal splash with nothing below the logo.
+///
 /// The native splash (pubspec.yaml's flutter_native_splash config) is a
 /// DELIBERATELY different screen, not a seamless twin of this one: white
 /// background, the solid lime tile carrying Stitch's uppercase-R monogram
@@ -36,10 +44,11 @@ import '../../core/theme/app_colors.dart';
 /// widget's animated text-only wordmark. main.dart
 /// removes that native splash a fixed 600ms after runApp() -- this widget
 /// is what's underneath it by then, and it stays up on its own for a
-/// further 2s (700ms pause + ~1050ms reveal animation, plus a small buffer)
-/// before navigating to '/onboarding'. These are two separately-tuned
-/// durations for two visually distinct screens, not one combined handoff --
-/// FlutterNativeSplash.remove() lives entirely in main.dart now, not here.
+/// further 3.5s (700ms pause + ~1050ms reveal animation, plus a generous
+/// dwell before navigating) before navigating to '/onboarding'. These are
+/// two separately-tuned durations for two visually distinct screens, not
+/// one combined handoff -- FlutterNativeSplash.remove() lives entirely in
+/// main.dart now, not here.
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -58,7 +67,7 @@ class _SplashScreenState extends State<SplashScreen> {
     Future.delayed(const Duration(milliseconds: 700), () {
       if (mounted) setState(() => _revealed = true);
     });
-    Future.delayed(const Duration(milliseconds: 2000), () {
+    Future.delayed(const Duration(milliseconds: 3500), () {
       if (mounted) context.go('/onboarding');
     });
   }
@@ -95,15 +104,24 @@ class _SplashScreenState extends State<SplashScreen> {
                     width: 64,
                     height: 64,
                     decoration: BoxDecoration(color: AppColors.ink, borderRadius: BorderRadius.circular(16)),
-                    alignment: Alignment.center,
-                    child: Text(
-                      'R',
-                      style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                            color: AppColors.primaryContainer,
-                            fontWeight: FontWeight.w900,
-                            fontSize: 32,
-                            height: 1,
-                          ),
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Text(
+                          'R',
+                          style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w900,
+                                fontSize: 32,
+                                height: 1,
+                              ),
+                        ),
+                        Positioned(
+                          right: 10,
+                          bottom: 10,
+                          child: Icon(PhosphorIcons.star(PhosphorIconsStyle.fill), color: Colors.white, size: 14),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -124,33 +142,6 @@ class _SplashScreenState extends State<SplashScreen> {
                       child: Text('app_name'.tr(), style: wordmarkStyle),
                     ),
                   ),
-                ),
-              ],
-            ),
-          ),
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 48,
-            child: Column(
-              children: [
-                Text(
-                  'splash_tagline'.tr().toUpperCase(),
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: AppColors.onPrimaryContainer,
-                        letterSpacing: 2,
-                      ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'splash_subtitle'.tr().toUpperCase(),
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: AppColors.onPrimaryContainer.withValues(alpha: 0.6),
-                        letterSpacing: 1,
-                        fontSize: 10,
-                      ),
                 ),
               ],
             ),

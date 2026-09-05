@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:renly/core/theme/app_theme.dart';
@@ -41,7 +42,7 @@ void main() {
     rootBundle.clear();
   });
 
-  testWidgets('renders the R badge, wordmark text, and tagline on its first frame', (tester) async {
+  testWidgets('renders the R badge (with its star accent) and wordmark text on its first frame', (tester) async {
     final router = GoRouter(routes: [
       GoRoute(path: '/splash', builder: (context, state) => const SplashScreen()),
       GoRoute(path: '/onboarding', builder: (context, state) => const Placeholder()),
@@ -56,22 +57,22 @@ void main() {
 
     // The badge and wordmark are both present from the first frame -- only
     // their AnimatedScale/AnimatedOpacity values change once the ~700ms
-    // reveal fires, not their presence in the tree.
+    // reveal fires, not their presence in the tree. The splash is
+    // deliberately plain below the logo now -- no tagline text at all.
     expect(find.text('R'), findsOneWidget);
     expect(find.text('renly'), findsOneWidget);
-    expect(find.text('PROPERTY COLLABORATION PLATFORM'), findsOneWidget);
-    expect(find.text('MULTI-AGENT REAL ESTATE OPERATING SYSTEM'), findsOneWidget);
+    expect(find.byIcon(PhosphorIcons.star(PhosphorIconsStyle.fill)), findsOneWidget);
 
-    // Flush the 2s delay and the resulting navigation before the test ends.
-    // pumpAndSettle() alone won't do it: nothing rebuilds while the
+    // Flush the 3.5s delay and the resulting navigation before the test
+    // ends. pumpAndSettle() alone won't do it: nothing rebuilds while the
     // Future.delayed is pending, so it sees no scheduled frame and
     // considers itself "settled" well before the fake clock actually
-    // reaches 2s -- pump() past that mark explicitly first.
-    await tester.pump(const Duration(milliseconds: 2000));
+    // reaches 3.5s -- pump() past that mark explicitly first.
+    await tester.pump(const Duration(milliseconds: 3500));
     await tester.pumpAndSettle();
   });
 
-  testWidgets('navigates to /onboarding after its own 2s on-screen delay', (tester) async {
+  testWidgets('navigates to /onboarding after its own 3.5s on-screen delay', (tester) async {
     final router = GoRouter(routes: [
       GoRoute(path: '/splash', builder: (context, state) => const SplashScreen()),
       GoRoute(path: '/onboarding', builder: (context, state) => const Text('onboarding')),
@@ -82,8 +83,8 @@ void main() {
     expect(find.text('onboarding'), findsNothing);
 
     // Same reasoning as above: pumpAndSettle() alone never advances the
-    // fake clock far enough to fire the 2s Future.delayed.
-    await tester.pump(const Duration(milliseconds: 2000));
+    // fake clock far enough to fire the 3.5s Future.delayed.
+    await tester.pump(const Duration(milliseconds: 3500));
     await tester.pumpAndSettle();
 
     expect(find.text('onboarding'), findsOneWidget);
