@@ -1,5 +1,7 @@
 import 'dart:typed_data';
 
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:local_auth/local_auth.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'models/negotiator.dart';
@@ -11,6 +13,9 @@ class AuthRepository {
   AuthRepository(this._client);
 
   final SupabaseClient _client;
+  final LocalAuthentication _localAuth = LocalAuthentication();
+  static const _secureStorage = FlutterSecureStorage();
+  static const _biometricTokenKey = 'biometric_refresh_token';
 
   Future<User> signUp({required String email, required String password}) async {
     final response = await _client.auth.signUp(email: email, password: password);
@@ -110,6 +115,62 @@ class AuthRepository {
 
   Future<void> signOut() {
     return _client.auth.signOut();
+  }
+
+  Future<void> resetPasswordForEmail(String email) {
+    return _client.auth.resetPasswordForEmail(email);
+  }
+
+  Future<bool> isBiometricAvailable() async {
+    final canCheck = await _localAuth.canCheckBiometrics;
+    final supported = await _localAuth.isDeviceSupported();
+    return canCheck && supported;
+  }
+
+  /// Confirms the user's biometric identity, then stores the CURRENT
+  /// session's refresh token -- deliberately not cleared by signOut() (a
+  /// stored token surviving sign-out is what makes this feature useful:
+  /// "I signed out yesterday, let me back in quickly today").
+  Future<void> enableBiometricLogin({required String localizedReason}) async {
+    final authenticated = await _localAuth.authenticate(localizedReason: localizedReason);
+    if (!authenticated) {
+      throw StateError('Biometric authentication was not completed.');
+    }
+    final session = _client.auth.currentSession;
+    if (session == null) {
+      throw StateError('No active session to enable biometric login for.');
+    }
+    await _secureStorage.write(key: _biometricTokenKey, value: session.refreshToken);
+  }
+
+  Future<void> disableBiometricLogin() {
+    return _secureStorage.delete(key: _biometricTokenKey);
+  }
+
+  Future<bool> hasBiometricLoginEnabled() {
+    return _secureStorage.containsKey(key: _biometricTokenKey);
+  }
+
+  /// Restores the session from the stored refresh token after a successful
+  /// biometric check. If the stored token itself is invalid/expired (rare,
+  /// but real -- Supabase can revoke a refresh token server-side), clears
+  /// it so `hasBiometricLoginEnabled()` -> the Biometric button disappears
+  /// -- rather than leaving a permanently-broken button behind.
+  Future<AuthResponse> signInWithBiometrics({required String localizedReason}) async {
+    final authenticated = await _localAuth.authenticate(localizedReason: localizedReason);
+    if (!authenticated) {
+      throw StateError('Biometric authentication was not completed.');
+    }
+    final token = await _secureStorage.read(key: _biometricTokenKey);
+    if (token == null) {
+      throw StateError('No stored biometric credential.');
+    }
+    try {
+      return await _client.auth.setSession(token);
+    } catch (e) {
+      await _secureStorage.delete(key: _biometricTokenKey);
+      rethrow;
+    }
   }
 
   /// Returns null if the caller has an auth session but no `negotiator`
