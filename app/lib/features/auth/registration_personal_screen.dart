@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/r_star_badge.dart';
 import 'auth_providers.dart';
 import 'auth_validation.dart';
 
@@ -85,7 +86,15 @@ class _RegistrationPersonalScreenState extends ConsumerState<RegistrationPersona
     return Scaffold(
       appBar: AppBar(
         leading: BackButton(onPressed: () => context.canPop() ? context.pop() : context.go('/')),
-        title: Text('app_name'.tr()),
+        centerTitle: true,
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const RStarBadge(size: 28),
+            const SizedBox(width: 8),
+            Text('app_name'.tr()),
+          ],
+        ),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
