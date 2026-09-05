@@ -92,7 +92,19 @@ class _RegistrationPersonalScreenState extends ConsumerState<RegistrationPersona
           children: [
             const RStarBadge(size: 28),
             const SizedBox(width: 8),
-            Text('app_name'.tr()),
+            Text(
+              'app_name'.tr(),
+              // Same bold/geometric wordmark treatment as the
+              // login/register selection screen's title -- headlineLarge
+              // (already bold/black-weight) sized down to balance the
+              // 28px badge, with the same tightened tracking.
+              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                    color: AppColors.ink,
+                    fontSize: 20,
+                    letterSpacing: -1.0,
+                    height: 1,
+                  ),
+            ),
           ],
         ),
       ),
