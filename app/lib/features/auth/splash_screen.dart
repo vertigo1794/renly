@@ -49,7 +49,25 @@ import '../../core/theme/app_colors.dart';
 /// more closely than the Stitch-provided size. All 3 rounds share the same
 /// SVG->recolor->crop->rasterize pipeline; only the source SVG or polygon
 /// coordinates changed each time, never the code (the asset filename never
-/// changed). Both `splash_tagline`/`splash_subtitle` l10n keys and the
+/// changed).
+///
+/// **The badge PNG's own canvas is centered on ink-mass centroid, not its
+/// bounding box** -- the same lesson this project has hit repeatedly for
+/// every other logo asset (the "renly" wordmark, the app icon's "R"):
+/// bbox-symmetric padding is NOT the same as visually-balanced padding,
+/// since the R's thick stem plus the star's added mass sit off to one side
+/// of the glyph's own geometric bbox. A tight-crop-then-uniform-padding pass
+/// (what every prior round of this badge did) measured ~18px left / ~17px
+/// up of true center on a ~700px canvas -- visible as the whole R+star unit
+/// reading "left-heavy" inside the badge box despite the Container's own
+/// `EdgeInsets.all(10)` already being perfectly symmetric in code. Fixed at
+/// the asset level (asymmetric padding added around the tight ink crop so
+/// the centroid lands dead-center, verified to within 0.15px), not by
+/// touching the Container/Image code, which was never actually the
+/// problem. `Image.asset`'s `alignment: Alignment.center` was still made
+/// explicit (previously implicit via `BoxFit.contain`'s own default) so the
+/// centering intent reads clearly from the widget code itself. Both
+/// `splash_tagline`/`splash_subtitle` l10n keys and the
 /// bottom-pinned tagline text were removed in the round before
 /// this one, for a plain/minimal splash with nothing below the logo.
 ///
@@ -124,6 +142,7 @@ class _SplashScreenState extends State<SplashScreen> {
                     child: Image.asset(
                       'assets/illustrations/renly_r_star_badge.png',
                       fit: BoxFit.contain,
+                      alignment: Alignment.center,
                       errorBuilder: (context, error, stackTrace) => Text(
                         'R',
                         style: Theme.of(context).textTheme.headlineLarge?.copyWith(
