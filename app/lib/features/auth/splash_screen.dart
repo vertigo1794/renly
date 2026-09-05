@@ -68,13 +68,27 @@ class _SplashScreenState extends State<SplashScreen> {
             left: 0,
             right: 0,
             bottom: 48,
-            child: Text(
-              'splash_tagline'.tr().toUpperCase(),
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: AppColors.onPrimaryContainer,
-                    letterSpacing: 2,
-                  ),
+            child: Column(
+              children: [
+                Text(
+                  'splash_tagline'.tr().toUpperCase(),
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: AppColors.onPrimaryContainer,
+                        letterSpacing: 2,
+                      ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'splash_subtitle'.tr().toUpperCase(),
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: AppColors.onPrimaryContainer.withValues(alpha: 0.6),
+                        letterSpacing: 1,
+                        fontSize: 10,
+                      ),
+                ),
+              ],
             ),
           ),
         ],

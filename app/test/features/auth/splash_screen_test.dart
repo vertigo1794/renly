@@ -57,6 +57,7 @@ void main() {
     final image = tester.widget<Image>(find.byType(Image));
     expect((image.image as AssetImage).assetName, 'assets/illustrations/renly_wordmark.png');
     expect(find.text('PROPERTY COLLABORATION PLATFORM'), findsOneWidget);
+    expect(find.text('MULTI-AGENT REAL ESTATE OPERATING SYSTEM'), findsOneWidget);
 
     // Flush the 1.8s delay and the resulting navigation before the test
     // ends. pumpAndSettle() alone won't do it: nothing rebuilds while the
