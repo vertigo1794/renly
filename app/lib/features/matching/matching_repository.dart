@@ -149,6 +149,28 @@ class MatchingRepository {
     return _toCandidates(rows as List);
   }
 
+  /// Top area by match count in the last 24h, among matches on the
+  /// negotiator's OWN listings only (Co-Broking Radar's own filter,
+  /// mirrored here for the Market Pulse strip's "N New Matches in {area}"
+  /// copy). Returns null when there are zero qualifying matches -- the
+  /// caller hides the whole strip rather than showing a fabricated "0".
+  Future<({String area, int count})?> fetchTopMatchAreaLast24h(String negotiatorId) async {
+    final since = DateTime.now().toUtc().subtract(const Duration(hours: 24)).toIso8601String();
+    final rows = await _client
+        .from('match')
+        .select('listing!inner(area, negotiator_id)')
+        .eq('listing.negotiator_id', negotiatorId)
+        .gte('created_at', since);
+    final counts = <String, int>{};
+    for (final row in rows as List) {
+      final area = (row as Map<String, dynamic>)['listing']['area'] as String;
+      counts[area] = (counts[area] ?? 0) + 1;
+    }
+    if (counts.isEmpty) return null;
+    final top = counts.entries.reduce((a, b) => a.value >= b.value ? a : b);
+    return (area: top.key, count: top.value);
+  }
+
   Future<List<MatchCandidate>> _toCandidates(List rows) async {
     // Collect every distinct negotiator id up front and resolve them all
     // concurrently with Future.wait, instead of awaiting ownerFor(...) once

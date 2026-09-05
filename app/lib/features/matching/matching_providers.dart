@@ -38,3 +38,7 @@ final matchesForRequirementProvider = FutureProvider.family<List<MatchCandidate>
 final myMatchesProvider = FutureProvider<List<MatchCandidate>>((ref) {
   return ref.watch(matchingRepositoryProvider).fetchMyMatches();
 });
+
+final marketPulseProvider = FutureProvider.family<({String area, int count})?, String>((ref, negotiatorId) {
+  return ref.watch(matchingRepositoryProvider).fetchTopMatchAreaLast24h(negotiatorId);
+});
