@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/r_star_badge.dart';
 
 /// Ports the Stitch "Splash Screen - Kinetic R to Renly Animation" design
 /// (project "Renly Property Agent Network") to the Urby neo-brutalist
@@ -29,47 +30,15 @@ import '../../core/theme/app_colors.dart';
 /// blobs), since the flat lime background already matches the rest of the
 /// app's brand screens.
 ///
-/// The badge glyph is the real Stitch-generated "Renly - Rockstar Style Logo
-/// Refined" vector artwork, itself a direct follow-up ask, not part of the
-/// original Kinetic-Reveal mockup -- a hand-tuned italic "R" with an
-/// authentic bevel-cut counter plus a 5-point star tucked into its
-/// bottom-right corner, replacing the earlier system-font `Text('R')` +
-/// generic `PhosphorIcons.star()` approximation. Downloaded as SVG (this
-/// screen's `htmlCode` field carries `image/svg+xml`, not markup), then
-/// rasterized to a transparent PNG with the R recolored black->white (the
-/// source SVG drew it black for its own lime background; this badge's own
-/// background is ink/black) and cropped tight to its ink bbox with a small
-/// breathing margin -- `renly_r_star_badge.png`. Re-fetched once more under
-/// a new screen ID ("Rockstar R Logo - Lowered Star") for a star-position
-/// refinement (same R path, star polygon moved lower for cleaner separation
-/// from the R's leg), then tuned once more directly (not from a new Stitch
-/// fetch -- computed in Python against the same source SVG's polygon): the
-/// star scaled 1.75x from its own centroid and re-centered so one point
-/// touches the R's right leg/foot, matching real Rockstar Games proportions
-/// more closely than the Stitch-provided size. All 3 rounds share the same
-/// SVG->recolor->crop->rasterize pipeline; only the source SVG or polygon
-/// coordinates changed each time, never the code (the asset filename never
-/// changed).
-///
-/// **The badge PNG's own canvas is centered on ink-mass centroid, not its
-/// bounding box** -- the same lesson this project has hit repeatedly for
-/// every other logo asset (the "renly" wordmark, the app icon's "R"):
-/// bbox-symmetric padding is NOT the same as visually-balanced padding,
-/// since the R's thick stem plus the star's added mass sit off to one side
-/// of the glyph's own geometric bbox. A tight-crop-then-uniform-padding pass
-/// (what every prior round of this badge did) measured ~18px left / ~17px
-/// up of true center on a ~700px canvas -- visible as the whole R+star unit
-/// reading "left-heavy" inside the badge box despite the Container's own
-/// `EdgeInsets.all(10)` already being perfectly symmetric in code. Fixed at
-/// the asset level (asymmetric padding added around the tight ink crop so
-/// the centroid lands dead-center, verified to within 0.15px), not by
-/// touching the Container/Image code, which was never actually the
-/// problem. `Image.asset`'s `alignment: Alignment.center` was still made
-/// explicit (previously implicit via `BoxFit.contain`'s own default) so the
-/// centering intent reads clearly from the widget code itself. Both
-/// `splash_tagline`/`splash_subtitle` l10n keys and the
-/// bottom-pinned tagline text were removed in the round before
-/// this one, for a plain/minimal splash with nothing below the logo.
+/// The badge is `RStarBadge` (`core/widgets/r_star_badge.dart`) -- see its
+/// own doc comment for the full provenance of `renly_r_star_badge.png`
+/// (Stitch's "Renly - Rockstar Style Logo Refined"/"Rockstar R Logo -
+/// Lowered Star" screens, the SVG->recolor->crop->rasterize pipeline, and
+/// the ink-mass-centroid + optical-nudge centering history). Extracted out
+/// of this file once AuthSelectionScreen needed the identical badge too.
+/// Both `splash_tagline`/`splash_subtitle` l10n keys and the bottom-pinned
+/// tagline text were removed in an earlier round, for a plain/minimal
+/// splash with nothing below the logo.
 ///
 /// The native splash (pubspec.yaml's flutter_native_splash config) is a
 /// DELIBERATELY different screen, not a seamless twin of this one: white
@@ -134,50 +103,7 @@ class _SplashScreenState extends State<SplashScreen> {
                   scale: _revealed ? 1.0 : 1.6,
                   duration: const Duration(milliseconds: 1050),
                   curve: kineticCurve,
-                  child: Container(
-                    width: 64,
-                    height: 64,
-                    // Symmetric on purpose: asymmetric padding here changes
-                    // the INNER box's own aspect ratio away from square,
-                    // which made BoxFit.contain re-scale the image (not just
-                    // shift it) -- confirmed by measuring a live screenshot
-                    // before/after, where a 4dp left/right padding
-                    // difference overshot into an 8-device-px imbalance in
-                    // the WRONG direction instead of the intended few-px
-                    // nudge. The actual rightward nudge lives on the
-                    // Transform.translate below instead, which shifts
-                    // pixels directly with no re-scaling side effect.
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(color: AppColors.ink, borderRadius: BorderRadius.circular(16)),
-                    child: Transform.translate(
-                      // A small manual OPTICAL nudge on top of the asset's
-                      // own ink-mass centering (see the doc comment above).
-                      // Measuring a live screenshot confirmed the geometric
-                      // centering is already correct to well under 1
-                      // logical pixel -- the R's solid stroke and the
-                      // star's thin outline just don't carry equal
-                      // PERCEIVED visual weight at an identical pixel-area
-                      // centroid, so this is a deliberate optical
-                      // correction, not evidence the measurement was wrong.
-                      // Same category of fix as the app icon's own
-                      // real-device nudge (commit 3503409).
-                      offset: const Offset(1, 0),
-                      child: Image.asset(
-                        'assets/illustrations/renly_r_star_badge.png',
-                        fit: BoxFit.contain,
-                        alignment: Alignment.center,
-                        errorBuilder: (context, error, stackTrace) => Text(
-                          'R',
-                          style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w900,
-                                fontSize: 32,
-                                height: 1,
-                              ),
-                        ),
-                      ),
-                    ),
-                  ),
+                  child: const RStarBadge(),
                 ),
                 AnimatedOpacity(
                   opacity: _revealed ? 1.0 : 0.0,

@@ -5,14 +5,22 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/brutalist_button.dart';
+import '../../core/widgets/r_star_badge.dart';
 
 /// Ports Stitch's "Login/Register Selection - English (Official Style)"
 /// (project "Renly Property Agent Network") to the Urby neo-brutalist
 /// system -- full-bleed lime background matching SplashScreen (this
 /// screen and the splash are now visually siblings, both brand-forward
-/// lime screens), the actual wordmark image as the brand mark rather
-/// than rendered text, and Space Grotesk throughout rather than Stitch's
-/// own Syne/Hanken Grotesk/JetBrains Mono.
+/// lime screens), and Space Grotesk throughout rather than Stitch's own
+/// Syne/Hanken Grotesk/JetBrains Mono.
+///
+/// The title row is `RStarBadge` (the shared R* monogram, see its own doc
+/// comment) + the "renly" wordmark as real text -- previously a single
+/// `Image.asset('renly_wordmark.png')`, replaced once SplashScreen's own
+/// badge+text title needed the identical treatment here too, keeping the
+/// exact same `headlineLarge`/fontSize 48/`AppColors.ink` style the image's
+/// own `errorBuilder` fallback already used, so the wordmark's visible
+/// font/size/color are unchanged from before.
 ///
 /// The "Create account" CTA uses BrutalistButtonVariant.dark rather than
 /// the usual primary: on a lime PAGE background, a lime-filled primary
@@ -85,17 +93,21 @@ class AuthSelectionScreen extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 28),
-                          Image.asset(
-                            'assets/illustrations/renly_wordmark.png',
-                            width: 240,
-                            errorBuilder: (context, error, stackTrace) => Text(
-                              'app_name'.tr(),
-                              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                                    color: AppColors.ink,
-                                    fontSize: 48,
-                                    height: 1,
-                                  ),
-                            ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const RStarBadge(),
+                              const SizedBox(width: 14),
+                              Text(
+                                'app_name'.tr(),
+                                style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                                      color: AppColors.ink,
+                                      fontSize: 48,
+                                      height: 1,
+                                    ),
+                              ),
+                            ],
                           ),
                           const SizedBox(height: 20),
                           Text(
