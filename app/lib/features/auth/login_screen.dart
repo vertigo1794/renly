@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/brutalist_button.dart';
@@ -54,12 +55,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
+  /// Offered BEFORE any navigation happens (see `_submit`) -- showing this
+  /// after `context.go(...)` races the screen's own disposal, and the
+  /// dialog can silently never appear.
+  ///
+  /// "Not Now" is remembered via `has_dismissed_biometric_prompt` so the
+  /// user is asked at most once; the Account Settings toggle stays
+  /// available forever regardless.
   Future<void> _maybeOfferBiometricEnrollment() async {
     final repository = ref.read(authRepositoryProvider);
     final available = await repository.isBiometricAvailable();
     if (!available) return;
     final alreadyEnabled = await repository.hasBiometricLoginEnabled();
     if (alreadyEnabled) return;
+    final prefs = await SharedPreferences.getInstance();
+    final dismissed = prefs.getBool('has_dismissed_biometric_prompt') ?? false;
+    if (dismissed) return;
     if (!mounted) return;
     final wantsToEnable = await showDialog<bool>(
       context: context,
@@ -86,10 +97,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       try {
         await repository.enableBiometricLogin(localizedReason: 'auth_biometric_enable_reason'.tr());
         ref.invalidate(biometricLoginEnabledProvider);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('auth_biometric_enable_success'.tr())),
+          );
+        }
       } catch (_) {
         // Enrollment failing (user cancelled the biometric prompt, etc.)
-        // must never block the sign-in that already succeeded.
+        // must never block the sign-in that already succeeded -- but it
+        // must not be silent either, matching the Account Settings
+        // toggle's own SnackBar-on-failure behaviour.
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('listing_error_generic'.tr())),
+          );
+        }
       }
+    } else {
+      await prefs.setBool('has_dismissed_biometric_prompt', true);
     }
   }
 
@@ -111,10 +136,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         setState(() => _errorMessage = 'auth_login_error_invalid'.tr());
         return;
       }
+      // Enrollment offer must come BEFORE _handlePostSignIn -- that method
+      // navigates away with context.go(), and a showDialog issued after it
+      // races this screen's disposal and can silently never appear.
+      await _maybeOfferBiometricEnrollment();
+      if (!mounted) return;
       await _handlePostSignIn(userId);
-      if (mounted && _errorMessage == null) {
-        await _maybeOfferBiometricEnrollment();
-      }
     } catch (_) {
       if (mounted) setState(() => _errorMessage = 'auth_login_error_invalid'.tr());
     } finally {
@@ -139,7 +166,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       }
       await _handlePostSignIn(userId);
     } catch (_) {
-      if (mounted) setState(() => _errorMessage = 'auth_login_error_invalid'.tr());
+      if (mounted) {
+        // The stored token is gone (signInWithBiometrics clears it on
+        // failure), so the Biometric button must disappear -- without this
+        // invalidate it stays on screen, permanently broken.
+        ref.invalidate(biometricLoginEnabledProvider);
+        setState(() => _errorMessage = 'auth_login_error_invalid'.tr());
+      }
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
@@ -219,8 +252,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
+                    // barrierDismissible: false -- the dialog pops itself
+                    // once resetPasswordForEmail() resolves; a barrier tap
+                    // mid-flight would pop it early and let that later pop
+                    // take THIS screen off the stack instead.
                     onPressed: () => showDialog<void>(
                       context: context,
+                      barrierDismissible: false,
                       builder: (_) => ForgotPasswordDialog(initialEmail: _emailController.text.trim()),
                     ),
                     child: Text('auth_forgot_password_link'.tr()),

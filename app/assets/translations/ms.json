@@ -40,6 +40,7 @@
   "auth_biometric_prompt_enable": "Aktifkan",
   "auth_biometric_enable_reason": "Sahkan identiti anda untuk mengaktifkan log masuk biometrik",
   "auth_biometric_signin_reason": "Log masuk ke Renly",
+  "auth_biometric_enable_success": "Log masuk biometrik telah diaktifkan.",
   "auth_or_continue_with": "ATAU TERUSKAN DENGAN",
   "auth_biometric_button": "Biometrik / REN",
   "registration_error_generic": "Sesuatu tidak kena. Sila semak butiran anda dan cuba lagi.",

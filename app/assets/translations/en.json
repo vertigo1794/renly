@@ -40,6 +40,7 @@
   "auth_biometric_prompt_enable": "Enable",
   "auth_biometric_enable_reason": "Confirm your identity to enable biometric login",
   "auth_biometric_signin_reason": "Sign in to Renly",
+  "auth_biometric_enable_success": "Biometric login enabled.",
   "auth_or_continue_with": "OR CONTINUE WITH",
   "auth_biometric_button": "Biometric / REN",
   "registration_error_generic": "Something went wrong. Please check your details and try again.",

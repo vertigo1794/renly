@@ -49,11 +49,14 @@ dependencies:
   flutter_native_splash: ^2.4.7
   local_auth: ^3.0.2
   flutter_secure_storage: ^11.0.0
+  # Promoted from dev_dependencies: login_screen.dart persists the
+  # `has_dismissed_biometric_prompt` flag at runtime, so this is now a real
+  # runtime dependency, not test-only tooling.
+  shared_preferences: ^2.5.5
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  shared_preferences: ^2.5.5
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
