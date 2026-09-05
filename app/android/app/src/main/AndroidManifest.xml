@@ -1,7 +1,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- allowBackup="false": flutter_secure_storage's blob is encrypted with
+         an Android Keystore key that is NOT itself backupable. Letting
+         auto-backup ship the encrypted blob to the user's Drive would
+         produce an undecryptable restore (a stored biometric refresh token
+         that can never be read back). -->
     <application
         android:label="renly"
         android:name="${applicationName}"
+        android:allowBackup="false"
         android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"
