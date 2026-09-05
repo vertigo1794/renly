@@ -42,9 +42,8 @@ import '../../core/widgets/r_star_badge.dart';
 ///
 /// The native splash (pubspec.yaml's flutter_native_splash config) is a
 /// DELIBERATELY different screen, not a seamless twin of this one: white
-/// background, the solid lime tile carrying Stitch's uppercase-R monogram
-/// (renly_r_logo_tile.png, also the app's launcher icon) rather than this
-/// widget's animated text-only wordmark. main.dart
+/// background, splash_logo.png (the R* badge alone, no "renly" text)
+/// rather than this widget's own badge+wordmark title. main.dart
 /// removes that native splash a fixed 600ms after runApp() -- this widget
 /// is what's underneath it by then, and it stays up on its own for a
 /// further 3.5s (700ms pause + ~1050ms reveal animation, plus a generous

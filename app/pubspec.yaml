@@ -109,24 +109,32 @@ flutter:
   # see https://flutter.dev/to/font-from-package
 
 # Consumed by `dart run flutter_native_splash:create`. White background +
-# the solid lime tile carrying Stitch's uppercase-R monogram
-# (renly_r_logo_tile.png, padded to ~66% of its own 1024px canvas the
-# same way renly_logo_tile.png -- the wordmark version this replaces --
-# was, so Android 12+'s circular icon mask has margin to crop into
-# instead of the glyph itself). Still logo-only, no branding/tagline
-# image, since a thin letter-spaced strip is what caused the squashing
-# on Android 12+ before; see the note in SplashScreen for that whole
-# icon-slot-sizing story. Android draws splash bitmaps at their own
-# source pixel width / 4 as the on-screen dp size (see
-# flutter_native_splash's _saveImageAndroid, which scales every density
-# bucket relative to a 4x/xxxhdpi baseline) -- this asset is 1024px, same
-# as the wordmark tile it replaces, so on-screen size is unchanged.
+# splash_logo.png -- a transparent PNG carrying JUST the R* badge (black
+# rounded-square, white R + star, no "renly" text), replacing the older
+# plain-"R" lime tile (renly_r_logo_tile.png, predates the Rockstar-star
+# design) now that RStarBadge is this app's badge everywhere else
+# (splash/login/onboarding). TRANSPARENT background deliberately, not a
+# baked-in white square, so this config's own `color`/`android_12.color`
+# is the only thing painting white -- the same lesson the launcher icon
+# hit (`60c0728`): an opaque source image occludes whatever background
+# color this config sets, regardless of its value. Badge padded to ~66%
+# of its own 1024px canvas, same Android-12+-circular-icon-mask safe zone
+# every other logo/icon asset in this project uses (the mask always
+# applies to whatever image it's given -- see the note in SplashScreen
+# for the full "confirmed via an edge-to-edge tile getting clipped
+# straight through the glyph" story). No branding/tagline image, since a
+# thin letter-spaced strip is what caused squashing on Android 12+
+# before. Android draws splash bitmaps at their own source pixel width /
+# 4 as the on-screen dp size (flutter_native_splash's _saveImageAndroid,
+# scaling every density bucket relative to a 4x/xxxhdpi baseline) --
+# this asset is 1024px, same as the tile it replaces, so on-screen size
+# is unchanged.
 flutter_native_splash:
   color: "#FFFFFF"
-  image: assets/illustrations/renly_r_logo_tile.png
+  image: assets/illustrations/splash_logo.png
   android_12:
     color: "#FFFFFF"
-    image: assets/illustrations/renly_r_logo_tile.png
+    image: assets/illustrations/splash_logo.png
 
 # Consumed by `dart run flutter_launcher_icons`. Back to a real Adaptive
 # Icon setup (superseding the single-flat-image config directly above this
