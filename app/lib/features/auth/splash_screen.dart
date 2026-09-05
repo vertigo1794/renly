@@ -41,10 +41,15 @@ import '../../core/theme/app_colors.dart';
 /// background is ink/black) and cropped tight to its ink bbox with a small
 /// breathing margin -- `renly_r_star_badge.png`. Re-fetched once more under
 /// a new screen ID ("Rockstar R Logo - Lowered Star") for a star-position
-/// refinement only (same R path, star polygon moved lower for cleaner
-/// separation from the R's leg) -- same re-extraction pipeline, just a
-/// different source SVG, no code changes needed since the asset filename
-/// didn't change. Both `splash_tagline`/`splash_subtitle` l10n keys and the
+/// refinement (same R path, star polygon moved lower for cleaner separation
+/// from the R's leg), then tuned once more directly (not from a new Stitch
+/// fetch -- computed in Python against the same source SVG's polygon): the
+/// star scaled 1.75x from its own centroid and re-centered so one point
+/// touches the R's right leg/foot, matching real Rockstar Games proportions
+/// more closely than the Stitch-provided size. All 3 rounds share the same
+/// SVG->recolor->crop->rasterize pipeline; only the source SVG or polygon
+/// coordinates changed each time, never the code (the asset filename never
+/// changed). Both `splash_tagline`/`splash_subtitle` l10n keys and the
 /// bottom-pinned tagline text were removed in the round before
 /// this one, for a plain/minimal splash with nothing below the logo.
 ///
