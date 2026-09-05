@@ -99,12 +99,51 @@ class GoRouterRefreshStream extends ChangeNotifier {
 class CurrentLocationObserver extends NavigatorObserver {
   final ValueNotifier<String?> currentLocation = ValueNotifier<String?>(null);
 
+  // The StatefulShellRoute wrapping the 4 bottom-nav branches has no `name`
+  // and no `path` of its own, so go_router's builder.dart gives its page
+  // `name: state.name ?? state.path` == null. That makes the shell page
+  // INVISIBLE to [_record]'s null-name guard below: popping back onto the
+  // shell from a root-level pushed route (e.g. '/messages/req-1') would
+  // otherwise leave [currentLocation] stuck on the popped route, and a
+  // foreground push for that same chat would be wrongly suppressed while
+  // the user is actually sitting on a bottom-nav tab.
+  //
+  // [MainShell] therefore reports its own Route object plus the active
+  // branch's path here on every build; [_record] recognises that exact Route
+  // by identity (never by name) and substitutes the branch path. A
+  // WeakReference is used so a discarded shell (e.g. after sign-out) is not
+  // retained by this app-lifetime singleton.
+  WeakReference<Route<dynamic>>? _shellRouteRef;
+  String? _shellBranchLocation;
+
+  /// Called by [MainShell] on every build. [shellRoute] is the shell's own
+  /// route on the ROOT navigator; [location] is the active branch's path
+  /// ('/home', '/marketplace', '/chat' or '/profile').
+  ///
+  /// The branch is always remembered (so a later pop back onto the shell can
+  /// restore it), but [currentLocation] is only updated when the shell is
+  /// actually the topmost route -- while it is buried under a pushed route
+  /// such as '/messages/:requestId', that pushed route is what the user is
+  /// looking at and must not be clobbered.
+  void recordShellBranch({required Route<dynamic>? shellRoute, required String location}) {
+    _shellRouteRef = shellRoute == null ? null : WeakReference<Route<dynamic>>(shellRoute);
+    _shellBranchLocation = location;
+    if (shellRoute == null || shellRoute.isCurrent) currentLocation.value = location;
+  }
+
   // go_router's own Page.name is the RAW route template ('/messages/:requestId'),
   // never the resolved location -- see go_router's builder.dart, which sets
   // `name: state.name ?? state.path`. The actual matched values live in
   // Page.arguments (state.pathParameters), so the resolved location has to be
   // rebuilt by substituting each ':param' segment in the template.
   void _record(Route<dynamic>? route) {
+    // The shell's own (unnamed) route is resolved by identity, BEFORE the
+    // null-name guard -- which stays fully intact for every other route.
+    if (route != null && identical(route, _shellRouteRef?.target)) {
+      final shellLocation = _shellBranchLocation;
+      if (shellLocation != null) currentLocation.value = shellLocation;
+      return;
+    }
     final settings = route?.settings;
     final template = settings?.name;
     if (template == null || template.isEmpty) return;
@@ -169,7 +208,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const VerificationPendingScreen(),
       ),
       StatefulShellRoute.indexedStack(
-        builder: (context, state, navigationShell) => _MainShell(navigationShell: navigationShell),
+        builder: (context, state, navigationShell) =>
+            MainShell(navigationShell: navigationShell, locationObserver: currentLocationObserver),
         branches: [
           StatefulShellBranch(
             routes: [GoRoute(path: '/home', builder: (context, state) => const MainDashboardScreen())],
@@ -231,13 +271,30 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 /// bottom nav bar (tapping a destination calls [StatefulNavigationShell.
 /// goBranch], which preserves each branch's own navigation stack), and the
 /// centered Post FAB shortcut to `/post-listing`.
-class _MainShell extends StatelessWidget {
-  const _MainShell({required this.navigationShell});
+///
+/// It also reports the active branch's path to [locationObserver] on every
+/// build -- see [CurrentLocationObserver.recordShellBranch] for why the
+/// observer cannot work this out from the shell page alone.
+class MainShell extends StatelessWidget {
+  const MainShell({super.key, required this.navigationShell, required this.locationObserver});
 
   final StatefulNavigationShell navigationShell;
+  final CurrentLocationObserver locationObserver;
 
   @override
   Widget build(BuildContext context) {
+    // Read during build (the Route is only reachable from this context), but
+    // report AFTER the frame: at build time the Navigator stack may not yet
+    // reflect a route being pushed on top of the shell in this same frame,
+    // so `isCurrent` would be read too early.
+    final branchPath = navigationShell.route.branches[navigationShell.currentIndex].defaultRoute?.path;
+    final shellRoute = ModalRoute.of(context);
+    if (branchPath != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        locationObserver.recordShellBranch(shellRoute: shellRoute, location: branchPath);
+      });
+    }
+
     return Scaffold(
       body: navigationShell,
       bottomNavigationBar: BottomNavigationBar(
