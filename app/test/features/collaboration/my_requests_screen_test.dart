@@ -22,7 +22,7 @@ import 'package:renly/features/ratings/models/rating.dart';
 import 'package:renly/features/ratings/rating_providers.dart' hide currentNegotiatorIdProvider;
 import 'package:renly/features/requirement/models/requirement.dart';
 
-const _myListing = Listing(
+final _myListing = Listing(
   listingId: 'l-1',
   negotiatorId: 'n-1',
   title: 'My Listing',
@@ -34,6 +34,7 @@ const _myListing = Listing(
   price: 400000,
   photoUrls: [],
   status: 'active',
+  createdAt: DateTime(2024, 1, 1),
 );
 
 const _theirRequirement = Requirement(
@@ -51,7 +52,7 @@ const _theirRequirement = Requirement(
 
 const _owner = ListingOwner(fullName: 'Aiman Yusof', renNumber: '12345');
 
-const _matchCandidate = MatchCandidate(
+final _matchCandidate = MatchCandidate(
   matchId: 'm-1',
   score: 90,
   listing: _myListing,

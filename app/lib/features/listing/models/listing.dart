@@ -13,8 +13,9 @@ class Listing {
   final int? bathrooms;
   final List<String> photoUrls;
   final String status;
+  final DateTime createdAt;
 
-  const Listing({
+  Listing({
     required this.listingId,
     required this.negotiatorId,
     required this.title,
@@ -28,6 +29,7 @@ class Listing {
     this.bathrooms,
     required this.photoUrls,
     required this.status,
+    required this.createdAt,
   });
 
   factory Listing.fromJson(Map<String, dynamic> json) {
@@ -45,6 +47,7 @@ class Listing {
       bathrooms: json['bathrooms'] as int?,
       photoUrls: (json['photo_urls'] as List<dynamic>?)?.map((e) => e as String).toList() ?? const [],
       status: json['status'] as String,
+      createdAt: DateTime.parse(json['created_at'] as String),
     );
   }
 }

@@ -3,7 +3,7 @@ import 'package:renly/features/listing/models/listing.dart';
 import 'package:renly/features/matching/matching_engine.dart';
 import 'package:renly/features/requirement/models/requirement.dart';
 
-const _listing = Listing(
+final _listing = Listing(
   listingId: 'l-1',
   negotiatorId: 'n-1',
   title: 'The Vertex Residency',
@@ -16,6 +16,7 @@ const _listing = Listing(
   bedrooms: 3,
   photoUrls: [],
   status: 'active',
+  createdAt: DateTime(2024, 1, 1),
 );
 
 const _requirement = Requirement(
@@ -90,7 +91,7 @@ void main() {
     });
 
     test('price 5 percent over max gets half the graduated band', () {
-      const listing = Listing(
+      final listing = Listing(
         listingId: 'l-2',
         negotiatorId: 'n-1',
         title: 't',
@@ -103,12 +104,13 @@ void main() {
         bedrooms: 3,
         photoUrls: [],
         status: 'active',
+        createdAt: DateTime(2024, 1, 1),
       );
       expect(MatchingEngine.score(listing, _requirement), 83);
     });
 
     test('price beyond 10 percent over max scores zero for price', () {
-      const listing = Listing(
+      final listing = Listing(
         listingId: 'l-3',
         negotiatorId: 'n-1',
         title: 't',
@@ -121,12 +123,13 @@ void main() {
         bedrooms: 3,
         photoUrls: [],
         status: 'active',
+        createdAt: DateTime(2024, 1, 1),
       );
       expect(MatchingEngine.score(listing, _requirement), 65);
     });
 
     test('price below budget minimum still scores full price weight', () {
-      const listing = Listing(
+      final listing = Listing(
         listingId: 'l-4',
         negotiatorId: 'n-1',
         title: 't',
@@ -139,6 +142,7 @@ void main() {
         bedrooms: 3,
         photoUrls: [],
         status: 'active',
+        createdAt: DateTime(2024, 1, 1),
       );
       expect(MatchingEngine.score(listing, _requirement), 100);
     });

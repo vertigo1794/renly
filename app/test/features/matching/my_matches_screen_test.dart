@@ -16,7 +16,7 @@ import 'package:renly/features/matching/models/match_candidate.dart';
 import 'package:renly/features/matching/my_matches_screen.dart';
 import 'package:renly/features/requirement/models/requirement.dart';
 
-const _myListing = Listing(
+final _myListing = Listing(
   listingId: 'l-1',
   negotiatorId: 'n-1',
   title: 'My Listing',
@@ -28,6 +28,7 @@ const _myListing = Listing(
   price: 400000,
   photoUrls: [],
   status: 'active',
+  createdAt: DateTime(2024, 1, 1),
 );
 
 const _theirRequirement = Requirement(
@@ -43,7 +44,7 @@ const _theirRequirement = Requirement(
   status: 'open',
 );
 
-const _theirListing = Listing(
+final _theirListing = Listing(
   listingId: 'l-2',
   negotiatorId: 'n-3',
   title: 'Their Listing',
@@ -55,6 +56,7 @@ const _theirListing = Listing(
   price: 800000,
   photoUrls: [],
   status: 'active',
+  createdAt: DateTime(2024, 1, 1),
 );
 
 const _myRequirement = Requirement(
@@ -73,7 +75,7 @@ const _myRequirement = Requirement(
 const _owner = ListingOwner(fullName: 'Aiman Yusof', renNumber: '12345');
 
 final _fixtureMatches = [
-  const MatchCandidate(
+  MatchCandidate(
     matchId: 'm-1',
     score: 90,
     listing: _myListing,
@@ -81,7 +83,7 @@ final _fixtureMatches = [
     listingOwner: _owner,
     requirementOwner: _owner,
   ),
-  const MatchCandidate(
+  MatchCandidate(
     matchId: 'm-2',
     score: 80,
     listing: _theirListing,

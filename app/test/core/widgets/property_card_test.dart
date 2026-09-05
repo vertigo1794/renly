@@ -6,7 +6,7 @@ import 'package:renly/core/theme/app_theme.dart';
 import 'package:renly/core/widgets/property_card.dart';
 import 'package:renly/features/listing/models/listing.dart';
 
-const _listing = Listing(
+final _listing = Listing(
   listingId: 'l-1',
   negotiatorId: 'n-1',
   title: 'Modern Villa',
@@ -20,6 +20,7 @@ const _listing = Listing(
   bathrooms: 3,
   photoUrls: [],
   status: 'active',
+  createdAt: DateTime(2024, 1, 1),
 );
 
 void main() {

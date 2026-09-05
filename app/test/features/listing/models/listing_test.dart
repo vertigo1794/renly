@@ -19,6 +19,7 @@ void main() {
         'bathrooms': 2,
         'photo_urls': ['n-1/l-1/0.jpg', 'n-1/l-1/1.jpg'],
         'status': 'active',
+        'created_at': '2024-01-01T00:00:00Z',
       });
 
       expect(listing.listingId, 'l-1');
@@ -29,6 +30,7 @@ void main() {
       expect(listing.bathrooms, 2);
       expect(listing.photoUrls, ['n-1/l-1/0.jpg', 'n-1/l-1/1.jpg']);
       expect(listing.status, 'active');
+      expect(listing.createdAt, DateTime.parse('2024-01-01T00:00:00Z'));
     });
 
     test('handles null bedrooms/bathrooms and empty photo_urls', () {
@@ -46,6 +48,7 @@ void main() {
         'bathrooms': null,
         'photo_urls': null,
         'status': 'active',
+        'created_at': '2024-01-01T00:00:00Z',
       });
 
       expect(listing.bedrooms, isNull);

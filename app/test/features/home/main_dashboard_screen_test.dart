@@ -15,7 +15,7 @@ import 'package:renly/features/notifications/notification_providers.dart';
 import 'package:renly/features/profile/models/profile.dart';
 import 'package:renly/features/profile/profile_providers.dart';
 
-const _listing = Listing(
+final _listing = Listing(
   listingId: 'l-1',
   negotiatorId: 'n-1',
   title: 'Modern Villa',
@@ -29,6 +29,7 @@ const _listing = Listing(
   bathrooms: 3,
   photoUrls: [],
   status: 'active',
+  createdAt: DateTime(2024, 1, 1),
 );
 
 void main() {

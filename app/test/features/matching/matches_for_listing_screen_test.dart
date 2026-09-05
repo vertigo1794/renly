@@ -15,7 +15,7 @@ import 'package:renly/features/matching/matching_providers.dart';
 import 'package:renly/features/matching/models/match_candidate.dart';
 import 'package:renly/features/requirement/models/requirement.dart';
 
-const _fixtureListing = Listing(
+final _fixtureListing = Listing(
   listingId: 'l-1',
   negotiatorId: 'n-1',
   title: 'The Vertex Residency',
@@ -27,6 +27,7 @@ const _fixtureListing = Listing(
   price: 400000,
   photoUrls: [],
   status: 'active',
+  createdAt: DateTime(2024, 1, 1),
 );
 
 const _fixtureRequirement = Requirement(
@@ -45,7 +46,7 @@ const _fixtureRequirement = Requirement(
 const _fixtureOwner = ListingOwner(fullName: 'Aiman Yusof', renNumber: '12345');
 
 final _fixtureMatches = [
-  const MatchCandidate(
+  MatchCandidate(
     matchId: 'm-1',
     score: 90,
     listing: _fixtureListing,

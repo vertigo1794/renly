@@ -16,6 +16,7 @@ Listing _listing(String id, String status) {
     price: 100000,
     photoUrls: const [],
     status: status,
+    createdAt: DateTime(2024, 1, 1),
   );
 }
 

@@ -9,7 +9,7 @@ import 'package:renly/features/listing/models/listing_owner.dart';
 import 'package:renly/features/matching/models/match_candidate.dart';
 import 'package:renly/features/requirement/models/requirement.dart';
 
-const _listing = Listing(
+final _listing = Listing(
   listingId: 'l-1',
   negotiatorId: 'n-1',
   title: 'My Listing',
@@ -21,6 +21,7 @@ const _listing = Listing(
   price: 400000,
   photoUrls: [],
   status: 'active',
+  createdAt: DateTime(2024, 1, 1),
 );
 
 const _requirement = Requirement(
@@ -38,7 +39,7 @@ const _requirement = Requirement(
 
 const _owner = ListingOwner(fullName: 'Owner', renNumber: '12345');
 
-const _match = MatchCandidate(
+final _match = MatchCandidate(
   matchId: 'm-1',
   score: 90,
   listing: _listing,

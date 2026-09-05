@@ -13,7 +13,7 @@ import 'package:renly/features/listing/marketplace_screen.dart';
 import 'package:renly/features/listing/models/listing.dart';
 
 final _fixtureListings = [
-  const Listing(
+  Listing(
     listingId: 'l-1',
     negotiatorId: 'n-1',
     title: 'The Vertex Residency',
@@ -27,8 +27,9 @@ final _fixtureListings = [
     bathrooms: 2,
     photoUrls: [],
     status: 'active',
+    createdAt: DateTime(2024, 1, 1),
   ),
-  const Listing(
+  Listing(
     listingId: 'l-2',
     negotiatorId: 'n-2',
     title: 'City Loft',
@@ -42,6 +43,7 @@ final _fixtureListings = [
     bathrooms: 1,
     photoUrls: [],
     status: 'active',
+    createdAt: DateTime(2024, 1, 1),
   ),
 ];
 

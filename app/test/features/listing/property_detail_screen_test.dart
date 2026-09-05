@@ -17,7 +17,7 @@ import 'package:renly/features/listing/property_detail_screen.dart';
 import 'package:renly/features/subscription/models/subscription_status.dart' as subscription;
 import 'package:renly/features/subscription/subscription_providers.dart' as subscription_providers;
 
-const _fixtureListing = Listing(
+final _fixtureListing = Listing(
   listingId: 'l-1',
   negotiatorId: 'n-1',
   title: 'The Vertex Residency',
@@ -31,9 +31,10 @@ const _fixtureListing = Listing(
   bathrooms: 2,
   photoUrls: [],
   status: 'active',
+  createdAt: DateTime(2024, 1, 1),
 );
 
-const _withdrawnListingOwnedByN1 = Listing(
+final _withdrawnListingOwnedByN1 = Listing(
   listingId: 'l-1',
   negotiatorId: 'n-1',
   title: 'The Vertex Residency',
@@ -47,6 +48,7 @@ const _withdrawnListingOwnedByN1 = Listing(
   bathrooms: 2,
   photoUrls: [],
   status: 'withdrawn',
+  createdAt: DateTime(2024, 1, 1),
 );
 
 const _fixtureOwner = ListingOwner(fullName: 'Aiman Yusof', renNumber: '12345');
