@@ -67,6 +67,11 @@ void main() {
 
     await tester.pumpWidget(_wrap(router));
     await tester.pumpAndSettle();
+    // Scroll down to ensure the button is on-screen before tapping -- the
+    // added progress bar + restyled upload card made the form taller than
+    // the test viewport, same reasoning as registration_personal_screen_test.dart.
+    await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -300));
+    await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(ElevatedButton, 'Complete Registration'));
     await tester.pumpAndSettle();
 
