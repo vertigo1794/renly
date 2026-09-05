@@ -19,3 +19,18 @@ final authStateProvider = StreamProvider<AuthState>((ref) {
 final negotiatorProfileProvider = FutureProvider.family<Negotiator?, String>((ref, negotiatorId) {
   return ref.watch(authRepositoryProvider).fetchOwnNegotiator(negotiatorId);
 });
+
+/// Whether this device supports biometric authentication at all (hardware
+/// + enrollment) -- device-local capability, NOT negotiator-scoped (unlike
+/// settings_providers.dart's pattern, which gates server-backed prefs on
+/// currentNegotiatorIdProvider).
+final biometricAvailableProvider = FutureProvider<bool>((ref) {
+  return ref.watch(authRepositoryProvider).isBiometricAvailable();
+});
+
+/// Whether a biometric-gated refresh token is currently stored on this
+/// device -- LoginScreen's biometric button only renders when this
+/// resolves true.
+final biometricLoginEnabledProvider = FutureProvider<bool>((ref) {
+  return ref.watch(authRepositoryProvider).hasBiometricLoginEnabled();
+});
