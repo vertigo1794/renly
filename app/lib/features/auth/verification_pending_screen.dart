@@ -8,25 +8,33 @@ import '../../core/widgets/brutalist_button.dart';
 import '../../core/widgets/r_star_badge.dart';
 import '../../core/widgets/status_badge.dart';
 
-/// Ports Stitch's "Verification Pending - English Style" (project "Renly
-/// Property Agent Network") to the Urby neo-brutalist system -- this
-/// screen was a bare Milestone-1 placeholder (2 plain Text widgets, no
-/// button) before this pass, never previously built out against any real
-/// mockup.
+/// Ports Stitch's "Verification Pending" screens (project "Renly Property
+/// Agent Network") to the Urby neo-brutalist system -- this screen was a
+/// bare Milestone-1 placeholder (2 plain Text widgets, no button) before
+/// the first pass, never previously built out against any real mockup.
 ///
 /// Header is the same R* badge + wordmark treatment every other auth-flow
 /// screen now uses (splash/login/onboarding/registration), for chrome
-/// consistency across the flow -- the source mockup shows only bare
+/// consistency across the flow -- the source mockups show only bare
 /// "Renly" text here, but this project has consistently unified that
 /// chrome everywhere else rather than treating each mockup's own header as
 /// authoritative. No back button, matching the mockup's own reasoning
 /// (a pending screen is a dead end, standard nav is suppressed).
 ///
-/// The mockup's spinning outer ring and pulsing status dot are CSS
-/// animations with no functional purpose (this is a static status page,
-/// not something time-critical) -- rendered as a plain static ring/dot
-/// instead, consistent with skipping decorative micro-interactions
-/// throughout this project's Stitch ports.
+/// The illustration was re-fetched from Stitch under a new screen ID
+/// ("Verification Pending - Animated Flowing Hourglass") for a much more
+/// elaborate hand-crafted hourglass -- gradient lime sand, glass specular
+/// highlights, dark cap plates with a lime accent stripe -- replacing the
+/// first pass's generic `PhosphorIcons.hourglass()`. That distinctiveness
+/// was worth downloading as a real asset rather than approximating with a
+/// stock icon a second time: extracted the mockup's own inline `<svg>`,
+/// dropped the bottom-chamber sand fill's opacity to a faint 0.15 (the
+/// full-opacity resting frame implied an already-half-emptied hourglass,
+/// which read oddly for a JUST-submitted verification), and rasterized to
+/// `verification_hourglass.png`. The mockup's flip-rotation + sand-drain/
+/// fill animations (a ~4.2s infinite CSS cycle) are skipped as decorative,
+/// same call made for the spinning ring/pulsing dot in the first pass --
+/// this is a static status page, not something time-critical.
 ///
 /// "In Progress" reuses the existing `StatusBadge` widget (already this
 /// app's own pill-status convention for listing/requirement statuses)
@@ -70,20 +78,32 @@ class VerificationPendingScreen extends StatelessWidget {
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
+                      // Faint ambient ring, matching the mockup's own
+                      // outer aura ring (its glow/spin are the skipped
+                      // decorative animation this doc comment covers).
                       Container(
                         width: 160,
                         height: 160,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          border: Border.all(color: AppColors.surfaceVariant, width: 4),
+                          border: Border.all(color: AppColors.primaryContainer.withValues(alpha: 0.3), width: 2),
                         ),
                       ),
                       Container(
                         width: 128,
                         height: 128,
-                        decoration: const BoxDecoration(color: AppColors.primaryContainer, shape: BoxShape.circle),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: AppColors.surfaceVariant, width: 1),
+                        ),
                         alignment: Alignment.center,
-                        child: Icon(PhosphorIcons.hourglass(PhosphorIconsStyle.bold), size: 56, color: AppColors.ink),
+                        child: Image.asset(
+                          'assets/illustrations/verification_hourglass.png',
+                          height: 76,
+                          errorBuilder: (context, error, stackTrace) =>
+                              Icon(PhosphorIcons.hourglass(PhosphorIconsStyle.bold), size: 56, color: AppColors.ink),
+                        ),
                       ),
                       Positioned(
                         top: 4,
@@ -92,13 +112,12 @@ class VerificationPendingScreen extends StatelessWidget {
                           width: 32,
                           height: 32,
                           decoration: BoxDecoration(
-                            color: AppColors.surface,
+                            color: AppColors.primaryContainer,
                             shape: BoxShape.circle,
-                            border: Border.all(color: AppColors.primaryContainer, width: 2),
+                            border: Border.all(color: AppColors.surface, width: 2),
                           ),
                           alignment: Alignment.center,
-                          child: Icon(PhosphorIcons.sealCheck(PhosphorIconsStyle.bold),
-                              size: 16, color: AppColors.ink),
+                          child: Icon(PhosphorIcons.checks(PhosphorIconsStyle.bold), size: 16, color: AppColors.ink),
                         ),
                       ),
                     ],
