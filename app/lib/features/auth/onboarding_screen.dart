@@ -9,17 +9,24 @@ import '../../core/widgets/brutalist_button.dart';
 
 /// One onboarding slide's content. `titleKey`/`bodyKey` are easy_localization
 /// keys, not raw strings, so every slide stays bilingual EN/MS like the rest
-/// of the app.
+/// of the app. `badgeKey` is optional and nullable rather than required: it
+/// was added when slide 1 got its Stitch-sourced badge pill ("Co-Broke
+/// Network"), but slides 2/3 haven't had their own badge copy fed in yet
+/// (this project's Stitch screens arrive one at a time) -- leaving it null
+/// simply hides the badge on those slides rather than inventing copy for
+/// a design that hasn't been provided.
 class OnboardingSlideData {
   const OnboardingSlideData({
     required this.imageAsset,
     required this.titleKey,
     required this.bodyKey,
+    this.badgeKey,
   });
 
   final String imageAsset;
   final String titleKey;
   final String bodyKey;
+  final String? badgeKey;
 }
 
 /// Ports the Stitch "Onboarding" screens (project "Renly Property Agent
@@ -31,6 +38,15 @@ class OnboardingSlideData {
 /// hand-vectorized -- unlike the app's own simple geometric empty-state
 /// icons, these are detailed line-art figures not worth re-drawing.
 ///
+/// Slide 1 was re-fetched from Stitch under a new screen ID (the project's
+/// mockups get iterated on, not just added to) with a redesigned shared
+/// chrome: a top brand header (the "R" launcher-icon monogram + "renly"
+/// wordmark) with Skip moved up next to it, and a badge pill above each
+/// slide's title. The header renders once, outside the PageView, since
+/// it's identical across every slide, not per-slide data. The progress
+/// dots also picked up an active-dot-becomes-a-pill treatment instead of
+/// a plain filled/unfilled circle.
+///
 /// Slides are added here one at a time as each is ported from Stitch; the
 /// list below is the single source of truth for how many dots/pages show.
 const _slides = [
@@ -38,6 +54,7 @@ const _slides = [
     imageAsset: 'assets/illustrations/onboarding_1_collaboration.png',
     titleKey: 'onboarding_1_title',
     bodyKey: 'onboarding_1_body',
+    badgeKey: 'onboarding_1_badge',
   ),
   OnboardingSlideData(
     imageAsset: 'assets/illustrations/onboarding_2_matching.png',
@@ -94,6 +111,42 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       body: SafeArea(
         child: Column(
           children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 12, 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 28,
+                        height: 28,
+                        decoration: const BoxDecoration(color: AppColors.primaryContainer, shape: BoxShape.circle),
+                        alignment: Alignment.center,
+                        child: Text(
+                          'R',
+                          style: Theme.of(
+                            context,
+                          ).textTheme.labelLarge?.copyWith(color: AppColors.ink, fontWeight: FontWeight.w800),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'app_name'.tr(),
+                        style: Theme.of(
+                          context,
+                        ).textTheme.titleMedium?.copyWith(color: AppColors.ink, fontWeight: FontWeight.w700),
+                      ),
+                    ],
+                  ),
+                  TextButton(
+                    onPressed: () => context.go('/'),
+                    child: Text('onboarding_skip'.tr().toUpperCase()),
+                  ),
+                ],
+              ),
+            ),
             Expanded(
               child: PageView.builder(
                 controller: _controller,
@@ -114,6 +167,33 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           ),
                         ),
                         const SizedBox(height: 24),
+                        if (slide.badgeKey != null) ...[
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: AppColors.surfaceVariant,
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  width: 6,
+                                  height: 6,
+                                  decoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  slide.badgeKey!.tr().toUpperCase(),
+                                  style: Theme.of(
+                                    context,
+                                  ).textTheme.labelSmall?.copyWith(color: AppColors.ink, letterSpacing: 1),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                        ],
                         Text(
                           slide.titleKey.tr(),
                           textAlign: TextAlign.center,
@@ -146,13 +226,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: List.generate(_slides.length, (index) {
                       final active = index == _page;
-                      return Container(
+                      return AnimatedContainer(
+                        duration: const Duration(milliseconds: 250),
                         margin: const EdgeInsets.symmetric(horizontal: 4),
-                        width: 8,
+                        width: active ? 32 : 8,
                         height: 8,
                         decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppColors.ink.withValues(alpha: active ? 1 : 0.2),
+                          borderRadius: BorderRadius.circular(999),
+                          color: active ? AppColors.primaryContainer : AppColors.ink.withValues(alpha: 0.2),
                         ),
                       );
                     }),
@@ -162,11 +243,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     label: (_page == _slides.length - 1 ? 'onboarding_get_started' : 'onboarding_next').tr(),
                     icon: PhosphorIcons.arrowRight(PhosphorIconsStyle.bold),
                     onPressed: _next,
-                  ),
-                  const SizedBox(height: 8),
-                  TextButton(
-                    onPressed: () => context.go('/'),
-                    child: Text('onboarding_skip'.tr().toUpperCase()),
                   ),
                 ],
               ),

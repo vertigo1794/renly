@@ -42,7 +42,7 @@ void main() {
     rootBundle.clear();
   });
 
-  testWidgets('renders the first slide title and body', (tester) async {
+  testWidgets('renders the shared header (R monogram + wordmark + Skip)', (tester) async {
     final router = GoRouter(routes: [
       GoRoute(path: '/onboarding', builder: (context, state) => const OnboardingScreen()),
       GoRoute(path: '/', builder: (context, state) => const Placeholder()),
@@ -51,14 +51,42 @@ void main() {
     await tester.pumpWidget(_wrap(router));
     await tester.pumpAndSettle();
 
+    expect(find.text('R'), findsOneWidget);
+    expect(find.text('renly'), findsOneWidget);
+    expect(find.text('SKIP'), findsOneWidget);
+  });
+
+  testWidgets('renders the first slide badge, title, and body', (tester) async {
+    final router = GoRouter(routes: [
+      GoRoute(path: '/onboarding', builder: (context, state) => const OnboardingScreen()),
+      GoRoute(path: '/', builder: (context, state) => const Placeholder()),
+    ], initialLocation: '/onboarding');
+
+    await tester.pumpWidget(_wrap(router));
+    await tester.pumpAndSettle();
+
+    expect(find.text('CO-BROKE NETWORK'), findsOneWidget);
     expect(find.text('Cross-Agency Collaboration'), findsOneWidget);
     expect(
-      find.text(
-        "Break down agency barriers. Share listings and find clients with ease on Malaysia's premier agent network.",
-      ),
+      find.text('Break down agency barriers. Share listings and co-broke with certified agents across Malaysia seamlessly.'),
       findsOneWidget,
     );
     expect(find.widgetWithText(BrutalistButton, 'Next'), findsOneWidget);
+  });
+
+  testWidgets('slide 2 has no badge pill (no badgeKey provided yet)', (tester) async {
+    final router = GoRouter(routes: [
+      GoRoute(path: '/onboarding', builder: (context, state) => const OnboardingScreen()),
+      GoRoute(path: '/', builder: (context, state) => const Placeholder()),
+    ], initialLocation: '/onboarding');
+
+    await tester.pumpWidget(_wrap(router));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(BrutalistButton, 'Next'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Smart Listing Matching'), findsOneWidget);
+    expect(find.text('CO-BROKE NETWORK'), findsNothing);
   });
 
   testWidgets('tapping Skip navigates to /', (tester) async {

@@ -1,8 +1,9 @@
 {
   "app_name": "renly",
   "splash_tagline": "Property Collaboration Platform",
+  "onboarding_1_badge": "Co-Broke Network",
   "onboarding_1_title": "Cross-Agency Collaboration",
-  "onboarding_1_body": "Break down agency barriers. Share listings and find clients with ease on Malaysia's premier agent network.",
+  "onboarding_1_body": "Break down agency barriers. Share listings and co-broke with certified agents across Malaysia seamlessly.",
   "onboarding_2_title": "Smart Listing Matching",
   "onboarding_2_body": "Automatically match your listings with the requirements of other agents' clients in real-time.",
   "onboarding_3_title": "Transparent & Verified",
