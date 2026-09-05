@@ -59,8 +59,8 @@ class NotificationListScreen extends ConsumerWidget {
                           try {
                             await ref.read(notificationRepositoryProvider).markRead(notification.notificationId);
                             ref.invalidate(notificationsProvider);
-                          } catch (_) {
-                            // Ignored -- see comment above.
+                          } catch (e) {
+                            debugPrint('markRead failed: $e');
                           }
                         }());
                       }
