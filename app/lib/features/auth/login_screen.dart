@@ -1,11 +1,16 @@
+// app/lib/features/auth/login_screen.dart
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
+import '../../core/theme/app_colors.dart';
 import '../../core/widgets/brutalist_button.dart';
+import '../../core/widgets/r_star_badge.dart';
 import 'auth_providers.dart';
 import 'auth_validation.dart';
+import 'forgot_password_dialog.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -19,6 +24,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _submitting = false;
+  bool _obscurePassword = true;
   String? _errorMessage;
 
   @override
@@ -26,6 +32,65 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  /// Shared by both the normal email/password path and the biometric path
+  /// -- the negotiator-status branch (pending/approved/rejected) must never
+  /// drift between the two ways of arriving at a valid session.
+  Future<void> _handlePostSignIn(String userId) async {
+    final repository = ref.read(authRepositoryProvider);
+    final negotiator = await repository.fetchOwnNegotiator(userId);
+    if (!mounted) return;
+    if (negotiator == null) {
+      setState(() => _errorMessage = 'auth_login_error_no_profile'.tr());
+      return;
+    }
+    if (negotiator.verificationStatus == 'pending') {
+      context.go('/verification-pending');
+    } else if (negotiator.verificationStatus == 'approved') {
+      context.go('/home');
+    } else {
+      setState(() => _errorMessage = 'auth_login_error_rejected'.tr());
+    }
+  }
+
+  Future<void> _maybeOfferBiometricEnrollment() async {
+    final repository = ref.read(authRepositoryProvider);
+    final available = await repository.isBiometricAvailable();
+    if (!available) return;
+    final alreadyEnabled = await repository.hasBiometricLoginEnabled();
+    if (alreadyEnabled) return;
+    if (!mounted) return;
+    final wantsToEnable = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text('auth_biometric_prompt_title'.tr()),
+        content: Text('auth_biometric_prompt_body'.tr()),
+        actions: [
+          BrutalistButton(
+            label: 'auth_biometric_prompt_not_now'.tr(),
+            variant: BrutalistButtonVariant.secondary,
+            fullWidth: false,
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+          ),
+          BrutalistButton(
+            label: 'auth_biometric_prompt_enable'.tr(),
+            fullWidth: false,
+            icon: PhosphorIcons.fingerprint(PhosphorIconsStyle.bold),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+          ),
+        ],
+      ),
+    );
+    if (wantsToEnable == true) {
+      try {
+        await repository.enableBiometricLogin(localizedReason: 'auth_biometric_enable_reason'.tr());
+        ref.invalidate(biometricLoginEnabledProvider);
+      } catch (_) {
+        // Enrollment failing (user cancelled the biometric prompt, etc.)
+        // must never block the sign-in that already succeeded.
+      }
+    }
   }
 
   Future<void> _submit() async {
@@ -46,21 +111,33 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         setState(() => _errorMessage = 'auth_login_error_invalid'.tr());
         return;
       }
-      final negotiator = await repository.fetchOwnNegotiator(userId);
-      if (!mounted) return;
-      if (negotiator == null) {
-        setState(() => _errorMessage = 'auth_login_error_no_profile'.tr());
+      await _handlePostSignIn(userId);
+      if (mounted && _errorMessage == null) {
+        await _maybeOfferBiometricEnrollment();
+      }
+    } catch (_) {
+      if (mounted) setState(() => _errorMessage = 'auth_login_error_invalid'.tr());
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
+
+  Future<void> _submitWithBiometrics() async {
+    setState(() {
+      _submitting = true;
+      _errorMessage = null;
+    });
+    final repository = ref.read(authRepositoryProvider);
+    try {
+      final response = await repository.signInWithBiometrics(
+        localizedReason: 'auth_biometric_signin_reason'.tr(),
+      );
+      final userId = response.user?.id;
+      if (userId == null) {
+        setState(() => _errorMessage = 'auth_login_error_invalid'.tr());
         return;
       }
-      // Three explicit states -- a 'rejected' negotiator must NOT fall
-      // through to /home ("You're verified").
-      if (negotiator.verificationStatus == 'pending') {
-        context.go('/verification-pending');
-      } else if (negotiator.verificationStatus == 'approved') {
-        context.go('/home');
-      } else {
-        setState(() => _errorMessage = 'auth_login_error_rejected'.tr());
-      }
+      await _handlePostSignIn(userId);
     } catch (_) {
       if (mounted) setState(() => _errorMessage = 'auth_login_error_invalid'.tr());
     } finally {
@@ -70,22 +147,46 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final biometricEnabledAsync = ref.watch(biometricLoginEnabledProvider);
+
     return Scaffold(
+      appBar: AppBar(
+        leading: BackButton(onPressed: () => context.canPop() ? context.pop() : context.go('/')),
+        centerTitle: true,
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const RStarBadge(size: 28),
+            const SizedBox(width: 8),
+            Text(
+              'app_name'.tr(),
+              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                    color: AppColors.ink,
+                    fontSize: 20,
+                    letterSpacing: -1.0,
+                    height: 1,
+                  ),
+            ),
+          ],
+        ),
+      ),
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
           child: Form(
             key: _formKey,
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text('app_name'.tr(), style: Theme.of(context).textTheme.headlineLarge),
+                Text('auth_login_subtitle'.tr(), style: Theme.of(context).textTheme.bodyMedium),
                 const SizedBox(height: 24),
                 TextFormField(
                   key: const Key('login_email_field'),
                   controller: _emailController,
-                  decoration: InputDecoration(labelText: 'field_email'.tr()),
+                  decoration: InputDecoration(
+                    labelText: 'field_email'.tr(),
+                    prefixIcon: Icon(PhosphorIcons.envelopeSimple(PhosphorIconsStyle.bold)),
+                  ),
                   keyboardType: TextInputType.emailAddress,
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) return 'validation_required'.tr();
@@ -97,26 +198,76 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 TextFormField(
                   key: const Key('login_password_field'),
                   controller: _passwordController,
-                  decoration: InputDecoration(labelText: 'field_password'.tr()),
-                  obscureText: true,
+                  obscureText: _obscurePassword,
+                  decoration: InputDecoration(
+                    labelText: 'field_password'.tr(),
+                    prefixIcon: Icon(PhosphorIcons.lockKey(PhosphorIconsStyle.bold)),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword
+                            ? PhosphorIcons.eye(PhosphorIconsStyle.bold)
+                            : PhosphorIcons.eyeSlash(PhosphorIconsStyle.bold),
+                      ),
+                      onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                    ),
+                  ),
                   validator: (value) {
                     if (value == null || value.isEmpty) return 'validation_required'.tr();
                     return null;
                   },
                 ),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: () => showDialog<void>(
+                      context: context,
+                      builder: (_) => ForgotPasswordDialog(initialEmail: _emailController.text.trim()),
+                    ),
+                    child: Text('auth_forgot_password_link'.tr()),
+                  ),
+                ),
                 if (_errorMessage != null) ...[
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 4),
                   Text(_errorMessage!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
                 ],
-                const SizedBox(height: 24),
+                const SizedBox(height: 12),
                 BrutalistButton(
                   label: 'auth_log_in'.tr(),
+                  icon: PhosphorIcons.arrowRight(PhosphorIconsStyle.bold),
                   onPressed: _submitting ? null : _submit,
                 ),
                 const SizedBox(height: 12),
                 TextButton(
                   onPressed: () => context.push('/register/personal'),
                   child: Text('auth_login_no_account'.tr()),
+                ),
+                biometricEnabledAsync.when(
+                  loading: () => const SizedBox.shrink(),
+                  error: (error, stack) => const SizedBox.shrink(),
+                  data: (enabled) => enabled
+                      ? Column(
+                          children: [
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                const Expanded(child: Divider()),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                                  child: Text('auth_or_continue_with'.tr()),
+                                ),
+                                const Expanded(child: Divider()),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            BrutalistButton(
+                              label: 'auth_biometric_button'.tr(),
+                              variant: BrutalistButtonVariant.secondary,
+                              icon: PhosphorIcons.fingerprint(PhosphorIconsStyle.bold),
+                              onPressed: _submitting ? null : _submitWithBiometrics,
+                            ),
+                          ],
+                        )
+                      : const SizedBox.shrink(),
                 ),
               ],
             ),
