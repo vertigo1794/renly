@@ -15,6 +15,31 @@ class Listing {
   final String status;
   final DateTime createdAt;
 
+  /// Set only by the "Bump Listing" action (My Inventory Premium
+  /// Restyle) -- kept SEPARATE from [createdAt] deliberately: createdAt is
+  /// this listing's true age (backs "N Days on Market" and the
+  /// Dashboard's Recent Listings relative timestamp) and must never
+  /// change after creation. A bump changes ordering, never age.
+  final DateTime? bumpedAt;
+
+  /// The percentage of the eventual transaction commission this
+  /// listing's owner is offering to whichever co-broker brings a
+  /// qualifying buyer. Standalone from `Agreement.splitInitiator`/
+  /// `splitCounterparty`, which only exists once a specific co-broke
+  /// request is formalized into a deal -- this is the owner's own
+  /// upfront, self-set advertised split. Null means the owner didn't set
+  /// one; UI must never show a fabricated fallback percentage.
+  final double? commissionSplitPercent;
+
+  /// Self-attested by the listing's own owner -- NOT third-party
+  /// verified. Defaults false so every existing call site (11+ test
+  /// fixtures, `createListing`) compiles unchanged.
+  final bool titleVerified;
+
+  /// Self-attested by the listing's own owner -- NOT third-party
+  /// verified. Same default-false reasoning as [titleVerified].
+  final bool exclusiveMandate;
+
   Listing({
     required this.listingId,
     required this.negotiatorId,
@@ -30,6 +55,10 @@ class Listing {
     required this.photoUrls,
     required this.status,
     required this.createdAt,
+    this.bumpedAt,
+    this.commissionSplitPercent,
+    this.titleVerified = false,
+    this.exclusiveMandate = false,
   });
 
   factory Listing.fromJson(Map<String, dynamic> json) {
@@ -48,6 +77,10 @@ class Listing {
       photoUrls: (json['photo_urls'] as List<dynamic>?)?.map((e) => e as String).toList() ?? const [],
       status: json['status'] as String,
       createdAt: DateTime.parse(json['created_at'] as String),
+      bumpedAt: json['bumped_at'] == null ? null : DateTime.parse(json['bumped_at'] as String),
+      commissionSplitPercent: (json['commission_split_percent'] as num?)?.toDouble(),
+      titleVerified: json['title_verified'] as bool? ?? false,
+      exclusiveMandate: json['exclusive_mandate'] as bool? ?? false,
     );
   }
 }
