@@ -153,6 +153,7 @@ class MessageRepository {
       body: lastMessageRow['body'] as String,
       sentAt: DateTime.parse(lastMessageRow['sent_at'] as String),
       unreadCount: unreadCount.count,
+      readAt: lastMessageRow['read_at'] == null ? null : DateTime.parse(lastMessageRow['read_at'] as String),
     );
   }
 }

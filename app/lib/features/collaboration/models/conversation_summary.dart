@@ -10,6 +10,7 @@ class ConversationSummary {
   final String body;
   final DateTime sentAt;
   final int unreadCount;
+  final DateTime? readAt;
 
   const ConversationSummary({
     required this.requestId,
@@ -17,5 +18,6 @@ class ConversationSummary {
     required this.body,
     required this.sentAt,
     required this.unreadCount,
+    this.readAt,
   });
 }
