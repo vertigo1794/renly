@@ -1,0 +1,21 @@
+-- supabase/migrations/0022_listing_delete_policy.sql
+-- Run this once in the Supabase project's SQL Editor, AFTER 0021.
+--
+-- Adds a real DELETE RLS policy for the listing table's own negotiator
+-- owner (Delete action, My Inventory Premium Restyle follow-up). The
+-- authenticated/anon roles already carry table-level DELETE privilege
+-- from Supabase's own default per-role grant on table creation (verified
+-- via information_schema.table_privileges) -- what was missing is an RLS
+-- policy, without which RLS's default-deny blocks every DELETE
+-- regardless of the underlying grant.
+--
+-- Every downstream table (match/cobroke_request/message/agreement/
+-- rating) already carries `on delete cascade` back to listing (see
+-- 0006/0007/0008/0009/0011), so deleting a listing row cleanly removes
+-- every match/request/chat/agreement/rating tied to it at the database
+-- level. The app itself is responsible for blocking Delete in the UI
+-- when a listing has an ACCEPTED co-broke request (a real deal with
+-- chat/agreement history worth preserving) -- this migration only adds
+-- the underlying permission, it does not by itself protect that history.
+create policy listing_delete_own on listing for delete
+  to authenticated using (negotiator_id = auth.uid());

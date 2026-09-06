@@ -131,6 +131,16 @@ class ListingRepository {
     return _client.from('listing').update({'status': status}).eq('listing_id', listingId);
   }
 
+  /// Permanently removes the listing row. Every downstream table (match,
+  /// cobroke_request, message, agreement, rating) cascades on delete at
+  /// the database level -- the UI is responsible for blocking this when
+  /// the listing has an accepted co-broke request, since that represents
+  /// real deal/chat history worth preserving that this call would
+  /// otherwise silently destroy.
+  Future<void> deleteListing(String listingId) {
+    return _client.from('listing').delete().eq('listing_id', listingId);
+  }
+
   /// Real "resurface to top of feed" action -- sets bumped_at to now,
   /// which fetchMarketplaceListings/fetchOwnListings's own ordering
   /// already accounts for. Never touches created_at.

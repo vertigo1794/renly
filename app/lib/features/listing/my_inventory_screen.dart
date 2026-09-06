@@ -550,26 +550,44 @@ class _InventoryCard extends ConsumerWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.92),
+                            color: const Color(0xFF2563EB),
                             borderRadius: BorderRadius.circular(6),
                           ),
-                          child: Text(
-                            'inventory_badge_title_verified'.tr(),
-                            style:
-                                Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold, fontSize: 10),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(PhosphorIcons.sealCheck(PhosphorIconsStyle.bold), size: 12, color: Colors.white),
+                              const SizedBox(width: 4),
+                              Text(
+                                'inventory_badge_title_verified'.tr(),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .labelSmall
+                                    ?.copyWith(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.white),
+                              ),
+                            ],
                           ),
                         ),
                       if (listing.exclusiveMandate)
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.92),
+                            color: const Color(0xFF7C3AED),
                             borderRadius: BorderRadius.circular(6),
                           ),
-                          child: Text(
-                            'inventory_badge_exclusive_mandate'.tr(),
-                            style:
-                                Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold, fontSize: 10),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(PhosphorIcons.crown(PhosphorIconsStyle.bold), size: 12, color: Colors.white),
+                              const SizedBox(width: 4),
+                              Text(
+                                'inventory_badge_exclusive_mandate'.tr(),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .labelSmall
+                                    ?.copyWith(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.white),
+                              ),
+                            ],
                           ),
                         ),
                     ],
@@ -788,10 +806,49 @@ class _InventoryCard extends ConsumerWidget {
                         ),
                         PopupMenuButton<String>(
                           icon: Icon(PhosphorIcons.dotsThreeVertical(PhosphorIconsStyle.bold)),
-                          onSelected: (status) async {
+                          onSelected: (value) async {
+                            if (value == 'delete') {
+                              final confirmed = await showDialog<bool>(
+                                context: context,
+                                builder: (dialogContext) => AlertDialog(
+                                  title: Text('inventory_delete_confirm_title'.tr()),
+                                  content: Text('inventory_delete_confirm_body'.tr()),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.of(dialogContext).pop(false),
+                                      child: Text('inventory_delete_cancel'.tr()),
+                                    ),
+                                    TextButton(
+                                      onPressed: () => Navigator.of(dialogContext).pop(true),
+                                      child: Text(
+                                        'inventory_delete_confirm_button'.tr(),
+                                        style: TextStyle(color: Theme.of(dialogContext).colorScheme.error),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                              if (confirmed != true) return;
+                              try {
+                                await ref.read(listingRepositoryProvider).deleteListing(listing.listingId);
+                                ref.invalidate(marketplaceListingsProvider);
+                                ref.invalidate(myListingsProvider(listing.negotiatorId));
+                                ref.invalidate(activeListingCountProvider(listing.negotiatorId));
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context)
+                                      .showSnackBar(SnackBar(content: Text('inventory_delete_success'.tr())));
+                                }
+                              } catch (e) {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context)
+                                      .showSnackBar(SnackBar(content: Text('listing_error_generic'.tr())));
+                                }
+                              }
+                              return;
+                            }
                             final repository = ref.read(listingRepositoryProvider);
                             try {
-                              await repository.updateListingStatus(listingId: listing.listingId, status: status);
+                              await repository.updateListingStatus(listingId: listing.listingId, status: value);
                               ref.invalidate(listingDetailProvider(listing.listingId));
                               ref.invalidate(marketplaceListingsProvider);
                               ref.invalidate(myListingsProvider(listing.negotiatorId));
@@ -818,6 +875,17 @@ class _InventoryCard extends ConsumerWidget {
                                       : 'property_reactivate'.tr(),
                                 ),
                               ),
+                            const PopupMenuDivider(),
+                            PopupMenuItem(
+                              value: 'delete',
+                              enabled: myAcceptedRequests.isEmpty,
+                              child: Text(
+                                myAcceptedRequests.isEmpty
+                                    ? 'inventory_action_delete'.tr()
+                                    : '${'inventory_action_delete'.tr()} (${'inventory_delete_blocked_message'.tr()})',
+                                style: TextStyle(color: Theme.of(context).colorScheme.error),
+                              ),
+                            ),
                           ],
                         ),
                       ],
