@@ -423,6 +423,12 @@ class _PostListingScreenState extends ConsumerState<PostListingScreen> {
                   controller: _commissionSplitController,
                   keyboardType: TextInputType.number,
                   decoration: InputDecoration(labelText: 'listing_field_commission_split'.tr()),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) return null;
+                    final parsed = double.tryParse(value.trim());
+                    if (parsed == null || parsed <= 0 || parsed > 100) return 'validation_required'.tr();
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 12),
                 Text('listing_self_attestation_notice'.tr(), style: Theme.of(context).textTheme.labelSmall),

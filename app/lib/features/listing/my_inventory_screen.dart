@@ -72,6 +72,13 @@ class _MyInventoryScreenState extends ConsumerState<MyInventoryScreen> {
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
               child: Row(
                 children: [
+                  if (context.canPop()) ...[
+                    IconButton(
+                      icon: Icon(PhosphorIcons.arrowLeft(PhosphorIconsStyle.bold)),
+                      onPressed: () => context.pop(),
+                    ),
+                    const SizedBox(width: 4),
+                  ],
                   const RStarBadge(size: 28),
                   const SizedBox(width: 8),
                   Text(
@@ -535,18 +542,37 @@ class _InventoryCard extends ConsumerWidget {
                 Positioned(
                   bottom: 10,
                   left: 10,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.92),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      listing.titleVerified
-                          ? 'inventory_badge_title_verified'.tr()
-                          : 'inventory_badge_exclusive_mandate'.tr(),
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold, fontSize: 10),
-                    ),
+                  child: Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: [
+                      if (listing.titleVerified)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.92),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            'inventory_badge_title_verified'.tr(),
+                            style:
+                                Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold, fontSize: 10),
+                          ),
+                        ),
+                      if (listing.exclusiveMandate)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.92),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            'inventory_badge_exclusive_mandate'.tr(),
+                            style:
+                                Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold, fontSize: 10),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
             ],
@@ -732,12 +758,19 @@ class _InventoryCard extends ConsumerWidget {
                           child: FilledButton.icon(
                             style: FilledButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.black),
                             onPressed: () async {
-                              await ref.read(listingRepositoryProvider).bumpListing(listing.listingId);
-                              ref.invalidate(myListingsProvider(listing.negotiatorId));
-                              ref.invalidate(marketplaceListingsProvider);
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context)
-                                    .showSnackBar(SnackBar(content: Text('inventory_action_bumped_confirmation'.tr())));
+                              try {
+                                await ref.read(listingRepositoryProvider).bumpListing(listing.listingId);
+                                ref.invalidate(myListingsProvider(listing.negotiatorId));
+                                ref.invalidate(marketplaceListingsProvider);
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text('inventory_action_bumped_confirmation'.tr())));
+                                }
+                              } catch (e) {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context)
+                                      .showSnackBar(SnackBar(content: Text('listing_error_generic'.tr())));
+                                }
                               }
                             },
                             icon: Icon(PhosphorIcons.lightning(PhosphorIconsStyle.bold), size: 16),
