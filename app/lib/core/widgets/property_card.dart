@@ -21,10 +21,15 @@ import 'status_badge.dart';
 /// requirement_board_screen.dart still render Icons.bed/Icons.bathtub --
 /// converting those is a separate, not-yet-done cleanup.
 class PropertyCard extends StatelessWidget {
-  const PropertyCard({required this.listing, required this.onTap, super.key});
+  const PropertyCard({required this.listing, required this.onTap, this.trailing, super.key});
 
   final Listing listing;
   final VoidCallback onTap;
+
+  /// Optional small trailing content shown under the title (e.g. a
+  /// relative timestamp on the Dashboard's Recent Listings feed). Null by
+  /// default -- every other existing caller of this widget is unaffected.
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
@@ -66,6 +71,10 @@ class PropertyCard extends StatelessWidget {
                           StatusBadge(label: 'listing_status_available'.tr()),
                       ],
                     ),
+                    if (trailing != null) ...[
+                      const SizedBox(height: 2),
+                      trailing!,
+                    ],
                     const SizedBox(height: 4),
                     Text(
                       ListingFormatting.formatPrice(listing.price, listing.transactionType),

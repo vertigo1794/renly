@@ -60,4 +60,41 @@ void main() {
 
     expect(tapped, isTrue);
   });
+
+  testWidgets('does not render trailing content when omitted', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          theme: AppTheme.light,
+          home: Scaffold(
+            body: PropertyCard(listing: _listing, onTap: () {}),
+          ),
+        ),
+      ),
+    );
+
+    // Regression guard: existing callers (e.g. marketplace_screen.dart) don't
+    // pass `trailing`, so nothing extra should render beyond the card's
+    // existing content.
+    expect(find.text('18m ago'), findsNothing);
+  });
+
+  testWidgets('renders trailing widget when provided', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          theme: AppTheme.light,
+          home: Scaffold(
+            body: PropertyCard(
+              listing: _listing,
+              onTap: () {},
+              trailing: const Text('18m ago'),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('18m ago'), findsOneWidget);
+  });
 }

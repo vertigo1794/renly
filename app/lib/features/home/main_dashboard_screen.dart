@@ -18,6 +18,7 @@ import '../matching/matching_providers.dart' hide currentNegotiatorIdProvider;
 import '../matching/models/match_candidate.dart';
 import '../notifications/notification_providers.dart';
 import '../profile/profile_providers.dart' hide currentNegotiatorIdProvider;
+import 'dashboard_formatting.dart';
 
 /// The Home branch's root screen in the bottom-nav shell. Restyled from
 /// the Stitch "Renly - Main Dashboard (Redesigned Premium)" mockup
@@ -432,6 +433,10 @@ class MainDashboardScreen extends ConsumerWidget {
                           child: PropertyCard(
                             listing: listing,
                             onTap: () => context.push('/property/${listing.listingId}'),
+                            trailing: Text(
+                              DashboardFormatting.formatRelativeTime(listing.createdAt, DateTime.now()),
+                              style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Colors.grey),
+                            ),
                           ),
                         );
                       },
