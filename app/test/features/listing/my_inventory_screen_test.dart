@@ -174,9 +174,11 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    expect(find.text('Active One'), findsOneWidget);
-    expect(find.text('Sold One'), findsNothing);
-    expect(find.text('In Review One'), findsNothing);
+    // The premium card (Task 8) shows price/area/type, not the raw title,
+    // so tests identify listings by their unique formatted price instead.
+    expect(find.text('RM 800,000'), findsOneWidget);
+    expect(find.text('RM 900,000'), findsNothing);
+    expect(find.text('RM 700,000'), findsNothing);
   });
 
   testWidgets('switching to Co-Broke in Review tab shows only listings with a pending request', (tester) async {
@@ -194,9 +196,9 @@ void main() {
     await tester.tap(find.textContaining('Co-Broke in Review'));
     await tester.pumpAndSettle();
 
-    expect(find.text('In Review One'), findsOneWidget);
-    expect(find.text('Active One'), findsNothing);
-    expect(find.text('Sold One'), findsNothing);
+    expect(find.text('RM 700,000'), findsOneWidget);
+    expect(find.text('RM 800,000'), findsNothing);
+    expect(find.text('RM 900,000'), findsNothing);
   });
 
   testWidgets('switching to Closed / Sold tab shows sold/withdrawn listings', (tester) async {
@@ -210,8 +212,8 @@ void main() {
     await tester.tap(find.textContaining('Closed / Sold'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Sold One'), findsOneWidget);
-    expect(find.text('Active One'), findsNothing);
+    expect(find.text('RM 900,000'), findsOneWidget);
+    expect(find.text('RM 800,000'), findsNothing);
   });
 
   testWidgets('ticker shows the pending co-broke inquiry count and Review navigates to /my-requests',

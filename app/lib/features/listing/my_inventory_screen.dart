@@ -6,11 +6,15 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/r_star_badge.dart';
+import '../collaboration/agreement_providers.dart' hide currentNegotiatorIdProvider;
 import '../collaboration/cobroke_request_providers.dart' hide currentNegotiatorIdProvider;
 import '../collaboration/models/cobroke_request_candidate.dart';
+import '../matching/matching_providers.dart' hide currentNegotiatorIdProvider;
 import '../notifications/notification_providers.dart';
 import '../profile/profile_providers.dart' hide currentNegotiatorIdProvider;
 import 'listing_drafts_provider.dart';
+import 'listing_formatting.dart';
+import 'listing_photo.dart';
 import 'listing_providers.dart';
 import 'listing_status_filter.dart';
 import 'models/listing.dart';
@@ -338,10 +342,9 @@ class _MyInventoryScreenState extends ConsumerState<MyInventoryScreen> {
                                       child: Center(child: Text('inventory_empty'.tr())),
                                     )
                                   else
-                                    // TASK 8: premium listing cards inserted here.
                                     for (final listing in visible) ...[
-                                      Text(listing.title), // placeholder, replaced by Task 8
-                                      const SizedBox(height: 10),
+                                      _InventoryCard(listing: listing, received: received),
+                                      const SizedBox(height: 12),
                                     ],
                                 ],
                               ),
@@ -440,6 +443,266 @@ class _DraftRow extends ConsumerWidget {
                 'inventory_resume_draft'.tr(),
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold),
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InventoryCard extends ConsumerWidget {
+  const _InventoryCard({required this.listing, required this.received});
+
+  final Listing listing;
+  final List<CobrokeRequestCandidate> received;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final myPendingRequests = received
+        .where((c) => c.match.listing.listingId == listing.listingId && c.request.status == 'pending')
+        .toList();
+    final myAcceptedRequests = received
+        .where((c) => c.match.listing.listingId == listing.listingId && c.request.status == 'accepted')
+        .toList();
+
+    final daysOnMarket = DateTime.now().difference(listing.createdAt).inDays;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.black, width: 2),
+        boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(4, 4))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Stack(
+            children: [
+              ClipRRect(
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
+                child: SizedBox(
+                  height: 180,
+                  width: double.infinity,
+                  child: listing.photoUrls.isNotEmpty
+                      ? ListingPhoto(path: listing.photoUrls.first, fit: BoxFit.cover)
+                      : Container(color: const Color(0xFFF3F4F1)),
+                ),
+              ),
+              if (myAcceptedRequests.isNotEmpty)
+                Positioned(
+                  top: 10,
+                  left: 10,
+                  child: Consumer(
+                    builder: (context, ref, _) {
+                      final requestId = myAcceptedRequests.first.request.requestId;
+                      final agreementAsync = ref.watch(agreementForRequestProvider(requestId));
+                      final inDealReview = agreementAsync.valueOrNull?.status == 'pending';
+                      return Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: inDealReview ? Colors.amber.shade300 : AppColors.primary,
+                          border: Border.all(color: Colors.black, width: 2),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          inDealReview ? 'inventory_badge_deal_review'.tr() : 'inventory_badge_co_broking_active'.tr(),
+                          style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold, fontSize: 10),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              Positioned(
+                top: 10,
+                right: 10,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.75),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '$daysOnMarket ${'inventory_days_on_market'.tr()}',
+                    style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+              if (listing.titleVerified || listing.exclusiveMandate)
+                Positioned(
+                  bottom: 10,
+                  left: 10,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.92),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      listing.titleVerified
+                          ? 'inventory_badge_title_verified'.tr()
+                          : 'inventory_badge_exclusive_mandate'.tr(),
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold, fontSize: 10),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      ListingFormatting.formatPrice(listing.price, listing.transactionType),
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF3F4F1),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: const Color(0xFFE5E7EB)),
+                      ),
+                      child: Text(
+                        listing.propertyType,
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Icon(PhosphorIcons.mapPin(PhosphorIconsStyle.bold), size: 13, color: const Color(0xFF94A3B8)),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        listing.area,
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(color: const Color(0xFF64748B)),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF9FAFB),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFE5E7EB)),
+                  ),
+                  child: Row(
+                    children: [
+                      if (listing.bedrooms != null) ...[
+                        Icon(PhosphorIcons.bed(PhosphorIconsStyle.bold), size: 15, color: const Color(0xFF64748B)),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${listing.bedrooms}',
+                          style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(width: 12),
+                      ],
+                      if (listing.bathrooms != null) ...[
+                        Icon(PhosphorIcons.bathtub(PhosphorIconsStyle.bold), size: 15, color: const Color(0xFF64748B)),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${listing.bathrooms}',
+                          style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                if (myPendingRequests.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFECFDF5),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFA7F3D0)),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            '${myPendingRequests.length} ${'inventory_insight_inquiries'.tr()}',
+                            style: Theme.of(context)
+                                .textTheme
+                                .labelSmall
+                                ?.copyWith(color: const Color(0xFF065F46), fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        if (listing.commissionSplitPercent != null)
+                          Text(
+                            '${listing.commissionSplitPercent!.round()}% ${'inventory_split_suffix'.tr()}',
+                            style: Theme.of(context)
+                                .textTheme
+                                .labelSmall
+                                ?.copyWith(color: const Color(0xFF047857), fontWeight: FontWeight.bold),
+                          ),
+                      ],
+                    ),
+                  ),
+                ] else
+                  Consumer(
+                    builder: (context, ref, _) {
+                      final matchesAsync = ref.watch(myMatchesProvider);
+                      final topMatch = matchesAsync.maybeWhen(
+                        data: (matches) {
+                          final forThisListing = matches.where((m) => m.listing.listingId == listing.listingId).toList();
+                          if (forThisListing.isEmpty) return null;
+                          forThisListing.sort((a, b) => b.score.compareTo(a.score));
+                          return forThisListing.first;
+                        },
+                        orElse: () => null,
+                      );
+                      if (topMatch == null) return const SizedBox.shrink();
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 10),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.black, width: 2),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(4)),
+                                child: Text(
+                                  '${topMatch.score}%',
+                                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 11),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  '${'inventory_insight_buyer_match'.tr()} ${topMatch.requirementOwner.fullName}',
+                                  style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                // TASK 9: action row (Edit/Bump/Share/more-menu) inserted here.
+              ],
             ),
           ),
         ],
