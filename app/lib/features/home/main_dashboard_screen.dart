@@ -6,10 +6,16 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/brutalist_button.dart';
+import '../../core/widgets/brutalist_card.dart';
 import '../../core/widgets/property_card.dart';
 import '../../core/widgets/r_star_badge.dart';
-import '../listing/listing_providers.dart';
 import '../collaboration/cobroke_request_providers.dart' hide currentNegotiatorIdProvider;
+import '../collaboration/send_cobroke_request_action.dart';
+import '../listing/listing_formatting.dart';
+import '../listing/listing_photo.dart';
+import '../listing/listing_providers.dart';
+import '../matching/matching_providers.dart' hide currentNegotiatorIdProvider;
+import '../matching/models/match_candidate.dart';
 import '../notifications/notification_providers.dart';
 import '../profile/profile_providers.dart' hide currentNegotiatorIdProvider;
 
@@ -34,6 +40,9 @@ class MainDashboardScreen extends ConsumerWidget {
         ? const AsyncValue<List<dynamic>>.data([])
         : ref.watch(myListingsProvider(negotiatorId));
     final receivedRequestsAsync = ref.watch(receivedRequestsProvider);
+    final myMatchesAsync = ref.watch(myMatchesProvider);
+    final marketPulseAsync =
+        negotiatorId == null ? const AsyncValue.data(null) : ref.watch(marketPulseProvider(negotiatorId));
 
     return Scaffold(
       body: SafeArea(
@@ -117,7 +126,54 @@ class MainDashboardScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 4),
               Text('dashboard_subtitle'.tr()),
-              // TASK 6: Market Pulse strip inserted here.
+              marketPulseAsync.maybeWhen(
+                data: (pulse) {
+                  if (pulse == null) return const SizedBox.shrink();
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 12),
+                    child: InkWell(
+                      onTap: () => context.push('/my-matches'),
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        decoration: BoxDecoration(color: AppColors.ink, borderRadius: BorderRadius.circular(12)),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                'dashboard_market_pulse_live'.tr(),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .labelSmall
+                                    ?.copyWith(color: AppColors.ink, fontWeight: FontWeight.w800),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                '${pulse.count} ${'dashboard_market_pulse_new_matches'.tr()} ${pulse.area}',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .labelMedium
+                                    ?.copyWith(color: Colors.white, fontWeight: FontWeight.w600),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            Icon(PhosphorIcons.caretRight(PhosphorIconsStyle.bold), color: AppColors.primary, size: 16),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+                orElse: () => const SizedBox.shrink(),
+              ),
               const SizedBox(height: 24),
               Text('dashboard_quick_actions_title'.tr(), style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 12),
@@ -175,7 +231,174 @@ class MainDashboardScreen extends ConsumerWidget {
                 },
                 orElse: () => const SizedBox.shrink(),
               ),
-              // TASK 6: Co-Broking Radar section inserted here.
+              myMatchesAsync.maybeWhen(
+                data: (matches) {
+                  final myListingMatches = negotiatorId == null
+                      ? const <MatchCandidate>[]
+                      : matches.where((c) => c.listing.negotiatorId == negotiatorId).toList();
+                  if (myListingMatches.isEmpty) return const SizedBox.shrink();
+                  final primary = myListingMatches.first;
+                  final secondary = myListingMatches.skip(1).take(2).toList();
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('dashboard_radar_title'.tr(), style: Theme.of(context).textTheme.titleMedium),
+                                Text('dashboard_radar_subtitle'.tr(), style: Theme.of(context).textTheme.labelSmall),
+                              ],
+                            ),
+                            TextButton(
+                              onPressed: () => context.push('/my-matches'),
+                              child: Text('${'dashboard_radar_view_all'.tr()} (${myListingMatches.length})'),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        BrutalistCard(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  if (primary.listing.photoUrls.isNotEmpty) ...[
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: SizedBox(
+                                        width: 64,
+                                        height: 64,
+                                        child: ListingPhoto(path: primary.listing.photoUrls.first),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                  ],
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                              decoration: BoxDecoration(
+                                                color: AppColors.primary,
+                                                border: Border.all(color: AppColors.ink),
+                                                borderRadius: BorderRadius.circular(4),
+                                              ),
+                                              child: Text(
+                                                '${primary.score}% ${'dashboard_radar_match_percent'.tr()}',
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .labelSmall
+                                                    ?.copyWith(fontWeight: FontWeight.w800),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          ListingFormatting.formatPrice(
+                                            primary.listing.price,
+                                            primary.listing.transactionType,
+                                          ),
+                                          style: Theme.of(context).textTheme.titleMedium,
+                                        ),
+                                        Text(
+                                          primary.listing.area,
+                                          style: Theme.of(context).textTheme.labelSmall,
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          'dashboard_radar_standard_split'.tr(),
+                                          style: Theme.of(context).textTheme.labelSmall,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const Divider(height: 20),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          primary.requirementOwner.fullName,
+                                          style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                        ),
+                                        Text(
+                                          [
+                                            if (primary.requirementOwner.agencyName != null)
+                                              primary.requirementOwner.agencyName!,
+                                            'REN ${primary.requirementOwner.renNumber}',
+                                          ].join(' · '),
+                                          style: Theme.of(context).textTheme.labelSmall,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  BrutalistButton(
+                                    label: 'cobroke_request_send'.tr(),
+                                    fullWidth: false,
+                                    onPressed: () => sendCobrokeRequest(context, ref, primary.matchId),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        for (final candidate in secondary) ...[
+                          const SizedBox(height: 8),
+                          BrutalistCard(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        candidate.listing.area,
+                                        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                      ),
+                                      Text(
+                                        ListingFormatting.formatPrice(
+                                          candidate.listing.price,
+                                          candidate.listing.transactionType,
+                                        ),
+                                        style: Theme.of(context).textTheme.labelSmall,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: Icon(PhosphorIcons.arrowRight(PhosphorIconsStyle.bold)),
+                                  onPressed: () => sendCobrokeRequest(context, ref, candidate.matchId),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  );
+                },
+                orElse: () => const SizedBox.shrink(),
+              ),
               const SizedBox(height: 24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,

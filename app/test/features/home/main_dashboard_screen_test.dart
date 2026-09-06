@@ -11,10 +11,14 @@ import 'package:renly/core/theme/app_theme.dart';
 import 'package:renly/features/home/main_dashboard_screen.dart';
 import 'package:renly/features/listing/listing_providers.dart';
 import 'package:renly/features/listing/models/listing.dart';
+import 'package:renly/features/listing/models/listing_owner.dart';
+import 'package:renly/features/matching/matching_providers.dart' hide currentNegotiatorIdProvider;
+import 'package:renly/features/matching/models/match_candidate.dart';
 import 'package:renly/features/notifications/notification_providers.dart';
 import 'package:renly/features/profile/models/profile.dart';
 import 'package:renly/features/profile/profile_providers.dart' hide currentNegotiatorIdProvider;
 import 'package:renly/features/collaboration/cobroke_request_providers.dart' hide currentNegotiatorIdProvider;
+import 'package:renly/features/requirement/models/requirement.dart';
 
 final _listing = Listing(
   listingId: 'l-1',
@@ -31,6 +35,28 @@ final _listing = Listing(
   photoUrls: [],
   status: 'active',
   createdAt: DateTime(2024, 1, 1),
+);
+
+final _requirement = Requirement(
+  requirementId: 'r-1',
+  negotiatorId: 'n-2',
+  propertyType: 'house',
+  transactionType: 'sale',
+  state: 'Selangor',
+  area: 'Downtown',
+  budgetMin: 2000000,
+  budgetMax: 3000000,
+  photoUrls: [],
+  status: 'open',
+);
+
+final _matchCandidate = MatchCandidate(
+  matchId: 'm-1',
+  score: 92,
+  listing: _listing,
+  requirement: _requirement,
+  listingOwner: const ListingOwner(fullName: 'Aiman Yusof', renNumber: '48210'),
+  requirementOwner: const ListingOwner(fullName: 'Julian Danial', renNumber: '34812', agencyName: 'IQI Global'),
 );
 
 Future<void> _pumpDashboard(
@@ -89,6 +115,8 @@ void main() {
         myListingsProvider.overrideWith((ref, negotiatorId) async => [_listing]),
         receivedRequestsProvider.overrideWith((ref) async => []),
         unreadNotificationCountProvider.overrideWith((ref) => 2),
+        myMatchesProvider.overrideWith((ref) async => [_matchCandidate]),
+        marketPulseProvider.overrideWith((ref, negotiatorId) async => (area: 'Mont Kiara', count: 3)),
       ],
     );
 
@@ -116,6 +144,15 @@ void main() {
         myListingsProvider.overrideWith((ref, negotiatorId) async => []),
         receivedRequestsProvider.overrideWith((ref) async => []),
         unreadNotificationCountProvider.overrideWith((ref) => 0),
+        // Empty/null here (not the shared _matchCandidate fixture): this test
+        // asserts findsNothing for any "REN" text (checking the header pill
+        // is hidden), and the Radar card would otherwise render the match's
+        // "REN 34812" requirementOwner text and break that unrelated
+        // assertion. Still overridden (not left to the real repository)
+        // because the screen unconditionally watches both providers once
+        // currentNegotiatorIdProvider resolves non-null.
+        myMatchesProvider.overrideWith((ref) async => []),
+        marketPulseProvider.overrideWith((ref, negotiatorId) async => null),
       ],
     );
 
@@ -123,5 +160,54 @@ void main() {
     expect(find.text('dashboard_quick_action_market'.tr()), findsOneWidget);
     expect(find.text('dashboard_quick_action_my_inventory'.tr()), findsOneWidget);
     expect(find.textContaining('· 0'), findsNothing);
+  });
+
+  testWidgets('shows Co-Broking Radar for matches on my own listings only', (tester) async {
+    await _pumpDashboard(
+      tester,
+      overrides: [
+        myProfileProvider.overrideWith((ref) async => const Profile(
+              negotiatorId: 'n-1',
+              fullName: 'Aiman Yusof',
+              renNumber: '48210',
+              verificationStatus: 'approved',
+            )),
+        marketplaceListingsProvider.overrideWith((ref) async => []),
+        currentNegotiatorIdProvider.overrideWithValue('n-1'),
+        myListingsProvider.overrideWith((ref, negotiatorId) async => []),
+        receivedRequestsProvider.overrideWith((ref) async => []),
+        unreadNotificationCountProvider.overrideWith((ref) => 0),
+        myMatchesProvider.overrideWith((ref) async => [_matchCandidate]),
+        marketPulseProvider.overrideWith((ref, negotiatorId) async => (area: 'Mont Kiara', count: 3)),
+      ],
+    );
+
+    expect(find.text('dashboard_radar_title'.tr()), findsOneWidget);
+    expect(find.textContaining('92%'), findsOneWidget);
+    expect(find.textContaining('IQI Global'), findsOneWidget);
+    expect(find.textContaining('Mont Kiara'), findsWidgets);
+  });
+
+  testWidgets('hides Co-Broking Radar and Market Pulse when there are no matches', (tester) async {
+    await _pumpDashboard(
+      tester,
+      overrides: [
+        myProfileProvider.overrideWith((ref) async => const Profile(
+              negotiatorId: 'n-1',
+              fullName: 'Aiman Yusof',
+              verificationStatus: 'approved',
+            )),
+        marketplaceListingsProvider.overrideWith((ref) async => []),
+        currentNegotiatorIdProvider.overrideWithValue('n-1'),
+        myListingsProvider.overrideWith((ref, negotiatorId) async => []),
+        receivedRequestsProvider.overrideWith((ref) async => []),
+        unreadNotificationCountProvider.overrideWith((ref) => 0),
+        myMatchesProvider.overrideWith((ref) async => []),
+        marketPulseProvider.overrideWith((ref, negotiatorId) async => null),
+      ],
+    );
+
+    expect(find.text('dashboard_radar_title'.tr()), findsNothing);
+    expect(find.text('dashboard_market_pulse_live'.tr()), findsNothing);
   });
 }
