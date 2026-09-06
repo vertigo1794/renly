@@ -41,6 +41,7 @@ class _PostListingScreenState extends ConsumerState<PostListingScreen> {
   final _priceController = TextEditingController();
   final _bedroomsController = TextEditingController();
   final _bathroomsController = TextEditingController();
+  final _sqftController = TextEditingController();
   final _commissionSplitController = TextEditingController();
   String _propertyType = 'apartment';
   String _transactionType = 'sale';
@@ -82,6 +83,7 @@ class _PostListingScreenState extends ConsumerState<PostListingScreen> {
       _priceController.text = draft.price ?? '';
       _bedroomsController.text = draft.bedrooms ?? '';
       _bathroomsController.text = draft.bathrooms ?? '';
+      _sqftController.text = draft.sqft ?? '';
       _commissionSplitController.text = draft.commissionSplitPercent ?? '';
       _titleVerified = draft.titleVerified;
       _exclusiveMandate = draft.exclusiveMandate;
@@ -96,6 +98,7 @@ class _PostListingScreenState extends ConsumerState<PostListingScreen> {
     _priceController.dispose();
     _bedroomsController.dispose();
     _bathroomsController.dispose();
+    _sqftController.dispose();
     _commissionSplitController.dispose();
     super.dispose();
   }
@@ -112,6 +115,7 @@ class _PostListingScreenState extends ConsumerState<PostListingScreen> {
     _priceController.text = listing.price.toString();
     _bedroomsController.text = listing.bedrooms?.toString() ?? '';
     _bathroomsController.text = listing.bathrooms?.toString() ?? '';
+    _sqftController.text = listing.builtUpSqft?.toString() ?? '';
     _commissionSplitController.text = listing.commissionSplitPercent?.toString() ?? '';
     _titleVerified = listing.titleVerified;
     _exclusiveMandate = listing.exclusiveMandate;
@@ -150,6 +154,12 @@ class _PostListingScreenState extends ConsumerState<PostListingScreen> {
     return double.tryParse(text);
   }
 
+  int? get _sqftValue {
+    final text = _sqftController.text.trim();
+    if (text.isEmpty) return null;
+    return int.tryParse(text);
+  }
+
   Future<void> _saveAsDraft() async {
     if (_titleController.text.trim().isEmpty) return;
     final draft = ListingDraft(
@@ -164,6 +174,7 @@ class _PostListingScreenState extends ConsumerState<PostListingScreen> {
       price: _priceController.text.trim().isEmpty ? null : _priceController.text.trim(),
       bedrooms: _bedroomsController.text.trim().isEmpty ? null : _bedroomsController.text.trim(),
       bathrooms: _bathroomsController.text.trim().isEmpty ? null : _bathroomsController.text.trim(),
+      sqft: _sqftController.text.trim().isEmpty ? null : _sqftController.text.trim(),
       commissionSplitPercent:
           _commissionSplitController.text.trim().isEmpty ? null : _commissionSplitController.text.trim(),
       titleVerified: _titleVerified,
@@ -203,6 +214,7 @@ class _PostListingScreenState extends ConsumerState<PostListingScreen> {
           price: double.parse(_priceController.text.trim()),
           bedrooms: _bedroomsController.text.trim().isEmpty ? null : int.parse(_bedroomsController.text.trim()),
           bathrooms: _bathroomsController.text.trim().isEmpty ? null : int.parse(_bathroomsController.text.trim()),
+          builtUpSqft: _sqftValue,
           commissionSplitPercent: _commissionSplitValue,
           titleVerified: _titleVerified,
           exclusiveMandate: _exclusiveMandate,
@@ -229,6 +241,7 @@ class _PostListingScreenState extends ConsumerState<PostListingScreen> {
           price: double.parse(_priceController.text.trim()),
           bedrooms: _bedroomsController.text.trim().isEmpty ? null : int.parse(_bedroomsController.text.trim()),
           bathrooms: _bathroomsController.text.trim().isEmpty ? null : int.parse(_bathroomsController.text.trim()),
+          builtUpSqft: _sqftValue,
           commissionSplitPercent: _commissionSplitValue,
           titleVerified: _titleVerified,
           exclusiveMandate: _exclusiveMandate,
@@ -413,6 +426,15 @@ class _PostListingScreenState extends ConsumerState<PostListingScreen> {
                         controller: _bathroomsController,
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(labelText: 'listing_field_bathrooms'.tr()),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: TextFormField(
+                        key: const Key('listing_sqft_field'),
+                        controller: _sqftController,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(labelText: 'listing_field_sqft'.tr()),
                       ),
                     ),
                   ],

@@ -512,9 +512,10 @@ class _MarketplaceCard extends StatelessWidget {
                     Positioned(
                       top: 10,
                       left: 10,
-                      child: Row(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          if (matchScore != null) ...[
+                          if (matchScore != null)
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                               decoration: BoxDecoration(
@@ -529,19 +530,51 @@ class _MarketplaceCard extends StatelessWidget {
                                     ?.copyWith(fontWeight: FontWeight.w900, fontSize: 10),
                               ),
                             ),
-                            const SizedBox(width: 6),
-                          ],
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(6)),
-                            child: Text(
-                              'marketplace_verified_badge'.tr(),
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .labelSmall
-                                  ?.copyWith(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10),
+                          if (listing.titleVerified || listing.exclusiveMandate) ...[
+                            if (matchScore != null) const SizedBox(height: 6),
+                            Wrap(
+                              spacing: 6,
+                              runSpacing: 6,
+                              children: [
+                                if (listing.titleVerified)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    decoration:
+                                        BoxDecoration(color: const Color(0xFF2563EB), borderRadius: BorderRadius.circular(6)),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(PhosphorIcons.sealCheck(PhosphorIconsStyle.bold), size: 12, color: Colors.white),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          'inventory_badge_title_verified'.tr(),
+                                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                              color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                if (listing.exclusiveMandate)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    decoration:
+                                        BoxDecoration(color: const Color(0xFF7C3AED), borderRadius: BorderRadius.circular(6)),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(PhosphorIcons.crown(PhosphorIconsStyle.bold), size: 12, color: Colors.white),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          'inventory_badge_exclusive_mandate'.tr(),
+                                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                              color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                              ],
                             ),
-                          ),
+                          ],
                         ],
                       ),
                     ),

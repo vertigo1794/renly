@@ -11,6 +11,10 @@ class Listing {
   final double price;
   final int? bedrooms;
   final int? bathrooms;
+
+  /// Built-up size in square feet. Nullable -- absent on any listing whose
+  /// owner didn't set it, never a fabricated/estimated fallback.
+  final int? builtUpSqft;
   final List<String> photoUrls;
   final String status;
   final DateTime createdAt;
@@ -52,6 +56,7 @@ class Listing {
     required this.price,
     this.bedrooms,
     this.bathrooms,
+    this.builtUpSqft,
     required this.photoUrls,
     required this.status,
     required this.createdAt,
@@ -74,6 +79,7 @@ class Listing {
       price: (json['price'] as num).toDouble(),
       bedrooms: json['bedrooms'] as int?,
       bathrooms: json['bathrooms'] as int?,
+      builtUpSqft: json['built_up_sqft'] as int?,
       photoUrls: (json['photo_urls'] as List<dynamic>?)?.map((e) => e as String).toList() ?? const [],
       status: json['status'] as String,
       createdAt: DateTime.parse(json['created_at'] as String),

@@ -15,6 +15,7 @@ class ListingDraft {
   final String? price;
   final String? bedrooms;
   final String? bathrooms;
+  final String? sqft;
   final String? commissionSplitPercent;
   final bool titleVerified;
   final bool exclusiveMandate;
@@ -31,6 +32,7 @@ class ListingDraft {
     this.price,
     this.bedrooms,
     this.bathrooms,
+    this.sqft,
     this.commissionSplitPercent,
     required this.titleVerified,
     required this.exclusiveMandate,
@@ -49,6 +51,7 @@ class ListingDraft {
       'price': price,
       'bedrooms': bedrooms,
       'bathrooms': bathrooms,
+      'sqft': sqft,
       'commission_split_percent': commissionSplitPercent,
       'title_verified': titleVerified,
       'exclusive_mandate': exclusiveMandate,
@@ -68,6 +71,7 @@ class ListingDraft {
       price: json['price'] as String?,
       bedrooms: json['bedrooms'] as String?,
       bathrooms: json['bathrooms'] as String?,
+      sqft: json['sqft'] as String?,
       commissionSplitPercent: json['commission_split_percent'] as String?,
       titleVerified: json['title_verified'] as bool,
       exclusiveMandate: json['exclusive_mandate'] as bool,

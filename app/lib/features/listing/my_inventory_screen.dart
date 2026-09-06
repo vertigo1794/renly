@@ -72,13 +72,24 @@ class _MyInventoryScreenState extends ConsumerState<MyInventoryScreen> {
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
               child: Row(
                 children: [
-                  if (context.canPop()) ...[
-                    IconButton(
-                      icon: Icon(PhosphorIcons.arrowLeft(PhosphorIconsStyle.bold)),
-                      onPressed: () => context.pop(),
-                    ),
-                    const SizedBox(width: 4),
-                  ],
+                  // This screen has no bottom nav dock (unlike the shell-root
+                  // screens whose header this was copied from), so the back
+                  // affordance must always be visible here regardless of
+                  // canPop() -- a saved edit/create/draft flow navigates back
+                  // via context.go('/my-inventory'), which replaces the whole
+                  // route stack and would otherwise make canPop() false and
+                  // silently drop the only way back.
+                  IconButton(
+                    icon: Icon(PhosphorIcons.arrowLeft(PhosphorIconsStyle.bold)),
+                    onPressed: () {
+                      if (context.canPop()) {
+                        context.pop();
+                      } else {
+                        context.go('/home');
+                      }
+                    },
+                  ),
+                  const SizedBox(width: 4),
                   const RStarBadge(size: 28),
                   const SizedBox(width: 8),
                   Text(
@@ -460,6 +471,31 @@ class _DraftRow extends ConsumerWidget {
   }
 }
 
+/// One icon+label item inside the Beds/Baths/sqft stat pill. Each present
+/// stat gets equal width via the parent's Expanded+Center wrapper, so the
+/// row stays balanced whether 1, 2, or 3 stats are present.
+class _StatPillItem extends StatelessWidget {
+  const _StatPillItem({required this.icon, required this.text});
+
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 15, color: const Color(0xFF64748B)),
+        const SizedBox(width: 4),
+        Text(
+          text,
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold),
+        ),
+      ],
+    );
+  }
+}
+
 class _InventoryCard extends ConsumerWidget {
   const _InventoryCard({required this.listing, required this.received});
 
@@ -644,36 +680,54 @@ class _InventoryCard extends ConsumerWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 10),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF9FAFB),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFE5E7EB)),
-                  ),
-                  child: Row(
+                Builder(builder: (context) {
+                  final stats = <Widget>[
+                    if (listing.bedrooms != null)
+                      _StatPillItem(
+                        icon: PhosphorIcons.bed(PhosphorIconsStyle.bold),
+                        text: '${listing.bedrooms} ${'inventory_stat_beds'.tr()}',
+                      ),
+                    if (listing.bathrooms != null)
+                      _StatPillItem(
+                        icon: PhosphorIcons.bathtub(PhosphorIconsStyle.bold),
+                        text: '${listing.bathrooms} ${'inventory_stat_baths'.tr()}',
+                      ),
+                    if (listing.builtUpSqft != null)
+                      _StatPillItem(
+                        icon: PhosphorIcons.ruler(PhosphorIconsStyle.bold),
+                        text: '${ListingFormatting.formatSqft(listing.builtUpSqft!)} ${'inventory_stat_sqft'.tr()}',
+                      ),
+                  ];
+                  if (stats.isEmpty) return const SizedBox.shrink();
+                  return Column(
                     children: [
-                      if (listing.bedrooms != null) ...[
-                        Icon(PhosphorIcons.bed(PhosphorIconsStyle.bold), size: 15, color: const Color(0xFF64748B)),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${listing.bedrooms}',
-                          style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold),
+                      const SizedBox(height: 10),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF9FAFB),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFE5E7EB)),
                         ),
-                        const SizedBox(width: 12),
-                      ],
-                      if (listing.bathrooms != null) ...[
-                        Icon(PhosphorIcons.bathtub(PhosphorIconsStyle.bold), size: 15, color: const Color(0xFF64748B)),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${listing.bathrooms}',
-                          style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold),
+                        child: Row(
+                          children: [
+                            for (var i = 0; i < stats.length; i++) ...[
+                              if (i > 0)
+                                Text(
+                                  '·',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .labelSmall
+                                      ?.copyWith(color: const Color(0xFFCBD5E1), fontWeight: FontWeight.bold),
+                                ),
+                              Expanded(child: Center(child: stats[i])),
+                            ],
+                          ],
                         ),
-                      ],
+                      ),
                     ],
-                  ),
-                ),
+                  );
+                }),
                 if (myPendingRequests.isNotEmpty) ...[
                   const SizedBox(height: 10),
                   Container(

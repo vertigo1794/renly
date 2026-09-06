@@ -15,6 +15,7 @@ void main() {
       price: '450000',
       bedrooms: '3',
       bathrooms: '2',
+      sqft: '1450',
       commissionSplitPercent: '1.5',
       titleVerified: true,
       exclusiveMandate: false,
@@ -33,6 +34,7 @@ void main() {
     expect(roundTripped.price, draft.price);
     expect(roundTripped.bedrooms, draft.bedrooms);
     expect(roundTripped.bathrooms, draft.bathrooms);
+    expect(roundTripped.sqft, draft.sqft);
     expect(roundTripped.commissionSplitPercent, draft.commissionSplitPercent);
     expect(roundTripped.titleVerified, draft.titleVerified);
     expect(roundTripped.exclusiveMandate, draft.exclusiveMandate);
@@ -51,6 +53,7 @@ void main() {
       price: null,
       bedrooms: null,
       bathrooms: null,
+      sqft: null,
       commissionSplitPercent: null,
       titleVerified: false,
       exclusiveMandate: false,
@@ -61,6 +64,7 @@ void main() {
     expect(roundTripped.price, isNull);
     expect(roundTripped.bedrooms, isNull);
     expect(roundTripped.bathrooms, isNull);
+    expect(roundTripped.sqft, isNull);
     expect(roundTripped.commissionSplitPercent, isNull);
   });
 }

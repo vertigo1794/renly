@@ -20,4 +20,16 @@ class ListingFormatting {
     final suffix = transactionType == 'rent' ? ' /mo' : '';
     return 'RM $buffer$suffix';
   }
+
+  static String formatSqft(int sqft) {
+    final digits = sqft.toString();
+    final buffer = StringBuffer();
+    for (var i = 0; i < digits.length; i++) {
+      if (i > 0 && (digits.length - i) % 3 == 0) {
+        buffer.write(',');
+      }
+      buffer.write(digits[i]);
+    }
+    return buffer.toString();
+  }
 }
