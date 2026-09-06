@@ -93,6 +93,23 @@ class MessageRepository {
     return _listingRepository.fetchListingOwner(negotiatorId);
   }
 
+  /// Whether the current negotiator has ANY unread message across ALL of
+  /// their conversations -- backs the bottom-nav Chat tab's presence dot
+  /// (no number, just on/off). No request_id filter needed: message_select's
+  /// own RLS (0008_messaging.sql) already restricts visible rows to
+  /// accepted conversations this negotiator is a party to, same reasoning
+  /// as MatchingRepository.fetchMyMatches(). limit(1) since only presence,
+  /// not a count, is needed.
+  Future<bool> hasUnreadMessages(String negotiatorId) async {
+    final rows = await _client
+        .from('message')
+        .select('message_id')
+        .neq('sender_id', negotiatorId)
+        .isFilter('read_at', null)
+        .limit(1);
+    return (rows as List).isNotEmpty;
+  }
+
   /// Marks every unread message in this conversation that the CURRENT user
   /// did not send as read. Relies on message_update_read_at's own RLS check
   /// (accepted-request party, not the sender) rather than re-deriving that

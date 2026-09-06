@@ -288,5 +288,6 @@
   "nav_home": "Home",
   "nav_market": "Market",
   "nav_chat": "Chat",
-  "nav_profile": "Profile"
+  "nav_profile": "Profile",
+  "nav_post": "Post"
 }

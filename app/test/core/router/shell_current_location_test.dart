@@ -1,12 +1,14 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:renly/core/router/app_router.dart';
+import 'package:renly/features/collaboration/message_providers.dart';
 import 'package:renly/features/notifications/foreground_suppression.dart';
 
 // Regression coverage for the Task 8 shell/observer interaction.
@@ -71,17 +73,25 @@ void main() {
 
   Future<void> pumpApp(WidgetTester tester, GoRouter router) async {
     await tester.pumpWidget(
-      EasyLocalization(
-        supportedLocales: const [Locale('en'), Locale('ms')],
-        path: 'assets/translations',
-        fallbackLocale: const Locale('en'),
-        startLocale: const Locale('en'),
-        child: Builder(
-          builder: (context) => MaterialApp.router(
-            localizationsDelegates: context.localizationDelegates,
-            supportedLocales: context.supportedLocales,
-            locale: context.locale,
-            routerConfig: router,
+      ProviderScope(
+        // MainShell is a ConsumerWidget (watches hasUnreadMessagesProvider
+        // for the floating dock's Chat-tab dot) -- overridden here so it
+        // never touches the real provider chain (currentNegotiatorIdProvider
+        // -> authStateProvider -> Supabase.instance, uninitialized in this
+        // test sandbox).
+        overrides: [hasUnreadMessagesProvider.overrideWith((ref) async => false)],
+        child: EasyLocalization(
+          supportedLocales: const [Locale('en'), Locale('ms')],
+          path: 'assets/translations',
+          fallbackLocale: const Locale('en'),
+          startLocale: const Locale('en'),
+          child: Builder(
+            builder: (context) => MaterialApp.router(
+              localizationsDelegates: context.localizationDelegates,
+              supportedLocales: context.supportedLocales,
+              locale: context.locale,
+              routerConfig: router,
+            ),
           ),
         ),
       ),

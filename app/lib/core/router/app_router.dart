@@ -16,6 +16,7 @@ import '../../features/auth/registration_professional_screen.dart';
 import '../../features/auth/verification_pending_screen.dart';
 import '../../features/collaboration/chat_screen.dart';
 import '../../features/collaboration/conversation_list_screen.dart';
+import '../../features/collaboration/message_providers.dart' hide currentNegotiatorIdProvider;
 import '../../features/collaboration/my_requests_screen.dart';
 import '../../features/home/main_dashboard_screen.dart';
 import '../../features/listing/marketplace_screen.dart';
@@ -275,14 +276,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 /// It also reports the active branch's path to [locationObserver] on every
 /// build -- see [CurrentLocationObserver.recordShellBranch] for why the
 /// observer cannot work this out from the shell page alone.
-class MainShell extends StatelessWidget {
+class MainShell extends ConsumerWidget {
   const MainShell({super.key, required this.navigationShell, required this.locationObserver});
 
   final StatefulNavigationShell navigationShell;
   final CurrentLocationObserver locationObserver;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     // Read during build (the Route is only reachable from this context), but
     // report AFTER the frame: at build time the Navigator stack may not yet
     // reflect a route being pushed on top of the shell in this same frame,
@@ -295,36 +296,219 @@ class MainShell extends StatelessWidget {
       });
     }
 
+    final hasUnreadAsync = ref.watch(hasUnreadMessagesProvider);
+
     return Scaffold(
+      extendBody: true,
       body: navigationShell,
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        currentIndex: navigationShell.currentIndex,
-        onTap: (index) => navigationShell.goBranch(index),
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(PhosphorIcons.house(PhosphorIconsStyle.bold)),
-            label: 'nav_home'.tr(),
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+          child: _FloatingDock(
+            currentIndex: navigationShell.currentIndex,
+            onTap: navigationShell.goBranch,
+            hasUnreadChat: hasUnreadAsync.maybeWhen(data: (value) => value, orElse: () => false),
+            onPost: () => context.push('/post-listing'),
           ),
-          BottomNavigationBarItem(
-            icon: Icon(PhosphorIcons.storefront(PhosphorIconsStyle.bold)),
-            label: 'nav_market'.tr(),
+        ),
+      ),
+    );
+  }
+}
+
+/// The floating "ultra-stylish" glass dock replacing the standard
+/// BottomNavigationBar+FAB pair, matching the Stitch
+/// "Renly - Bottom Nav Dock (Ultra-Stylish)" mockup exactly: a dark
+/// translucent capsule with 4 tabs and an elevated lime "+" button
+/// floating above its center. [hasUnreadChat] backs the Chat tab's
+/// presence dot -- real data (MessageRepository.hasUnreadMessages), never
+/// always-on decoration.
+class _FloatingDock extends StatelessWidget {
+  const _FloatingDock({
+    required this.currentIndex,
+    required this.onTap,
+    required this.hasUnreadChat,
+    required this.onPost,
+  });
+
+  final int currentIndex;
+  final ValueChanged<int> onTap;
+  final bool hasUnreadChat;
+  final VoidCallback onPost;
+
+  static const _capsuleColor = Color(0xF0121214);
+  static const _lime = Color(0xFFD4FF00);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      decoration: BoxDecoration(
+        color: _capsuleColor,
+        borderRadius: BorderRadius.circular(32),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.35), blurRadius: 24, offset: const Offset(0, 10)),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            child: _DockItem(
+              icon: PhosphorIcons.house(PhosphorIconsStyle.bold),
+              label: 'nav_home'.tr(),
+              active: currentIndex == 0,
+              onTap: () => onTap(0),
+            ),
           ),
-          BottomNavigationBarItem(
-            icon: Icon(PhosphorIcons.chatCircle(PhosphorIconsStyle.bold)),
-            label: 'nav_chat'.tr(),
+          Expanded(
+            child: _DockItem(
+              icon: PhosphorIcons.storefront(PhosphorIconsStyle.bold),
+              label: 'nav_market'.tr(),
+              active: currentIndex == 1,
+              onTap: () => onTap(1),
+            ),
           ),
-          BottomNavigationBarItem(
-            icon: Icon(PhosphorIcons.user(PhosphorIconsStyle.bold)),
-            label: 'nav_profile'.tr(),
+          _DockPostButton(onTap: onPost),
+          Expanded(
+            child: _DockItem(
+              icon: PhosphorIcons.chatCircle(PhosphorIconsStyle.bold),
+              label: 'nav_chat'.tr(),
+              active: currentIndex == 2,
+              onTap: () => onTap(2),
+              showDot: hasUnreadChat,
+            ),
+          ),
+          Expanded(
+            child: _DockItem(
+              icon: PhosphorIcons.user(PhosphorIconsStyle.bold),
+              label: 'nav_profile'.tr(),
+              active: currentIndex == 3,
+              onTap: () => onTap(3),
+            ),
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push('/post-listing'),
-        child: Icon(PhosphorIcons.plusCircle(PhosphorIconsStyle.bold)),
+    );
+  }
+}
+
+class _DockItem extends StatelessWidget {
+  const _DockItem({
+    required this.icon,
+    required this.label,
+    required this.active,
+    required this.onTap,
+    this.showDot = false,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool active;
+  final VoidCallback onTap;
+  final bool showDot;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  width: 40,
+                  height: 32,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: active ? Colors.white.withValues(alpha: 0.1) : Colors.transparent,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon, size: 20, color: active ? _FloatingDock._lime : const Color(0xFF9CA3AF)),
+                ),
+                if (showDot)
+                  Positioned(
+                    top: -2,
+                    right: 2,
+                    child: Container(
+                      width: 9,
+                      height: 9,
+                      decoration: BoxDecoration(
+                        color: _FloatingDock._lime,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: _FloatingDock._capsuleColor, width: 2),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 3),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: active ? FontWeight.bold : FontWeight.w500,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+    );
+  }
+}
+
+class _DockPostButton extends StatelessWidget {
+  const _DockPostButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 6),
+      child: Transform.translate(
+        offset: const Offset(0, -18),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(22),
+              child: Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: _FloatingDock._lime,
+                  borderRadius: BorderRadius.circular(22),
+                  border: Border.all(color: Colors.black, width: 2),
+                  boxShadow: [
+                    BoxShadow(color: _FloatingDock._lime.withValues(alpha: 0.45), blurRadius: 24, spreadRadius: 2),
+                  ],
+                ),
+                child: Icon(PhosphorIcons.plus(PhosphorIconsStyle.bold), color: Colors.black, size: 28),
+              ),
+            ),
+            const SizedBox(height: 3),
+            Text(
+              'nav_post'.tr().toUpperCase(),
+              style: const TextStyle(
+                fontSize: 9,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.6,
+                color: _FloatingDock._lime,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

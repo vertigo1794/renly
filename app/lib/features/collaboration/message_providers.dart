@@ -40,3 +40,16 @@ final currentNegotiatorIdProvider = Provider<String?>((ref) {
 final messagesStreamProvider = StreamProvider.autoDispose.family<List<Message>, String>((ref, requestId) {
   return ref.watch(messageRepositoryProvider).messagesStream(requestId);
 });
+
+/// Backs the bottom-nav dock's Chat tab presence dot. autoDispose +
+/// re-read on every MainShell rebuild (not a stream) is intentional here:
+/// there's no cheap Realtime channel for "any unread across all my
+/// conversations" the way a single conversation's message list has one,
+/// so this is refetch-on-rebuild, same tradeoff already accepted for
+/// ProfileScreen/NotificationListScreen/ConversationListScreen's own
+/// RefreshIndicator-refetch pattern elsewhere in this app.
+final hasUnreadMessagesProvider = FutureProvider.autoDispose<bool>((ref) {
+  final negotiatorId = ref.watch(currentNegotiatorIdProvider);
+  if (negotiatorId == null) return Future.value(false);
+  return ref.watch(messageRepositoryProvider).hasUnreadMessages(negotiatorId);
+});
