@@ -7,15 +7,50 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:renly/core/theme/app_theme.dart';
 import 'package:renly/features/listing/listing_providers.dart';
+import 'package:renly/features/listing/listing_repository.dart';
 import 'package:renly/features/listing/models/listing.dart';
 import 'package:renly/features/listing/post_broadcast_screen.dart';
 import 'package:renly/features/notifications/notification_providers.dart';
 import 'package:renly/features/profile/models/profile.dart';
 import 'package:renly/features/profile/profile_providers.dart' hide currentNegotiatorIdProvider;
+import 'package:renly/features/requirement/models/requirement.dart';
 import 'package:renly/features/requirement/requirement_providers.dart' hide currentNegotiatorIdProvider;
+import 'package:renly/features/requirement/requirement_repository.dart';
+
+/// Never actually invoked -- both fake repositories below override every
+/// method PostBroadcastScreen's preview fetch calls, so this client's
+/// methods are never reached. It only exists to satisfy the real
+/// repositories' constructors without touching Supabase.instance.client
+/// (which throws synchronously in this widget-test environment, since
+/// Supabase.initialize() is never called here).
+class _FakeSupabaseClient implements SupabaseClient {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+/// PostListingFormBody's live-preview fetch reads requirementRepositoryProvider
+/// directly (not boardRequirementsProvider), so that's the provider that must
+/// be overridden for the preview fetch to resolve instead of silently
+/// swallowing a thrown error in this test environment.
+class _FakeRequirementRepository extends RequirementRepository {
+  _FakeRequirementRepository() : super(_FakeSupabaseClient());
+
+  @override
+  Future<List<Requirement>> fetchBoardRequirements() async => [];
+}
+
+/// Symmetric fake for PostRequirementFormBody's live-preview fetch, which
+/// reads listingRepositoryProvider directly.
+class _FakeListingRepository extends ListingRepository {
+  _FakeListingRepository() : super(_FakeSupabaseClient());
+
+  @override
+  Future<List<Listing>> fetchMarketplaceListings() async => [];
+}
 
 Future<void> _pumpScreen(WidgetTester tester, {required List<Override> overrides, PostBroadcastMode initialMode = PostBroadcastMode.listing, String? editListingId}) async {
   // Widened for the same reason every other tall-card/tall-form screen this
@@ -65,7 +100,14 @@ List<Override> _baseOverrides() => [
       unreadNotificationCountProvider.overrideWith((ref) => 0),
       marketplaceListingsProvider.overrideWith((ref) async => []),
       openRequirementsCountProvider.overrideWith((ref) async => 0),
-      boardRequirementsProvider.overrideWith((ref) async => []),
+      // Both forms' live-preview fetches read the repository providers
+      // directly (fetchBoardRequirements/fetchMarketplaceListings), not
+      // boardRequirementsProvider/marketplaceListingsProvider above -- these
+      // overrides are what let the preview fetch actually succeed here
+      // instead of throwing on the uninitialized Supabase.instance.client
+      // and being silently swallowed.
+      requirementRepositoryProvider.overrideWithValue(_FakeRequirementRepository()),
+      listingRepositoryProvider.overrideWithValue(_FakeListingRepository()),
     ];
 
 void main() {

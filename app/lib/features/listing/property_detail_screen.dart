@@ -36,8 +36,9 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
       ref.invalidate(myListingsProvider(listing.negotiatorId));
       // The cap counter is not autoDispose, so withdrawing/reactivating here
       // must invalidate it too -- otherwise a free-tier user who withdraws a
-      // listing to free up a slot still sees PostListingScreen's submit button
-      // disabled with the upsell message, with no in-app way to clear it.
+      // listing to free up a slot still sees PostListingFormBody's submit
+      // button disabled with the upsell message, with no in-app way to
+      // clear it.
       ref.invalidate(activeListingCountProvider(listing.negotiatorId));
     } catch (e) {
       if (mounted) {

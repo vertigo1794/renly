@@ -10,9 +10,10 @@ class MatchingEngine {
   static const qualifyingThreshold = 40;
 
   /// Returns null if a mandatory filter disqualifies the pair (transaction
-  /// type or state mismatch). Otherwise returns the weighted score
-  /// (0-100), rounded to the nearest integer -- callers decide whether it
-  /// clears [qualifyingThreshold].
+  /// type mismatch, state mismatch, or the listing not meeting the
+  /// requirement's bathroomsMin/builtUpSqftMin, when set). Otherwise
+  /// returns the weighted score (0-100), rounded to the nearest integer --
+  /// callers decide whether it clears [qualifyingThreshold].
   static int? score(Listing listing, Requirement requirement) {
     if (listing.transactionType != requirement.transactionType) return null;
     if (listing.state != requirement.state) return null;

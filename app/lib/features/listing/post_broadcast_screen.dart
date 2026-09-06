@@ -2,6 +2,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../core/theme/app_colors.dart';
@@ -44,6 +45,7 @@ class _PostBroadcastScreenState extends ConsumerState<PostBroadcastScreen> {
   @override
   Widget build(BuildContext context) {
     final showToggle = widget.editListingId == null;
+    final isEditMode = widget.editListingId != null;
 
     return Scaffold(
       appBar: AppBar(
@@ -53,7 +55,7 @@ class _PostBroadcastScreenState extends ConsumerState<PostBroadcastScreen> {
             const RStarBadge(size: 28),
             const SizedBox(width: 8),
             Text(
-              'app_name'.tr(),
+              isEditMode ? 'listing_edit_title'.tr() : 'app_name'.tr(),
               style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                     color: AppColors.ink,
                     fontSize: 20,
@@ -104,7 +106,7 @@ class _PostBroadcastScreenState extends ConsumerState<PostBroadcastScreen> {
                 children: [
                   IconButton(
                     icon: Icon(PhosphorIcons.bellSimple(PhosphorIconsStyle.bold)),
-                    onPressed: () {},
+                    onPressed: () => context.push('/notifications'),
                   ),
                   if (unreadCount > 0)
                     Positioned(

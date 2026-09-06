@@ -116,8 +116,12 @@ class _PostListingFormBodyState extends ConsumerState<PostListingFormBody> {
         _previewCandidates = requirements;
         _recomputePreview();
       });
-    } catch (_) {
-      // Intentionally swallowed -- see doc comment above.
+    } catch (e) {
+      // Intentionally swallowed -- see doc comment above. debugPrint keeps
+      // a real failure visible in test/debug output (matches
+      // chat_screen.dart's _markConversationRead precedent) without
+      // surfacing anything to the user.
+      debugPrint('_loadPreviewCandidates failed: $e');
     }
   }
 
@@ -434,7 +438,10 @@ class _PostListingFormBodyState extends ConsumerState<PostListingFormBody> {
                     DropdownMenuItem(value: 'commercial', child: Text('listing_property_type_commercial'.tr())),
                     DropdownMenuItem(value: 'land', child: Text('listing_property_type_land'.tr())),
                   ],
-                  onChanged: (value) => setState(() => _propertyType = value!),
+                  onChanged: (value) => setState(() {
+                    _propertyType = value!;
+                    _recomputePreview();
+                  }),
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
@@ -445,7 +452,10 @@ class _PostListingFormBodyState extends ConsumerState<PostListingFormBody> {
                     DropdownMenuItem(value: 'sale', child: Text('listing_transaction_type_sale'.tr())),
                     DropdownMenuItem(value: 'rent', child: Text('listing_transaction_type_rent'.tr())),
                   ],
-                  onChanged: (value) => setState(() => _transactionType = value!),
+                  onChanged: (value) => setState(() {
+                    _transactionType = value!;
+                    _recomputePreview();
+                  }),
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
@@ -455,7 +465,10 @@ class _PostListingFormBodyState extends ConsumerState<PostListingFormBody> {
                   items: [
                     for (final state in malaysianStates) DropdownMenuItem(value: state, child: Text(state)),
                   ],
-                  onChanged: (value) => setState(() => _state = value!),
+                  onChanged: (value) => setState(() {
+                    _state = value!;
+                    _recomputePreview();
+                  }),
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
