@@ -163,7 +163,7 @@ void main() {
       ],
     );
 
-    expect(find.textContaining('Aiman Yusof'), findsOneWidget);
+    expect(find.textContaining('Aiman Yusof', findRichText: true), findsOneWidget);
     expect(find.textContaining('REN 48210'), findsOneWidget);
     expect(find.text('Modern Villa'), findsOneWidget);
     expect(find.textContaining('1 Listings'), findsOneWidget);
