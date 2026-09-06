@@ -148,7 +148,11 @@ class MainDashboardScreen extends ConsumerWidget {
                 error: (error, stack) => const SizedBox.shrink(),
                 data: (profile) => RichText(
                   text: TextSpan(
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(color: Colors.black),
+                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                          color: Colors.black,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: -1.0,
+                        ),
                     children: [
                       TextSpan(text: '${'dashboard_welcome_back'.tr()} '),
                       TextSpan(

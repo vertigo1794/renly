@@ -82,13 +82,13 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
               child: Row(
                 children: [
-                  const RStarBadge(size: 26),
+                  const RStarBadge(size: 28),
                   const SizedBox(width: 8),
                   Text(
                     'app_name'.tr(),
                     style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                           color: AppColors.ink,
-                          fontSize: 19,
+                          fontSize: 20,
                           letterSpacing: -1.0,
                           height: 1,
                         ),
