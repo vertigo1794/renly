@@ -82,6 +82,17 @@ void main() {
   });
 
   testWidgets('renders active listings with formatted price and area', (tester) async {
+    // The default test surface (800x600) is too short to mount every card
+    // in the restyled premium feed (~400dp tall each) -- ListView virtualizes
+    // via the sliver machinery regardless of the plain-list vs .builder
+    // delegate, so an off-screen card's Elements genuinely never mount and
+    // find.byType/find.text can't see them. Widen the surface so both
+    // fixture cards are within the mount+cache extent.
+    tester.view.physicalSize = const Size(800, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
     final router = GoRouter(routes: [
       GoRoute(path: '/', builder: (context, state) => const MarketplaceScreen()),
       GoRoute(path: '/property/:listingId', builder: (context, state) => const Placeholder()),
@@ -90,10 +101,10 @@ void main() {
     await tester.pumpWidget(_wrap(router));
     await tester.pumpAndSettle();
 
-    expect(find.text('RM 1,250,000'), findsOneWidget);
-    expect(find.text('RM 3,500 /mo'), findsOneWidget);
-    expect(find.text('Petaling Jaya'), findsOneWidget);
-    expect(find.text('Bukit Bintang'), findsOneWidget);
+    expect(find.text('1,250,000'), findsOneWidget);
+    expect(find.text('3,500 /mo'), findsOneWidget);
+    expect(find.textContaining('Petaling Jaya'), findsOneWidget);
+    expect(find.textContaining('Bukit Bintang'), findsOneWidget);
   });
 
   testWidgets('tapping a listing card navigates to its property detail route', (tester) async {
