@@ -577,6 +577,13 @@ class _InventoryCard extends ConsumerWidget {
                   ],
                 ),
                 const SizedBox(height: 4),
+                Text(
+                  listing.title,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
                 Row(
                   children: [
                     Icon(PhosphorIcons.mapPin(PhosphorIconsStyle.bold), size: 13, color: const Color(0xFF94A3B8)),
