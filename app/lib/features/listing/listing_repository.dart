@@ -13,11 +13,18 @@ class ListingRepository {
 
   final SupabaseClient _client;
 
+  /// Ordered by bumped_at first (nulls last, so a never-bumped listing
+  /// doesn't outrank a genuinely just-bumped one), then created_at --
+  /// composing two .order() calls into one multi-key ORDER BY. A listing
+  /// that was never bumped sorts purely by its real creation time; a
+  /// bumped listing jumps to the top by its bump time. createdAt itself
+  /// is never touched by a bump, so "N Days on Market" stays accurate.
   Future<List<Listing>> fetchMarketplaceListings() async {
     final rows = await _client
         .from('listing')
         .select()
         .eq('status', 'active')
+        .order('bumped_at', ascending: false, nullsFirst: false)
         .order('created_at', ascending: false);
     return (rows as List).map((row) => Listing.fromJson(row as Map<String, dynamic>)).toList();
   }
@@ -27,6 +34,7 @@ class ListingRepository {
         .from('listing')
         .select()
         .eq('negotiator_id', negotiatorId)
+        .order('bumped_at', ascending: false, nullsFirst: false)
         .order('created_at', ascending: false);
     return (rows as List).map((row) => Listing.fromJson(row as Map<String, dynamic>)).toList();
   }
@@ -89,6 +97,9 @@ class ListingRepository {
     required double price,
     int? bedrooms,
     int? bathrooms,
+    double? commissionSplitPercent,
+    bool titleVerified = false,
+    bool exclusiveMandate = false,
   }) async {
     final row = await _client
         .from('listing')
@@ -103,6 +114,9 @@ class ListingRepository {
           'price': price,
           'bedrooms': bedrooms,
           'bathrooms': bathrooms,
+          'commission_split_percent': commissionSplitPercent,
+          'title_verified': titleVerified,
+          'exclusive_mandate': exclusiveMandate,
         })
         .select()
         .single();
@@ -115,6 +129,49 @@ class ListingRepository {
 
   Future<void> updateListingStatus({required String listingId, required String status}) {
     return _client.from('listing').update({'status': status}).eq('listing_id', listingId);
+  }
+
+  /// Real "resurface to top of feed" action -- sets bumped_at to now,
+  /// which fetchMarketplaceListings/fetchOwnListings's own ordering
+  /// already accounts for. Never touches created_at.
+  Future<void> bumpListing(String listingId) {
+    return _client.from('listing').update({'bumped_at': DateTime.now().toIso8601String()}).eq('listing_id', listingId);
+  }
+
+  /// General field update for the Edit Listing flow. Deliberately does
+  /// NOT touch negotiator_id, status, photo_urls, created_at, or
+  /// bumped_at -- each of those has its own dedicated update path
+  /// (updateListingPhotos, updateListingStatus, bumpListing) or must
+  /// never change after creation.
+  Future<void> updateListingDetails({
+    required String listingId,
+    required String title,
+    required String description,
+    required String propertyType,
+    required String transactionType,
+    required String state,
+    required String area,
+    required double price,
+    int? bedrooms,
+    int? bathrooms,
+    double? commissionSplitPercent,
+    required bool titleVerified,
+    required bool exclusiveMandate,
+  }) {
+    return _client.from('listing').update({
+      'title': title,
+      'description': description,
+      'property_type': propertyType,
+      'transaction_type': transactionType,
+      'state': state,
+      'area': area,
+      'price': price,
+      'bedrooms': bedrooms,
+      'bathrooms': bathrooms,
+      'commission_split_percent': commissionSplitPercent,
+      'title_verified': titleVerified,
+      'exclusive_mandate': exclusiveMandate,
+    }).eq('listing_id', listingId);
   }
 
   Future<int> countActiveListings(String negotiatorId) async {
