@@ -22,7 +22,7 @@ import '../../features/home/main_dashboard_screen.dart';
 import '../../features/listing/marketplace_screen.dart';
 import '../../features/listing/models/listing_draft.dart';
 import '../../features/listing/my_inventory_screen.dart';
-import '../../features/listing/post_listing_screen.dart';
+import '../../features/listing/post_broadcast_screen.dart';
 import '../../features/listing/property_detail_screen.dart';
 import '../../features/matching/matches_for_listing_screen.dart';
 import '../../features/matching/matches_for_requirement_screen.dart';
@@ -31,7 +31,6 @@ import '../../features/notifications/notification_list_screen.dart';
 import '../../features/profile/profile_screen.dart';
 import '../../features/ratings/reviews_screen.dart';
 import '../../features/requirement/my_requirements_screen.dart';
-import '../../features/requirement/post_requirement_screen.dart';
 import '../../features/requirement/requirement_board_screen.dart';
 import '../../features/requirement/requirement_detail_screen.dart';
 import '../../features/settings/account_settings_screen.dart';
@@ -230,11 +229,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/my-inventory', builder: (context, state) => const MyInventoryScreen()),
       GoRoute(
         path: '/post-listing',
-        builder: (context, state) => PostListingScreen(initialDraft: state.extra as ListingDraft?),
+        builder: (context, state) => PostBroadcastScreen(initialDraft: state.extra as ListingDraft?),
       ),
       GoRoute(
         path: '/property/:listingId/edit',
-        builder: (context, state) => PostListingScreen(editListingId: state.pathParameters['listingId']),
+        builder: (context, state) => PostBroadcastScreen(editListingId: state.pathParameters['listingId']),
       ),
       GoRoute(
         path: '/property/:listingId',
@@ -242,7 +241,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(path: '/requirement-board', builder: (context, state) => const RequirementBoardScreen()),
       GoRoute(path: '/my-requirements', builder: (context, state) => const MyRequirementsScreen()),
-      GoRoute(path: '/post-requirement', builder: (context, state) => const PostRequirementScreen()),
+      GoRoute(
+        path: '/post-requirement',
+        builder: (context, state) => const PostBroadcastScreen(initialMode: PostBroadcastMode.requirement),
+      ),
       GoRoute(
         path: '/requirement-board/:requirementId',
         builder: (context, state) =>

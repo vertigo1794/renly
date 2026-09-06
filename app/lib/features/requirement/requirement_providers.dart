@@ -24,6 +24,10 @@ final boardRequirementsProvider = FutureProvider<List<Requirement>>((ref) {
   return ref.watch(requirementRepositoryProvider).fetchBoardRequirements();
 });
 
+final openRequirementsCountProvider = FutureProvider<int>((ref) {
+  return ref.watch(requirementRepositoryProvider).countOpenRequirements();
+});
+
 final myRequirementsProvider = FutureProvider.family<List<Requirement>, String>((ref, negotiatorId) {
   return ref.watch(requirementRepositoryProvider).fetchOwnRequirements(negotiatorId);
 });
