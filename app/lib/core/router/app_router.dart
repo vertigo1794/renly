@@ -20,6 +20,7 @@ import '../../features/collaboration/message_providers.dart' hide currentNegotia
 import '../../features/collaboration/my_requests_screen.dart';
 import '../../features/home/main_dashboard_screen.dart';
 import '../../features/listing/marketplace_screen.dart';
+import '../../features/listing/models/listing_draft.dart';
 import '../../features/listing/my_inventory_screen.dart';
 import '../../features/listing/post_listing_screen.dart';
 import '../../features/listing/property_detail_screen.dart';
@@ -227,7 +228,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         ],
       ),
       GoRoute(path: '/my-inventory', builder: (context, state) => const MyInventoryScreen()),
-      GoRoute(path: '/post-listing', builder: (context, state) => const PostListingScreen()),
+      GoRoute(
+        path: '/post-listing',
+        builder: (context, state) => PostListingScreen(initialDraft: state.extra as ListingDraft?),
+      ),
       GoRoute(
         path: '/property/:listingId/edit',
         builder: (context, state) => PostListingScreen(editListingId: state.pathParameters['listingId']),
