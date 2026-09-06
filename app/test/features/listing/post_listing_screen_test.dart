@@ -10,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:renly/core/theme/app_theme.dart';
 import 'package:renly/features/listing/listing_providers.dart';
+import 'package:renly/features/listing/models/listing.dart';
 import 'package:renly/features/listing/post_listing_screen.dart';
 import 'package:renly/core/widgets/brutalist_button.dart';
 import 'package:renly/features/subscription/models/subscription_status.dart' as subscription;
@@ -72,8 +73,11 @@ void main() {
     await tester.pumpWidget(_wrap(router));
     await tester.pumpAndSettle();
 
-    final scrollable = find.byType(SingleChildScrollView);
-    await tester.drag(scrollable, const Offset(0, -600));
+    // ensureVisible rather than a fixed drag offset: the form grew taller
+    // once the commission-split/title-verified/exclusive-mandate fields and
+    // the Save as Draft button were added (My Inventory Premium Restyle), so
+    // a hardcoded scroll distance would under-scroll and miss the button.
+    await tester.ensureVisible(find.widgetWithText(BrutalistButton, 'Post Now'));
     await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(BrutalistButton, 'Post Now'));
     await tester.pumpAndSettle();
@@ -97,7 +101,10 @@ void main() {
 
     expect(find.text("You've reached the Free plan's limit of 3 active listings. Upgrade to Professional for unlimited listings."), findsOneWidget);
 
-    final button = tester.widget<BrutalistButton>(find.byType(BrutalistButton));
+    // find.byType(BrutalistButton) alone now matches 2 widgets (Post Now +
+    // Save as Draft), so the primary submit button must be looked up by its
+    // own label.
+    final button = tester.widget<BrutalistButton>(find.widgetWithText(BrutalistButton, 'Post Now'));
     expect(button.onPressed, isNull);
   });
 
@@ -117,7 +124,47 @@ void main() {
 
     expect(find.text("You've reached the Free plan's limit of 3 active listings. Upgrade to Professional for unlimited listings."), findsNothing);
 
-    final button = tester.widget<BrutalistButton>(find.byType(BrutalistButton));
+    final button = tester.widget<BrutalistButton>(find.widgetWithText(BrutalistButton, 'Post Now'));
     expect(button.onPressed, isNotNull);
+  });
+
+  testWidgets('edit mode pre-fills fields from the existing listing and shows Save Changes', (tester) async {
+    final existingListing = Listing(
+      listingId: 'l-1',
+      negotiatorId: 'n-1',
+      title: 'Existing Title',
+      description: 'Existing description',
+      propertyType: 'house',
+      transactionType: 'sale',
+      state: 'Selangor',
+      area: 'Shah Alam',
+      price: 500000,
+      bedrooms: 4,
+      bathrooms: 3,
+      photoUrls: const [],
+      status: 'active',
+      createdAt: DateTime(2024, 1, 1),
+    );
+
+    final router = GoRouter(routes: [
+      GoRoute(
+        path: '/',
+        builder: (context, state) => const PostListingScreen(editListingId: 'l-1'),
+      ),
+    ]);
+
+    await tester.pumpWidget(_wrap(router, overrides: [
+      currentNegotiatorIdProvider.overrideWithValue('n-1'),
+      listingDetailProvider('l-1').overrideWith((ref) async => existingListing),
+      subscription_providers.subscriptionStatusProvider.overrideWith(
+        (ref) => Stream.value(const subscription.SubscriptionStatus(tier: 'professional')),
+      ),
+    ]));
+    await tester.pumpAndSettle();
+
+    final titleField = tester.widget<TextFormField>(find.byKey(const Key('listing_title_field')));
+    expect(titleField.controller?.text, 'Existing Title');
+    expect(find.text('listing_save_changes'.tr()), findsOneWidget);
+    expect(find.text('listing_post_now'.tr()), findsNothing);
   });
 }

@@ -229,6 +229,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/my-inventory', builder: (context, state) => const MyInventoryScreen()),
       GoRoute(path: '/post-listing', builder: (context, state) => const PostListingScreen()),
       GoRoute(
+        path: '/property/:listingId/edit',
+        builder: (context, state) => PostListingScreen(editListingId: state.pathParameters['listingId']),
+      ),
+      GoRoute(
         path: '/property/:listingId',
         builder: (context, state) => PropertyDetailScreen(listingId: state.pathParameters['listingId']!),
       ),
