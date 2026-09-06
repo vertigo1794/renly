@@ -181,6 +181,23 @@ void main() {
     expect(find.text('RM 700,000'), findsNothing);
   });
 
+  testWidgets('shows the real unit count badge and the active listing by title on the Active tab', (tester) async {
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const MyInventoryScreen()),
+    ]);
+
+    await tester.pumpWidget(_wrap(router, listings: [_activeListing, _soldListing]));
+    await tester.pumpAndSettle();
+
+    // The unit count badge reflects the real total across ALL listings
+    // (MyInventoryScreen uses `listings.length`, not the active-tab subset),
+    // so with one active + one sold listing it should read "2 Units".
+    expect(find.text('2 ${'inventory_units_label'.tr()}'), findsOneWidget);
+    // The premium card renders the listing's real title again since fix
+    // 1c1845c, so verify it directly rather than only by its formatted price.
+    expect(find.text(_activeListing.title), findsOneWidget);
+  });
+
   testWidgets('switching to Co-Broke in Review tab shows only listings with a pending request', (tester) async {
     final router = GoRouter(routes: [
       GoRoute(path: '/', builder: (context, state) => const MyInventoryScreen()),
