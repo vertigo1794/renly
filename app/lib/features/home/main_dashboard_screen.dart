@@ -14,6 +14,7 @@ import '../collaboration/send_cobroke_request_action.dart';
 import '../listing/listing_formatting.dart';
 import '../listing/listing_photo.dart';
 import '../listing/listing_providers.dart';
+import '../listing/models/listing.dart';
 import '../matching/matching_providers.dart' hide currentNegotiatorIdProvider;
 import '../matching/models/match_candidate.dart';
 import '../notifications/notification_providers.dart';
@@ -38,7 +39,7 @@ class MainDashboardScreen extends ConsumerWidget {
     final unreadCount = ref.watch(unreadNotificationCountProvider);
     final negotiatorId = ref.watch(currentNegotiatorIdProvider);
     final myListingsAsync = negotiatorId == null
-        ? const AsyncValue<List<dynamic>>.data([])
+        ? const AsyncValue<List<Listing>>.data(<Listing>[])
         : ref.watch(myListingsProvider(negotiatorId));
     final receivedRequestsAsync = ref.watch(receivedRequestsProvider);
     final myMatchesAsync = ref.watch(myMatchesProvider);
@@ -258,7 +259,7 @@ class MainDashboardScreen extends ConsumerWidget {
                             ),
                             TextButton(
                               onPressed: () => context.push('/my-matches'),
-                              child: Text('${'dashboard_radar_view_all'.tr()} (${myListingMatches.length})'),
+                              child: Text('dashboard_view_all'.tr()),
                             ),
                           ],
                         ),

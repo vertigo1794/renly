@@ -9,7 +9,18 @@
 -- full_name/ren_number for any negotiator party to a listing/requirement/
 -- match they're a legitimate counterparty to; agency_name is no more
 -- sensitive than those two.
-create or replace function get_negotiator_public_info(p_negotiator_id uuid)
+--
+-- Postgres does NOT allow CREATE OR REPLACE FUNCTION to change a
+-- function's return type (RETURNS TABLE compiles to OUT parameters) --
+-- the function must be dropped and recreated instead. Dropping a function
+-- discards its existing grants, so 0004's grants are explicitly restated
+-- below -- omitting this would leave the function executable by PUBLIC
+-- (the Postgres default for a newly created function), letting an
+-- unauthenticated caller bypass negotiator_select_own's RLS via this
+-- SECURITY DEFINER function.
+drop function if exists get_negotiator_public_info(uuid);
+
+create function get_negotiator_public_info(p_negotiator_id uuid)
 returns table (full_name text, ren_number text, agency_name text)
 language sql
 security definer
@@ -21,7 +32,5 @@ as $$
   where n.negotiator_id = p_negotiator_id;
 $$;
 
--- ren_number/full_name grants already exist from 0004; re-stating the
--- function signature via create-or-replace does not require re-granting
--- since the signature (arg types) is unchanged and REVOKE/GRANT is on the
--- function identity, not its return type.
+revoke execute on function get_negotiator_public_info(uuid) from public;
+grant execute on function get_negotiator_public_info(uuid) to authenticated;

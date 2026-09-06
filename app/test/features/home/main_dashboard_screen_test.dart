@@ -59,6 +59,49 @@ final _matchCandidate = MatchCandidate(
   requirementOwner: const ListingOwner(fullName: 'Julian Danial', renNumber: '34812', agencyName: 'IQI Global'),
 );
 
+// A match on a DIFFERENT negotiator's listing (negotiatorId 'n-9', not the
+// signed-in 'n-1'). Used to prove the Radar's client-side .where() filter
+// actually excludes matches that aren't on the current negotiator's own
+// listings, rather than just happening to include the one match that is.
+final _otherNegotiatorListing = Listing(
+  listingId: 'l-2',
+  negotiatorId: 'n-9',
+  title: 'Lakeside Bungalow',
+  description: 'd',
+  propertyType: 'house',
+  transactionType: 'sale',
+  state: 'Selangor',
+  area: 'Bangsar',
+  price: 1800000,
+  bedrooms: 3,
+  bathrooms: 2,
+  photoUrls: [],
+  status: 'active',
+  createdAt: DateTime(2024, 1, 1),
+);
+
+final _otherRequirement = Requirement(
+  requirementId: 'r-2',
+  negotiatorId: 'n-3',
+  propertyType: 'house',
+  transactionType: 'sale',
+  state: 'Selangor',
+  area: 'Bangsar',
+  budgetMin: 1500000,
+  budgetMax: 2000000,
+  photoUrls: [],
+  status: 'open',
+);
+
+final _otherNegotiatorMatchCandidate = MatchCandidate(
+  matchId: 'm-2',
+  score: 80,
+  listing: _otherNegotiatorListing,
+  requirementOwner: const ListingOwner(fullName: 'Siti Aminah', renNumber: '99999', agencyName: 'PropNex'),
+  requirement: _otherRequirement,
+  listingOwner: const ListingOwner(fullName: 'Farid Iskandar', renNumber: '77777'),
+);
+
 Future<void> _pumpDashboard(
   WidgetTester tester, {
   required List<Override> overrides,
@@ -149,8 +192,11 @@ void main() {
         // is hidden), and the Radar card would otherwise render the match's
         // "REN 34812" requirementOwner text and break that unrelated
         // assertion. Still overridden (not left to the real repository)
-        // because the screen unconditionally watches both providers once
-        // currentNegotiatorIdProvider resolves non-null.
+        // because the screen unconditionally watches myMatchesProvider
+        // regardless of currentNegotiatorIdProvider -- myMatchesProvider
+        // takes no negotiatorId parameter at all; it's the Radar's own
+        // client-side .where() filter that uses negotiatorId, not the
+        // provider itself.
         myMatchesProvider.overrideWith((ref) async => []),
         marketPulseProvider.overrideWith((ref, negotiatorId) async => null),
       ],
@@ -177,7 +223,7 @@ void main() {
         myListingsProvider.overrideWith((ref, negotiatorId) async => []),
         receivedRequestsProvider.overrideWith((ref) async => []),
         unreadNotificationCountProvider.overrideWith((ref) => 0),
-        myMatchesProvider.overrideWith((ref) async => [_matchCandidate]),
+        myMatchesProvider.overrideWith((ref) async => [_matchCandidate, _otherNegotiatorMatchCandidate]),
         marketPulseProvider.overrideWith((ref, negotiatorId) async => (area: 'Mont Kiara', count: 3)),
       ],
     );
@@ -186,6 +232,11 @@ void main() {
     expect(find.textContaining('92%'), findsOneWidget);
     expect(find.textContaining('IQI Global'), findsOneWidget);
     expect(find.textContaining('Mont Kiara'), findsWidgets);
+    // Negative case: the match on 'n-9's listing must be filtered out by the
+    // Radar's own-listings-only .where(), so its requirement owner and area
+    // never render, even though it was included in myMatchesProvider's list.
+    expect(find.textContaining('Siti Aminah'), findsNothing);
+    expect(find.textContaining('Bangsar'), findsNothing);
   });
 
   testWidgets('hides Co-Broking Radar and Market Pulse when there are no matches', (tester) async {
