@@ -441,72 +441,81 @@ class _PostListingScreenState extends ConsumerState<PostListingScreen> {
                   onChanged: (value) => setState(() => _exclusiveMandate = value),
                 ),
                 const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('listing_photos_label'.tr()),
-                    Text('listing_photos_max'.tr()),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                GridView.count(
-                  crossAxisCount: 3,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  mainAxisSpacing: 8,
-                  crossAxisSpacing: 8,
-                  children: [
-                    ...List.generate(_photos.length, (index) {
-                      return Stack(
-                        children: [
-                          // XFile.readAsBytes() works on every platform
-                          // including web; going through dart:io's
-                          // File(path) would break the web build. Same
-                          // reason as registration_professional_screen.
-                          Positioned.fill(
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: FutureBuilder<Uint8List>(
-                                future: _photoBytes(index),
-                                builder: (context, snapshot) {
-                                  final bytes = snapshot.data;
-                                  if (bytes == null) {
-                                    return Container(
-                                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                                    );
-                                  }
-                                  return Image.memory(bytes, fit: BoxFit.cover);
-                                },
-                              ),
-                            ),
-                          ),
-                          Positioned(
-                            top: 4,
-                            right: 4,
-                            child: GestureDetector(
-                              onTap: () => _removePhoto(index),
-                              child: const CircleAvatar(
-                                radius: 12,
-                                child: Icon(Icons.close, size: 16),
-                              ),
-                            ),
-                          ),
-                        ],
-                      );
-                    }),
-                    if (_photos.length < 10)
-                      OutlinedButton(
-                        onPressed: _pickPhotos,
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                // Photo editing has no wired-up submit path in edit mode --
+                // updateListingDetails() deliberately never touches
+                // photo_urls (see its own doc comment; that's
+                // updateListingPhotos's job, which the edit flow doesn't
+                // call). Hiding the whole section here, rather than just
+                // disabling it, avoids implying a capability edit mode
+                // doesn't actually have.
+                if (!_isEditMode) ...[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('listing_photos_label'.tr()),
+                      Text('listing_photos_max'.tr()),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  GridView.count(
+                    crossAxisCount: 3,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    mainAxisSpacing: 8,
+                    crossAxisSpacing: 8,
+                    children: [
+                      ...List.generate(_photos.length, (index) {
+                        return Stack(
                           children: [
-                            const Icon(Icons.add_a_photo),
-                            Text('listing_add_photo'.tr(), style: Theme.of(context).textTheme.labelSmall),
+                            // XFile.readAsBytes() works on every platform
+                            // including web; going through dart:io's
+                            // File(path) would break the web build. Same
+                            // reason as registration_professional_screen.
+                            Positioned.fill(
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: FutureBuilder<Uint8List>(
+                                  future: _photoBytes(index),
+                                  builder: (context, snapshot) {
+                                    final bytes = snapshot.data;
+                                    if (bytes == null) {
+                                      return Container(
+                                        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                                      );
+                                    }
+                                    return Image.memory(bytes, fit: BoxFit.cover);
+                                  },
+                                ),
+                              ),
+                            ),
+                            Positioned(
+                              top: 4,
+                              right: 4,
+                              child: GestureDetector(
+                                onTap: () => _removePhoto(index),
+                                child: const CircleAvatar(
+                                  radius: 12,
+                                  child: Icon(Icons.close, size: 16),
+                                ),
+                              ),
+                            ),
                           ],
+                        );
+                      }),
+                      if (_photos.length < 10)
+                        OutlinedButton(
+                          onPressed: _pickPhotos,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.add_a_photo),
+                              Text('listing_add_photo'.tr(), style: Theme.of(context).textTheme.labelSmall),
+                            ],
+                          ),
                         ),
-                      ),
-                  ],
-                ),
+                    ],
+                  ),
+                ],
                 if (!_isEditMode && tierAsync.valueOrNull?.tier == 'free') ...[
                   const SizedBox(height: 12),
                   Text('$activeCount/3 ${'listing_active_count_label'.tr()}'),
