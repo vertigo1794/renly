@@ -146,6 +146,8 @@
   "listing_field_bedrooms": "Bedrooms",
   "listing_field_bathrooms": "Bathrooms",
   "listing_field_sqft": "Built-up Size (sqft)",
+  "listing_preview_radar_label": "Preliminary Match Radar",
+  "listing_preview_match_count": "Matches {count} buyer requirement(s)",
   "listing_photos_label": "Photos",
   "listing_photos_max": "Max 10",
   "listing_add_photo": "Add Photo",

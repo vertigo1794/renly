@@ -146,6 +146,8 @@
   "listing_field_bedrooms": "Bilik Tidur",
   "listing_field_bathrooms": "Bilik Air",
   "listing_field_sqft": "Saiz Binaan (kaki persegi)",
+  "listing_preview_radar_label": "Radar Padanan Awal",
+  "listing_preview_match_count": "Sepadan dengan {count} keperluan pembeli",
   "listing_photos_label": "Gambar",
   "listing_photos_max": "Maksimum 10",
   "listing_add_photo": "Tambah Gambar",

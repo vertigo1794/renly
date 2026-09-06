@@ -1,4 +1,5 @@
 // app/lib/features/listing/post_listing_screen.dart
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:easy_localization/easy_localization.dart';
@@ -9,7 +10,10 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../core/constants/malaysian_states.dart';
 import '../../core/widgets/brutalist_button.dart';
+import '../matching/live_match_preview.dart';
 import '../matching/matching_providers.dart' hide currentNegotiatorIdProvider;
+import '../requirement/models/requirement.dart';
+import '../requirement/requirement_providers.dart' hide currentNegotiatorIdProvider;
 import 'listing_drafts_provider.dart';
 import 'listing_providers.dart';
 import 'models/listing.dart';
@@ -23,17 +27,17 @@ import '../subscription/subscription_providers.dart' hide currentNegotiatorIdPro
 /// and draft-resume (initialDraft set -- pre-fills from a local,
 /// never-submitted draft). editListingId and initialDraft are mutually
 /// exclusive in practice; passing both is not a supported combination.
-class PostListingScreen extends ConsumerStatefulWidget {
-  const PostListingScreen({super.key, this.editListingId, this.initialDraft});
+class PostListingFormBody extends ConsumerStatefulWidget {
+  const PostListingFormBody({super.key, this.editListingId, this.initialDraft});
 
   final String? editListingId;
   final ListingDraft? initialDraft;
 
   @override
-  ConsumerState<PostListingScreen> createState() => _PostListingScreenState();
+  ConsumerState<PostListingFormBody> createState() => _PostListingFormBodyState();
 }
 
-class _PostListingScreenState extends ConsumerState<PostListingScreen> {
+class _PostListingFormBodyState extends ConsumerState<PostListingFormBody> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
@@ -43,6 +47,9 @@ class _PostListingScreenState extends ConsumerState<PostListingScreen> {
   final _bathroomsController = TextEditingController();
   final _sqftController = TextEditingController();
   final _commissionSplitController = TextEditingController();
+  Timer? _previewDebounce;
+  List<Requirement>? _previewCandidates;
+  LiveMatchPreviewResult _previewResult = const LiveMatchPreviewResult(matchCount: 0);
   String _propertyType = 'apartment';
   String _transactionType = 'sale';
   String _state = malaysianStates.first;
@@ -88,10 +95,38 @@ class _PostListingScreenState extends ConsumerState<PostListingScreen> {
       _titleVerified = draft.titleVerified;
       _exclusiveMandate = draft.exclusiveMandate;
     }
+    _loadPreviewCandidates();
+    for (final controller in [_areaController, _priceController, _bedroomsController, _bathroomsController, _sqftController]) {
+      controller.addListener(_onPreviewFieldChanged);
+    }
+  }
+
+  /// Best-effort, same reasoning as _submit()'s matching-computation catch
+  /// block: the live match preview is an enhancement layered on top of the
+  /// form, never a requirement for posting/editing a listing to work. A
+  /// failure here (offline, backend hiccup, or -- in widget tests --
+  /// Supabase never having been initialized at all) must not crash
+  /// initState/the whole form; _previewCandidates simply stays null and
+  /// _recomputePreview's own null-check keeps the preview card hidden.
+  Future<void> _loadPreviewCandidates() async {
+    try {
+      final requirements = await ref.read(requirementRepositoryProvider).fetchBoardRequirements();
+      if (!mounted) return;
+      setState(() {
+        _previewCandidates = requirements;
+        _recomputePreview();
+      });
+    } catch (_) {
+      // Intentionally swallowed -- see doc comment above.
+    }
   }
 
   @override
   void dispose() {
+    _previewDebounce?.cancel();
+    for (final controller in [_areaController, _priceController, _bedroomsController, _bathroomsController, _sqftController]) {
+      controller.removeListener(_onPreviewFieldChanged);
+    }
     _titleController.dispose();
     _descriptionController.dispose();
     _areaController.dispose();
@@ -188,6 +223,42 @@ class _PostListingScreenState extends ConsumerState<PostListingScreen> {
     await ref.read(listingDraftsProvider.notifier).add(draft);
     if (!mounted) return;
     context.go('/my-inventory');
+  }
+
+  void _onPreviewFieldChanged() {
+    _previewDebounce?.cancel();
+    _previewDebounce = Timer(const Duration(milliseconds: 500), () {
+      if (!mounted) return;
+      setState(_recomputePreview);
+    });
+  }
+
+  void _recomputePreview() {
+    final candidates = _previewCandidates;
+    if (candidates == null) return;
+    final price = double.tryParse(_priceController.text.trim());
+    if (price == null) {
+      _previewResult = const LiveMatchPreviewResult(matchCount: 0);
+      return;
+    }
+    final draftListing = Listing(
+      listingId: 'preview',
+      negotiatorId: ref.read(currentNegotiatorIdProvider) ?? 'preview',
+      title: _titleController.text.trim(),
+      description: _descriptionController.text.trim(),
+      propertyType: _propertyType,
+      transactionType: _transactionType,
+      state: _state,
+      area: _areaController.text.trim(),
+      price: price,
+      bedrooms: _bedroomsController.text.trim().isEmpty ? null : int.tryParse(_bedroomsController.text.trim()),
+      bathrooms: _bathroomsController.text.trim().isEmpty ? null : int.tryParse(_bathroomsController.text.trim()),
+      builtUpSqft: _sqftValue,
+      photoUrls: const [],
+      status: 'active',
+      createdAt: DateTime.now(),
+    );
+    _previewResult = LiveMatchPreview.forListing(draftListing, candidates);
   }
 
   Future<void> _submit() async {
@@ -325,22 +396,18 @@ class _PostListingScreenState extends ConsumerState<PostListingScreen> {
       final listingAsync = ref.watch(listingDetailProvider(widget.editListingId!));
       listingAsync.whenData(_prefillFromListing);
       if (listingAsync.isLoading && !_prefilledFromListing) {
-        return Scaffold(
-          appBar: AppBar(title: Text('listing_edit_title'.tr())),
-          body: const Center(child: CircularProgressIndicator()),
-        );
+        return const Center(child: CircularProgressIndicator());
       }
     }
 
-    return Scaffold(
-      appBar: AppBar(title: Text(_isEditMode ? 'listing_edit_title'.tr() : 'listing_post_title'.tr())),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+    return SafeArea(
+      top: false,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 TextFormField(
                   key: const Key('listing_title_field'),
@@ -396,6 +463,17 @@ class _PostListingScreenState extends ConsumerState<PostListingScreen> {
                   controller: _areaController,
                   decoration: InputDecoration(labelText: 'listing_field_area'.tr()),
                   validator: _requiredValidator,
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  children: [
+                    for (final area in const ['Mont Kiara', 'KLCC', 'Bangsar', 'Petaling Jaya'])
+                      ActionChip(
+                        label: Text(area, style: const TextStyle(fontSize: 12)),
+                        onPressed: () => setState(() => _areaController.text = area),
+                      ),
+                  ],
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
@@ -559,6 +637,35 @@ class _PostListingScreenState extends ConsumerState<PostListingScreen> {
                   const SizedBox(height: 12),
                   Text(_submitError!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
                 ],
+                if (_previewResult.matchCount > 0) ...[
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF9FAFB),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.black, width: 2),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('listing_preview_radar_label'.tr(), style: Theme.of(context).textTheme.labelSmall),
+                        const SizedBox(height: 4),
+                        Text(
+                          'listing_preview_match_count'.tr(namedArgs: {'count': '${_previewResult.matchCount}'}),
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                        if (_previewResult.topMatchLabel != null)
+                          Text(
+                            _previewResult.topMatchLabel!,
+                            style: Theme.of(context).textTheme.labelSmall,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 24),
                 BrutalistButton(
                   label: _isEditMode ? 'listing_save_changes'.tr() : 'listing_post_now'.tr(),
@@ -576,7 +683,6 @@ class _PostListingScreenState extends ConsumerState<PostListingScreen> {
             ),
           ),
         ),
-      ),
-    );
+      );
   }
 }

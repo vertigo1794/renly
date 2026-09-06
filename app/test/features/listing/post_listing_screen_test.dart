@@ -50,7 +50,7 @@ void main() {
 
   testWidgets('renders all required fields', (tester) async {
     final router = GoRouter(routes: [
-      GoRoute(path: '/', builder: (context, state) => const PostListingScreen()),
+      GoRoute(path: '/', builder: (context, state) => const Scaffold(body: PostListingFormBody())),
     ]);
 
     await tester.pumpWidget(_wrap(router));
@@ -67,7 +67,7 @@ void main() {
 
   testWidgets('submitting with empty required fields shows validation errors', (tester) async {
     final router = GoRouter(routes: [
-      GoRoute(path: '/', builder: (context, state) => const PostListingScreen()),
+      GoRoute(path: '/', builder: (context, state) => const Scaffold(body: PostListingFormBody())),
     ]);
 
     await tester.pumpWidget(_wrap(router));
@@ -87,7 +87,7 @@ void main() {
 
   testWidgets('shows active count and disables submit at the free-tier cap', (tester) async {
     final router = GoRouter(routes: [
-      GoRoute(path: '/', builder: (context, state) => const PostListingScreen()),
+      GoRoute(path: '/', builder: (context, state) => const Scaffold(body: PostListingFormBody())),
     ]);
 
     await tester.pumpWidget(_wrap(router, overrides: [
@@ -110,7 +110,7 @@ void main() {
 
   testWidgets('does not block submit for a professional-tier negotiator even at 3 active listings', (tester) async {
     final router = GoRouter(routes: [
-      GoRoute(path: '/', builder: (context, state) => const PostListingScreen()),
+      GoRoute(path: '/', builder: (context, state) => const Scaffold(body: PostListingFormBody())),
     ]);
 
     await tester.pumpWidget(_wrap(router, overrides: [
@@ -149,7 +149,7 @@ void main() {
     final router = GoRouter(routes: [
       GoRoute(
         path: '/',
-        builder: (context, state) => const PostListingScreen(editListingId: 'l-1'),
+        builder: (context, state) => const Scaffold(body: PostListingFormBody(editListingId: 'l-1')),
       ),
     ]);
 
