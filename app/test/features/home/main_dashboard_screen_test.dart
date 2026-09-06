@@ -120,5 +120,8 @@ void main() {
     );
 
     expect(find.textContaining('REN'), findsNothing);
+    expect(find.text('dashboard_quick_action_market'.tr()), findsOneWidget);
+    expect(find.text('dashboard_quick_action_my_inventory'.tr()), findsOneWidget);
+    expect(find.textContaining('· 0'), findsNothing);
   });
 }

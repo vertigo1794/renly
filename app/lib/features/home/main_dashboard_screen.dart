@@ -136,8 +136,9 @@ class MainDashboardScreen extends ConsumerWidget {
                     Expanded(
                       child: BrutalistButton(
                         label: listingsAsync.maybeWhen(
-                          data: (listings) =>
-                              '${'dashboard_quick_action_market'.tr()} · ${listings.length} ${'dashboard_quick_action_market_active'.tr()}',
+                          data: (listings) => listings.isEmpty
+                              ? 'dashboard_quick_action_market'.tr()
+                              : '${'dashboard_quick_action_market'.tr()} · ${listings.length} ${'dashboard_quick_action_market_active'.tr()}',
                           orElse: () => 'dashboard_quick_action_market'.tr(),
                         ),
                         variant: BrutalistButtonVariant.secondary,
@@ -151,8 +152,9 @@ class MainDashboardScreen extends ConsumerWidget {
               const SizedBox(height: 12),
               BrutalistButton(
                 label: myListingsAsync.maybeWhen(
-                  data: (listings) =>
-                      '${'dashboard_quick_action_my_inventory'.tr()} · ${listings.length} ${'dashboard_quick_action_my_inventory_count'.tr()}',
+                  data: (listings) => listings.isEmpty
+                      ? 'dashboard_quick_action_my_inventory'.tr()
+                      : '${'dashboard_quick_action_my_inventory'.tr()} · ${listings.length} ${'dashboard_quick_action_my_inventory_count'.tr()}',
                   orElse: () => 'dashboard_quick_action_my_inventory'.tr(),
                 ),
                 variant: BrutalistButtonVariant.secondary,
