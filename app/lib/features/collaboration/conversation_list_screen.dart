@@ -388,7 +388,7 @@ class _ConversationListScreenState extends ConsumerState<ConversationListScreen>
       // over this screen -- without it, the default bottom-right FAB
       // position collides with the dock's own footprint.
       floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 90),
+        padding: const EdgeInsets.only(bottom: 120),
         child: FloatingActionButton.extended(
           onPressed: () => context.push('/post-requirement'),
           backgroundColor: AppColors.primary,
