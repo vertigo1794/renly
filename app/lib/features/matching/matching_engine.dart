@@ -16,6 +16,14 @@ class MatchingEngine {
   static int? score(Listing listing, Requirement requirement) {
     if (listing.transactionType != requirement.transactionType) return null;
     if (listing.state != requirement.state) return null;
+    if (requirement.bathroomsMin != null &&
+        (listing.bathrooms == null || listing.bathrooms! < requirement.bathroomsMin!)) {
+      return null;
+    }
+    if (requirement.builtUpSqftMin != null &&
+        (listing.builtUpSqft == null || listing.builtUpSqft! < requirement.builtUpSqftMin!)) {
+      return null;
+    }
 
     final location = listing.area.toLowerCase() == requirement.area.toLowerCase() ? 30 : 0;
     final price = _priceScore(listing.price, requirement.budgetMin, requirement.budgetMax);

@@ -180,6 +180,201 @@ void main() {
       expect(MatchingEngine.score(_listing, requirement), 90);
     });
 
+    test('listing meeting the requirement\'s bathroomsMin still scores normally', () {
+      final listing = Listing(
+        listingId: 'l-5',
+        negotiatorId: 'n-1',
+        title: 't',
+        description: 'd',
+        propertyType: 'apartment',
+        transactionType: 'sale',
+        state: 'Selangor',
+        area: 'Petaling Jaya',
+        price: 400000,
+        bedrooms: 3,
+        bathrooms: 2,
+        photoUrls: [],
+        status: 'active',
+        createdAt: DateTime(2024, 1, 1),
+      );
+      const requirement = Requirement(
+        requirementId: 'r-4',
+        negotiatorId: 'n-2',
+        propertyType: 'apartment',
+        transactionType: 'sale',
+        state: 'Selangor',
+        area: 'Petaling Jaya',
+        budgetMin: 300000,
+        budgetMax: 500000,
+        bedrooms: 3,
+        photoUrls: [],
+        status: 'open',
+        bathroomsMin: 2,
+      );
+      expect(MatchingEngine.score(listing, requirement), 100);
+    });
+
+    test('listing below the requirement\'s bathroomsMin is disqualified', () {
+      final listing = Listing(
+        listingId: 'l-6',
+        negotiatorId: 'n-1',
+        title: 't',
+        description: 'd',
+        propertyType: 'apartment',
+        transactionType: 'sale',
+        state: 'Selangor',
+        area: 'Petaling Jaya',
+        price: 400000,
+        bedrooms: 3,
+        bathrooms: 1,
+        photoUrls: [],
+        status: 'active',
+        createdAt: DateTime(2024, 1, 1),
+      );
+      const requirement = Requirement(
+        requirementId: 'r-5',
+        negotiatorId: 'n-2',
+        propertyType: 'apartment',
+        transactionType: 'sale',
+        state: 'Selangor',
+        area: 'Petaling Jaya',
+        budgetMin: 300000,
+        budgetMax: 500000,
+        bedrooms: 3,
+        photoUrls: [],
+        status: 'open',
+        bathroomsMin: 2,
+      );
+      expect(MatchingEngine.score(listing, requirement), isNull);
+    });
+
+    test('listing with unset bathrooms is disqualified when requirement sets a minimum', () {
+      const requirement = Requirement(
+        requirementId: 'r-6',
+        negotiatorId: 'n-2',
+        propertyType: 'apartment',
+        transactionType: 'sale',
+        state: 'Selangor',
+        area: 'Petaling Jaya',
+        budgetMin: 300000,
+        budgetMax: 500000,
+        bedrooms: 3,
+        photoUrls: [],
+        status: 'open',
+        bathroomsMin: 2,
+      );
+      expect(MatchingEngine.score(_listing, requirement), isNull);
+    });
+
+    test('requirement with no bathroomsMin never filters on bathrooms', () {
+      final listing = Listing(
+        listingId: 'l-7',
+        negotiatorId: 'n-1',
+        title: 't',
+        description: 'd',
+        propertyType: 'apartment',
+        transactionType: 'sale',
+        state: 'Selangor',
+        area: 'Petaling Jaya',
+        price: 400000,
+        bedrooms: 3,
+        photoUrls: [],
+        status: 'active',
+        createdAt: DateTime(2024, 1, 1),
+      );
+      expect(MatchingEngine.score(listing, _requirement), 100);
+    });
+
+    test('listing meeting the requirement\'s builtUpSqftMin still scores normally', () {
+      final listing = Listing(
+        listingId: 'l-8',
+        negotiatorId: 'n-1',
+        title: 't',
+        description: 'd',
+        propertyType: 'apartment',
+        transactionType: 'sale',
+        state: 'Selangor',
+        area: 'Petaling Jaya',
+        price: 400000,
+        bedrooms: 3,
+        builtUpSqft: 1200,
+        photoUrls: [],
+        status: 'active',
+        createdAt: DateTime(2024, 1, 1),
+      );
+      const requirement = Requirement(
+        requirementId: 'r-7',
+        negotiatorId: 'n-2',
+        propertyType: 'apartment',
+        transactionType: 'sale',
+        state: 'Selangor',
+        area: 'Petaling Jaya',
+        budgetMin: 300000,
+        budgetMax: 500000,
+        bedrooms: 3,
+        photoUrls: [],
+        status: 'open',
+        builtUpSqftMin: 1000,
+      );
+      expect(MatchingEngine.score(listing, requirement), 100);
+    });
+
+    test('listing below the requirement\'s builtUpSqftMin is disqualified', () {
+      final listing = Listing(
+        listingId: 'l-9',
+        negotiatorId: 'n-1',
+        title: 't',
+        description: 'd',
+        propertyType: 'apartment',
+        transactionType: 'sale',
+        state: 'Selangor',
+        area: 'Petaling Jaya',
+        price: 400000,
+        bedrooms: 3,
+        builtUpSqft: 800,
+        photoUrls: [],
+        status: 'active',
+        createdAt: DateTime(2024, 1, 1),
+      );
+      const requirement = Requirement(
+        requirementId: 'r-8',
+        negotiatorId: 'n-2',
+        propertyType: 'apartment',
+        transactionType: 'sale',
+        state: 'Selangor',
+        area: 'Petaling Jaya',
+        budgetMin: 300000,
+        budgetMax: 500000,
+        bedrooms: 3,
+        photoUrls: [],
+        status: 'open',
+        builtUpSqftMin: 1000,
+      );
+      expect(MatchingEngine.score(listing, requirement), isNull);
+    });
+
+    test('listing with unset builtUpSqft is disqualified when requirement sets a minimum', () {
+      const requirement = Requirement(
+        requirementId: 'r-9',
+        negotiatorId: 'n-2',
+        propertyType: 'apartment',
+        transactionType: 'sale',
+        state: 'Selangor',
+        area: 'Petaling Jaya',
+        budgetMin: 300000,
+        budgetMax: 500000,
+        bedrooms: 3,
+        photoUrls: [],
+        status: 'open',
+        builtUpSqftMin: 1000,
+      );
+      expect(MatchingEngine.score(_listing, requirement), isNull);
+    });
+
+    test('requirement with no builtUpSqftMin never filters on built-up size', () {
+      expect(MatchingEngine.score(_listing, _requirement), 100);
+    });
+
     test('qualifyingThreshold is 40', () {
       expect(MatchingEngine.qualifyingThreshold, 40);
     });
