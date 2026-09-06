@@ -648,6 +648,15 @@ class _MarketplaceCard extends StatelessWidget {
                           Icon(PhosphorIcons.bathtub(PhosphorIconsStyle.bold), size: 15, color: const Color(0xFF5F5E5E)),
                           const SizedBox(width: 4),
                           Text('${listing.bathrooms} ${'marketplace_baths'.tr()}', style: Theme.of(context).textTheme.labelSmall),
+                          if (listing.builtUpSqft != null) const SizedBox(width: 14),
+                        ],
+                        if (listing.builtUpSqft != null) ...[
+                          Icon(PhosphorIcons.ruler(PhosphorIconsStyle.bold), size: 15, color: const Color(0xFF5F5E5E)),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${ListingFormatting.formatSqft(listing.builtUpSqft!)} ${'inventory_stat_sqft'.tr()}',
+                            style: Theme.of(context).textTheme.labelSmall,
+                          ),
                         ],
                       ],
                     ),

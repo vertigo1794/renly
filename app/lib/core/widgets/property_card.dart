@@ -95,6 +95,12 @@ class PropertyCard extends StatelessWidget {
                           Text('${listing.bathrooms}'),
                           const SizedBox(width: 12),
                         ],
+                        if (listing.builtUpSqft != null) ...[
+                          Icon(PhosphorIcons.ruler(PhosphorIconsStyle.bold), size: 16),
+                          const SizedBox(width: 4),
+                          Text(ListingFormatting.formatSqft(listing.builtUpSqft!)),
+                          const SizedBox(width: 12),
+                        ],
                         Flexible(
                           child: Text(
                             listing.area,

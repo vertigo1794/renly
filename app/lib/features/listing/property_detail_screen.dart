@@ -171,6 +171,12 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
                         const Icon(Icons.bathtub),
                         const SizedBox(width: 4),
                         Text('${listing.bathrooms}'),
+                        if (listing.builtUpSqft != null) const SizedBox(width: 16),
+                      ],
+                      if (listing.builtUpSqft != null) ...[
+                        Icon(PhosphorIcons.ruler(PhosphorIconsStyle.bold)),
+                        const SizedBox(width: 4),
+                        Text('${ListingFormatting.formatSqft(listing.builtUpSqft!)} ${'inventory_stat_sqft'.tr()}'),
                       ],
                     ],
                   ),
