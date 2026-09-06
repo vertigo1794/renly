@@ -277,7 +277,7 @@ class _MyInventoryScreenState extends ConsumerState<MyInventoryScreen> {
                                     controller: _searchController,
                                     decoration: InputDecoration(
                                       hintText: 'inventory_search_hint'.tr(),
-                                      prefixIcon: const Icon(Icons.search),
+                                      prefixIcon: Icon(PhosphorIcons.magnifyingGlass(PhosphorIconsStyle.bold)),
                                       filled: true,
                                       fillColor: Colors.white,
                                       border: OutlineInputBorder(
