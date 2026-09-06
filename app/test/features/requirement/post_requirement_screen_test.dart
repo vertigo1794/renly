@@ -49,7 +49,7 @@ void main() {
 
   testWidgets('renders all required fields', (tester) async {
     final router = GoRouter(routes: [
-      GoRoute(path: '/', builder: (context, state) => const PostRequirementScreen()),
+      GoRoute(path: '/', builder: (context, state) => const Scaffold(body: PostRequirementFormBody())),
     ]);
 
     await tester.pumpWidget(_wrap(router));
@@ -65,14 +65,13 @@ void main() {
 
   testWidgets('submitting with empty required fields shows validation errors', (tester) async {
     final router = GoRouter(routes: [
-      GoRoute(path: '/', builder: (context, state) => const PostRequirementScreen()),
+      GoRoute(path: '/', builder: (context, state) => const Scaffold(body: PostRequirementFormBody())),
     ]);
 
     await tester.pumpWidget(_wrap(router));
     await tester.pumpAndSettle();
 
-    final scrollable = find.byType(SingleChildScrollView);
-    await tester.drag(scrollable, const Offset(0, -600));
+    await tester.ensureVisible(find.widgetWithText(BrutalistButton, 'Post Requirement'));
     await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(BrutalistButton, 'Post Requirement'));
     await tester.pumpAndSettle();
@@ -82,7 +81,7 @@ void main() {
 
   testWidgets('shows inline error when max budget is below min budget', (tester) async {
     final router = GoRouter(routes: [
-      GoRoute(path: '/', builder: (context, state) => const PostRequirementScreen()),
+      GoRoute(path: '/', builder: (context, state) => const Scaffold(body: PostRequirementFormBody())),
     ]);
 
     await tester.pumpWidget(_wrap(router));
@@ -92,8 +91,14 @@ void main() {
     await tester.enterText(find.byKey(const Key('requirement_budget_min_field')), '500000');
     await tester.enterText(find.byKey(const Key('requirement_budget_max_field')), '300000');
 
-    final scrollable = find.byType(SingleChildScrollView);
-    await tester.drag(scrollable, const Offset(0, -600));
+    // Unfocus before scrolling: a focused TextField schedules its own
+    // "scroll into view" request, which otherwise races the explicit
+    // ensureVisible() call below and can scroll the submit button back
+    // out of the viewport before the tap lands.
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.widgetWithText(BrutalistButton, 'Post Requirement'));
     await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(BrutalistButton, 'Post Requirement'));
     await tester.pumpAndSettle();
@@ -103,7 +108,7 @@ void main() {
 
   testWidgets('shows active count and disables submit at the free-tier cap', (tester) async {
     final router = GoRouter(routes: [
-      GoRoute(path: '/', builder: (context, state) => const PostRequirementScreen()),
+      GoRoute(path: '/', builder: (context, state) => const Scaffold(body: PostRequirementFormBody())),
     ]);
 
     await tester.pumpWidget(_wrap(router, overrides: [
@@ -123,7 +128,7 @@ void main() {
 
   testWidgets('does not block submit for a professional-tier negotiator even at 3 active requirements', (tester) async {
     final router = GoRouter(routes: [
-      GoRoute(path: '/', builder: (context, state) => const PostRequirementScreen()),
+      GoRoute(path: '/', builder: (context, state) => const Scaffold(body: PostRequirementFormBody())),
     ]);
 
     await tester.pumpWidget(_wrap(router, overrides: [
