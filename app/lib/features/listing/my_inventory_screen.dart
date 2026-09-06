@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/r_star_badge.dart';
@@ -12,6 +13,7 @@ import '../collaboration/models/cobroke_request_candidate.dart';
 import '../matching/matching_providers.dart' hide currentNegotiatorIdProvider;
 import '../notifications/notification_providers.dart';
 import '../profile/profile_providers.dart' hide currentNegotiatorIdProvider;
+import '../subscription/subscription_providers.dart' hide currentNegotiatorIdProvider;
 import 'listing_drafts_provider.dart';
 import 'listing_formatting.dart';
 import 'listing_photo.dart';
@@ -708,7 +710,87 @@ class _InventoryCard extends ConsumerWidget {
                       );
                     },
                   ),
-                // TASK 9: action row (Edit/Bump/Share/more-menu) inserted here.
+                const SizedBox(height: 12),
+                const Divider(height: 1, color: Color(0xFFF3F4F6)),
+                const SizedBox(height: 10),
+                Consumer(
+                  builder: (context, ref, _) {
+                    final tierAsync = ref.watch(subscriptionStatusProvider);
+                    final countAsync = ref.watch(activeListingCountProvider(listing.negotiatorId));
+                    final atCap = tierAsync.valueOrNull?.tier == 'free' && (countAsync.valueOrNull ?? 0) >= 3;
+                    return Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () => context.push('/property/${listing.listingId}/edit'),
+                            icon: Icon(PhosphorIcons.pencilSimple(PhosphorIconsStyle.bold), size: 16),
+                            label: Text('inventory_action_edit'.tr()),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: FilledButton.icon(
+                            style: FilledButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.black),
+                            onPressed: () async {
+                              await ref.read(listingRepositoryProvider).bumpListing(listing.listingId);
+                              ref.invalidate(myListingsProvider(listing.negotiatorId));
+                              ref.invalidate(marketplaceListingsProvider);
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context)
+                                    .showSnackBar(SnackBar(content: Text('inventory_action_bumped_confirmation'.tr())));
+                              }
+                            },
+                            icon: Icon(PhosphorIcons.lightning(PhosphorIconsStyle.bold), size: 16),
+                            label: Text('inventory_action_bump'.tr()),
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () => SharePlus.instance.share(
+                            ShareParams(
+                              text:
+                                  '${listing.title} - ${ListingFormatting.formatPrice(listing.price, listing.transactionType)} - ${listing.area}, ${listing.state}',
+                            ),
+                          ),
+                          icon: Icon(PhosphorIcons.shareNetwork(PhosphorIconsStyle.bold), size: 18),
+                        ),
+                        PopupMenuButton<String>(
+                          icon: Icon(PhosphorIcons.dotsThreeVertical(PhosphorIconsStyle.bold)),
+                          onSelected: (status) async {
+                            final repository = ref.read(listingRepositoryProvider);
+                            try {
+                              await repository.updateListingStatus(listingId: listing.listingId, status: status);
+                              ref.invalidate(listingDetailProvider(listing.listingId));
+                              ref.invalidate(marketplaceListingsProvider);
+                              ref.invalidate(myListingsProvider(listing.negotiatorId));
+                              ref.invalidate(activeListingCountProvider(listing.negotiatorId));
+                            } catch (e) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context)
+                                    .showSnackBar(SnackBar(content: Text('listing_error_generic'.tr())));
+                              }
+                            }
+                          },
+                          itemBuilder: (context) => [
+                            if (listing.status != 'sold')
+                              PopupMenuItem(value: 'sold', child: Text('property_mark_sold'.tr())),
+                            if (listing.status != 'withdrawn')
+                              PopupMenuItem(value: 'withdrawn', child: Text('property_withdraw'.tr())),
+                            if (listing.status != 'active')
+                              PopupMenuItem(
+                                value: 'active',
+                                enabled: !atCap,
+                                child: Text(
+                                  atCap
+                                      ? '${'property_reactivate'.tr()} (${'listing_cap_reached_message'.tr()})'
+                                      : 'property_reactivate'.tr(),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ],
+                    );
+                  },
+                ),
               ],
             ),
           ),

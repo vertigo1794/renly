@@ -53,6 +53,7 @@ dependencies:
   # `has_dismissed_biometric_prompt` flag at runtime, so this is now a real
   # runtime dependency, not test-only tooling.
   shared_preferences: ^2.5.5
+  share_plus: ^13.3.0
 
 dev_dependencies:
   flutter_test:
