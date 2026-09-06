@@ -475,6 +475,28 @@ class _CoBrokeCtaBanner extends StatelessWidget {
 /// this feed doesn't always have), so the button defers to the detail
 /// screen's own existing request flow rather than being disabled/hidden
 /// on most cards.
+/// One icon+label item inside the Beds/Baths/sqft stat row. Each present
+/// stat gets equal width via the parent's Expanded+Center wrapper, so the
+/// row stays balanced whether 1, 2, or 3 stats are present.
+class _MarketplaceStatItem extends StatelessWidget {
+  const _MarketplaceStatItem({required this.icon, required this.text});
+
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 15, color: const Color(0xFF5F5E5E)),
+        const SizedBox(width: 4),
+        Text(text, style: Theme.of(context).textTheme.labelSmall),
+      ],
+    );
+  }
+}
+
 class _MarketplaceCard extends StatelessWidget {
   const _MarketplaceCard({required this.listing, required this.matchScore, required this.onTap});
 
@@ -634,33 +656,34 @@ class _MarketplaceCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    child: Row(
-                      children: [
-                        if (listing.bedrooms != null) ...[
-                          Icon(PhosphorIcons.bed(PhosphorIconsStyle.bold), size: 15, color: const Color(0xFF5F5E5E)),
-                          const SizedBox(width: 4),
-                          Text('${listing.bedrooms} ${'marketplace_beds'.tr()}', style: Theme.of(context).textTheme.labelSmall),
-                          const SizedBox(width: 14),
+                  Builder(builder: (context) {
+                    final stats = <Widget>[
+                      if (listing.bedrooms != null)
+                        _MarketplaceStatItem(
+                          icon: PhosphorIcons.bed(PhosphorIconsStyle.bold),
+                          text: '${listing.bedrooms} ${'marketplace_beds'.tr()}',
+                        ),
+                      if (listing.bathrooms != null)
+                        _MarketplaceStatItem(
+                          icon: PhosphorIcons.bathtub(PhosphorIconsStyle.bold),
+                          text: '${listing.bathrooms} ${'marketplace_baths'.tr()}',
+                        ),
+                      if (listing.builtUpSqft != null)
+                        _MarketplaceStatItem(
+                          icon: PhosphorIcons.ruler(PhosphorIconsStyle.bold),
+                          text: '${ListingFormatting.formatSqft(listing.builtUpSqft!)} ${'inventory_stat_sqft'.tr()}',
+                        ),
+                    ];
+                    if (stats.isEmpty) return const SizedBox.shrink();
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      child: Row(
+                        children: [
+                          for (var i = 0; i < stats.length; i++) Expanded(child: Center(child: stats[i])),
                         ],
-                        if (listing.bathrooms != null) ...[
-                          Icon(PhosphorIcons.bathtub(PhosphorIconsStyle.bold), size: 15, color: const Color(0xFF5F5E5E)),
-                          const SizedBox(width: 4),
-                          Text('${listing.bathrooms} ${'marketplace_baths'.tr()}', style: Theme.of(context).textTheme.labelSmall),
-                          if (listing.builtUpSqft != null) const SizedBox(width: 14),
-                        ],
-                        if (listing.builtUpSqft != null) ...[
-                          Icon(PhosphorIcons.ruler(PhosphorIconsStyle.bold), size: 15, color: const Color(0xFF5F5E5E)),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${ListingFormatting.formatSqft(listing.builtUpSqft!)} ${'inventory_stat_sqft'.tr()}',
-                            style: Theme.of(context).textTheme.labelSmall,
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
+                      ),
+                    );
+                  }),
                   const Divider(height: 1, color: Color(0xFFE2E5DC)),
                   const SizedBox(height: 10),
                   Consumer(
