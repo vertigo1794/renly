@@ -35,21 +35,27 @@ class _FakeSupabaseClient implements SupabaseClient {
 /// PostListingFormBody's live-preview fetch reads requirementRepositoryProvider
 /// directly (not boardRequirementsProvider), so that's the provider that must
 /// be overridden for the preview fetch to resolve instead of silently
-/// swallowing a thrown error in this test environment.
+/// swallowing a thrown error in this test environment. Defaults to an empty
+/// list (the common case); tests exercising the preview card itself pass a
+/// seeded list of qualifying requirements.
 class _FakeRequirementRepository extends RequirementRepository {
-  _FakeRequirementRepository() : super(_FakeSupabaseClient());
+  _FakeRequirementRepository([this._requirements = const []]) : super(_FakeSupabaseClient());
+
+  final List<Requirement> _requirements;
 
   @override
-  Future<List<Requirement>> fetchBoardRequirements() async => [];
+  Future<List<Requirement>> fetchBoardRequirements() async => _requirements;
 }
 
 /// Symmetric fake for PostRequirementFormBody's live-preview fetch, which
 /// reads listingRepositoryProvider directly.
 class _FakeListingRepository extends ListingRepository {
-  _FakeListingRepository() : super(_FakeSupabaseClient());
+  _FakeListingRepository([this._listings = const []]) : super(_FakeSupabaseClient());
+
+  final List<Listing> _listings;
 
   @override
-  Future<List<Listing>> fetchMarketplaceListings() async => [];
+  Future<List<Listing>> fetchMarketplaceListings() async => _listings;
 }
 
 Future<void> _pumpScreen(WidgetTester tester, {required List<Override> overrides, PostBroadcastMode initialMode = PostBroadcastMode.listing, String? editListingId}) async {
@@ -178,5 +184,50 @@ void main() {
 
     expect(find.text('broadcast_provide_listing_tab'.tr()), findsNothing);
     expect(find.text('broadcast_buyer_match_tab'.tr()), findsNothing);
+    // Finding 3 (final review): edit mode hides both the toggle and the
+    // ticker, so the AppBar's title is the only remaining indication the
+    // user is editing rather than posting a new listing.
+    expect(find.text('listing_edit_title'.tr()), findsOneWidget);
+    expect(find.text('app_name'.tr()), findsNothing);
+  });
+
+  testWidgets('changing the state dropdown invalidates a stale preview match', (tester) async {
+    // Regression test for Finding 2 (final review): the state dropdown is a
+    // HARD disqualifier in MatchingEngine.score(), so switching it away from
+    // a value that qualified must clear the preview immediately, not leave
+    // the previous "1 match" showing.
+    final matchingRequirement = Requirement(
+      requirementId: 'r-1',
+      negotiatorId: 'n-2',
+      propertyType: 'apartment',
+      transactionType: 'sale',
+      state: 'Johor',
+      area: 'Mont Kiara',
+      budgetMin: 400000,
+      budgetMax: 600000,
+      photoUrls: const [],
+      status: 'open',
+    );
+
+    await _pumpScreen(
+      tester,
+      overrides: [
+        ..._baseOverrides(),
+        requirementRepositoryProvider.overrideWithValue(_FakeRequirementRepository([matchingRequirement])),
+      ],
+    );
+
+    await tester.enterText(find.byKey(const Key('listing_area_field')), 'Mont Kiara');
+    await tester.enterText(find.byKey(const Key('listing_price_field')), '500000');
+    await tester.pumpAndSettle(const Duration(milliseconds: 600));
+
+    expect(find.text('listing_preview_match_count'.tr(namedArgs: {'count': '1'})), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('listing_state_field')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Selangor').last);
+    await tester.pumpAndSettle();
+
+    expect(find.text('listing_preview_match_count'.tr(namedArgs: {'count': '1'})), findsNothing);
   });
 }

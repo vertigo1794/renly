@@ -7,17 +7,46 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:renly/core/theme/app_theme.dart';
 import 'package:renly/core/widgets/brutalist_button.dart';
+import 'package:renly/features/listing/listing_providers.dart' hide currentNegotiatorIdProvider;
+import 'package:renly/features/listing/listing_repository.dart';
+import 'package:renly/features/listing/models/listing.dart';
 import 'package:renly/features/requirement/post_requirement_screen.dart';
 import 'package:renly/features/requirement/requirement_providers.dart';
 import 'package:renly/features/subscription/models/subscription_status.dart' as subscription;
 import 'package:renly/features/subscription/subscription_providers.dart' as subscription_providers;
 
+/// Never actually invoked -- see the identical class in
+/// post_broadcast_screen_test.dart, which this mirrors.
+class _FakeSupabaseClient implements SupabaseClient {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+/// Symmetric fake for PostRequirementFormBody's live-preview fetch, which
+/// reads listingRepositoryProvider directly in initState() -- otherwise
+/// throws synchronously on the uninitialized Supabase.instance.client in
+/// every test here. Defaults to empty; the preview test below seeds it with
+/// one qualifying Listing.
+class _FakeListingRepository extends ListingRepository {
+  _FakeListingRepository([this._listings = const []]) : super(_FakeSupabaseClient());
+
+  final List<Listing> _listings;
+
+  @override
+  Future<List<Listing>> fetchMarketplaceListings() async => _listings;
+}
+
+List<Override> _baseOverrides() => [
+      listingRepositoryProvider.overrideWithValue(_FakeListingRepository()),
+    ];
+
 Widget _wrap(GoRouter router, {List<Override> overrides = const []}) {
   return ProviderScope(
-    overrides: overrides,
+    overrides: [..._baseOverrides(), ...overrides],
     child: EasyLocalization(
       supportedLocales: const [Locale('en'), Locale('ms')],
       path: 'assets/translations',
@@ -144,5 +173,38 @@ void main() {
 
     final button = tester.widget<BrutalistButton>(find.byType(BrutalistButton));
     expect(button.onPressed, isNotNull);
+  });
+
+  testWidgets('shows a live match preview once a fetched candidate qualifies', (tester) async {
+    final matchingListing = Listing(
+      listingId: 'l-9',
+      negotiatorId: 'n-9',
+      title: 'Test Unit',
+      description: 'd',
+      propertyType: 'apartment',
+      transactionType: 'sale',
+      state: 'Johor',
+      area: 'Mont Kiara',
+      price: 500000,
+      photoUrls: const [],
+      status: 'active',
+      createdAt: DateTime(2024, 1, 1),
+    );
+
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const Scaffold(body: PostRequirementFormBody())),
+    ]);
+
+    await tester.pumpWidget(_wrap(router, overrides: [
+      listingRepositoryProvider.overrideWithValue(_FakeListingRepository([matchingListing])),
+    ]));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byKey(const Key('requirement_area_field')), 'Mont Kiara');
+    await tester.enterText(find.byKey(const Key('requirement_budget_min_field')), '400000');
+    await tester.enterText(find.byKey(const Key('requirement_budget_max_field')), '600000');
+    await tester.pumpAndSettle(const Duration(milliseconds: 600));
+
+    expect(find.text('requirement_preview_match_count'.tr(namedArgs: {'count': '1'})), findsOneWidget);
   });
 }

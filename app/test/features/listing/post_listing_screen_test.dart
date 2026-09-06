@@ -7,18 +7,48 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:renly/core/theme/app_theme.dart';
 import 'package:renly/features/listing/listing_providers.dart';
 import 'package:renly/features/listing/models/listing.dart';
 import 'package:renly/features/listing/post_listing_screen.dart';
 import 'package:renly/core/widgets/brutalist_button.dart';
+import 'package:renly/features/requirement/models/requirement.dart';
+import 'package:renly/features/requirement/requirement_providers.dart' hide currentNegotiatorIdProvider;
+import 'package:renly/features/requirement/requirement_repository.dart';
 import 'package:renly/features/subscription/models/subscription_status.dart' as subscription;
 import 'package:renly/features/subscription/subscription_providers.dart' as subscription_providers;
 
+/// Never actually invoked -- see the identical class in
+/// post_broadcast_screen_test.dart, which this mirrors.
+class _FakeSupabaseClient implements SupabaseClient {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+/// PostListingFormBody's live-preview fetch reads requirementRepositoryProvider
+/// directly in initState(), which otherwise throws synchronously on the
+/// uninitialized Supabase.instance.client in every test here (silently
+/// swallowed, but noisy via debugPrint) -- overriding it below is what lets
+/// the fetch actually resolve. Defaults to empty; the preview test below
+/// seeds it with one qualifying Requirement.
+class _FakeRequirementRepository extends RequirementRepository {
+  _FakeRequirementRepository([this._requirements = const []]) : super(_FakeSupabaseClient());
+
+  final List<Requirement> _requirements;
+
+  @override
+  Future<List<Requirement>> fetchBoardRequirements() async => _requirements;
+}
+
+List<Override> _baseOverrides() => [
+      requirementRepositoryProvider.overrideWithValue(_FakeRequirementRepository()),
+    ];
+
 Widget _wrap(GoRouter router, {List<Override> overrides = const []}) {
   return ProviderScope(
-    overrides: overrides,
+    overrides: [..._baseOverrides(), ...overrides],
     child: EasyLocalization(
       supportedLocales: const [Locale('en'), Locale('ms')],
       path: 'assets/translations',
@@ -166,5 +196,35 @@ void main() {
     expect(titleField.controller?.text, 'Existing Title');
     expect(find.text('listing_save_changes'.tr()), findsOneWidget);
     expect(find.text('listing_post_now'.tr()), findsNothing);
+  });
+
+  testWidgets('shows a live match preview once a fetched candidate qualifies', (tester) async {
+    final matchingRequirement = Requirement(
+      requirementId: 'r-1',
+      negotiatorId: 'n-2',
+      propertyType: 'apartment',
+      transactionType: 'sale',
+      state: 'Johor',
+      area: 'Mont Kiara',
+      budgetMin: 400000,
+      budgetMax: 600000,
+      photoUrls: const [],
+      status: 'open',
+    );
+
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const Scaffold(body: PostListingFormBody())),
+    ]);
+
+    await tester.pumpWidget(_wrap(router, overrides: [
+      requirementRepositoryProvider.overrideWithValue(_FakeRequirementRepository([matchingRequirement])),
+    ]));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byKey(const Key('listing_area_field')), 'Mont Kiara');
+    await tester.enterText(find.byKey(const Key('listing_price_field')), '500000');
+    await tester.pumpAndSettle(const Duration(milliseconds: 600));
+
+    expect(find.text('listing_preview_match_count'.tr(namedArgs: {'count': '1'})), findsOneWidget);
   });
 }
