@@ -87,6 +87,11 @@ class RequirementRepository {
     required double budgetMin,
     required double budgetMax,
     int? bedrooms,
+    int? bathroomsMin,
+    int? builtUpSqftMin,
+    double? desiredCommissionSplitPercent,
+    bool loanReady = false,
+    bool urgentViewingRequired = false,
   }) async {
     final row = await _client
         .from('requirement')
@@ -99,6 +104,11 @@ class RequirementRepository {
           'budget_min': budgetMin,
           'budget_max': budgetMax,
           'bedrooms': bedrooms,
+          'bathrooms_min': bathroomsMin,
+          'built_up_sqft_min': builtUpSqftMin,
+          'desired_commission_split_percent': desiredCommissionSplitPercent,
+          'loan_ready': loanReady,
+          'urgent_viewing_required': urgentViewingRequired,
         })
         .select()
         .single();
@@ -113,6 +123,43 @@ class RequirementRepository {
     return _client.from('requirement').update({'status': status}).eq('requirement_id', requirementId);
   }
 
+  /// General field update for a future Requirement edit flow. No screen
+  /// calls this yet in this milestone (the Buyer Match mockup shows no
+  /// edit mode) -- added for symmetry with ListingRepository's own
+  /// updateListingDetails. Deliberately does NOT touch requirementId,
+  /// negotiatorId, status, photoUrls, or createdAt -- each has its own
+  /// dedicated update path or must never change after creation.
+  Future<void> updateRequirementDetails({
+    required String requirementId,
+    required String propertyType,
+    required String transactionType,
+    required String state,
+    required String area,
+    required double budgetMin,
+    required double budgetMax,
+    int? bedrooms,
+    int? bathroomsMin,
+    int? builtUpSqftMin,
+    double? desiredCommissionSplitPercent,
+    required bool loanReady,
+    required bool urgentViewingRequired,
+  }) {
+    return _client.from('requirement').update({
+      'property_type': propertyType,
+      'transaction_type': transactionType,
+      'state': state,
+      'area': area,
+      'budget_min': budgetMin,
+      'budget_max': budgetMax,
+      'bedrooms': bedrooms,
+      'bathrooms_min': bathroomsMin,
+      'built_up_sqft_min': builtUpSqftMin,
+      'desired_commission_split_percent': desiredCommissionSplitPercent,
+      'loan_ready': loanReady,
+      'urgent_viewing_required': urgentViewingRequired,
+    }).eq('requirement_id', requirementId);
+  }
+
   Future<int> countActiveRequirements(String negotiatorId) async {
     final response = await _client
         .from('requirement')
@@ -120,6 +167,15 @@ class RequirementRepository {
         .eq('negotiator_id', negotiatorId)
         .eq('status', 'open')
         .count(CountOption.exact);
+    return response.count;
+  }
+
+  /// Global count of ALL open requirements regardless of owner -- powers
+  /// the Buyer Match mode's "N Buyer Demands Active" ticker. NOT the same
+  /// as countActiveRequirements(negotiatorId) above, which is scoped to
+  /// one negotiator's own requirements for the free-tier cap check.
+  Future<int> countOpenRequirements() async {
+    final response = await _client.from('requirement').select('requirement_id').eq('status', 'open').count(CountOption.exact);
     return response.count;
   }
 }
