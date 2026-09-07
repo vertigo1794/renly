@@ -161,14 +161,32 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
   }
 }
 
-class _HeroHeader extends StatelessWidget {
+class _HeroHeader extends StatefulWidget {
   const _HeroHeader({required this.listing, required this.bestMatchScore});
 
   final Listing listing;
   final int? bestMatchScore;
 
   @override
+  State<_HeroHeader> createState() => _HeroHeaderState();
+}
+
+class _HeroHeaderState extends State<_HeroHeader> {
+  final _pageController = PageController();
+  // 0-based internally (matches PageView/PageController); the counter pill
+  // displays this +1 so a freshly-opened listing reads "1/N", not "0/N".
+  int _currentPage = 0;
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final listing = widget.listing;
+    final bestMatchScore = widget.bestMatchScore;
     final hasPhotos = listing.photoUrls.isNotEmpty;
     final hasBadges = bestMatchScore != null || listing.exclusiveMandate;
     // Bug fix vs. the original draft: an unconditional `if (photoUrls.isEmpty)
@@ -199,6 +217,8 @@ class _HeroHeader extends StatelessWidget {
           if (hasPhotos)
             Positioned.fill(
               child: PageView(
+                controller: _pageController,
+                onPageChanged: (index) => setState(() => _currentPage = index),
                 children: [
                   for (final photoPath in listing.photoUrls)
                     Padding(
@@ -253,7 +273,7 @@ class _HeroHeader extends StatelessWidget {
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  'property_photo_counter'.tr(namedArgs: {'current': '1', 'total': '${listing.photoUrls.length}'}),
+                  'property_photo_counter'.tr(namedArgs: {'current': '${_currentPage + 1}', 'total': '${listing.photoUrls.length}'}),
                   style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11),
                 ),
               ),
@@ -274,6 +294,13 @@ class _DealTermsBanner extends StatelessWidget {
     final pricePerSqft = listing.builtUpSqft != null && listing.builtUpSqft! > 0
         ? (listing.price / listing.builtUpSqft!).round()
         : null;
+    // Rounded to the SAME integer percent shown in the "X/Y" ratio right
+    // below -- _CoBrokingTermsCard computes its own "your share" RM figure
+    // off this identical rounded int (see _CoBrokingTermsCard.build), so a
+    // fractional split (e.g. 52.5, reachable via the free-text Custom
+    // field) can never show two different RM amounts for what both cards
+    // present as the same fact.
+    final splitRounded = listing.commissionSplitPercent?.round();
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -322,7 +349,7 @@ class _DealTermsBanner extends StatelessWidget {
                   ],
                 ),
               ),
-              if (listing.commissionSplitPercent != null)
+              if (splitRounded != null)
                 Container(
                   key: const Key('deal_terms_split_badge'),
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
@@ -335,11 +362,11 @@ class _DealTermsBanner extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
-                        '${listing.commissionSplitPercent!.round()}/${100 - listing.commissionSplitPercent!.round()}',
+                        '$splitRounded/${100 - splitRounded}',
                         style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14),
                       ),
                       Text(
-                        'RM ${(listing.price * listing.commissionSplitPercent! / 100).round()}',
+                        'RM ${(listing.price * splitRounded / 100).round()}',
                         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 10),
                       ),
                     ],
@@ -385,18 +412,22 @@ class _OverviewCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFECFDF5),
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: const Color(0xFFA7F3D0)),
-                ),
-                child: Text(
-                  listing.tenure == null ? listing.propertyType.toUpperCase() : '${listing.propertyType.toUpperCase()} • ${listing.tenure!.toUpperCase()}',
-                  style: const TextStyle(color: Color(0xFF047857), fontWeight: FontWeight.bold, fontSize: 10),
+              Flexible(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFECFDF5),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: const Color(0xFFA7F3D0)),
+                  ),
+                  child: Text(
+                    listing.tenure == null ? listing.propertyType.toUpperCase() : '${listing.propertyType.toUpperCase()} • ${listing.tenure!.toUpperCase()}',
+                    style: const TextStyle(color: Color(0xFF047857), fontWeight: FontWeight.bold, fontSize: 10),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ),
+              const SizedBox(width: 8),
               Text(
                 'property_id_prefix'.tr(namedArgs: {'id': shortId}),
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold),
@@ -475,53 +506,76 @@ class _OverviewCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          Row(
+          // Wrap, not a plain Row: up to 6 stat items (5 numeric specs plus
+          // furnishing) can't all fit one line at phone width once 3+
+          // optional fields are populated -- items that don't fit flow to
+          // a second line instead of forcing a RenderFlex overflow, per
+          // this card's own original "bento grid" intent.
+          Wrap(
+            spacing: 16,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              if (listing.bedrooms != null) ...[
-                const Icon(Icons.bed),
-                const SizedBox(width: 4),
-                Text('${listing.bedrooms}'),
-                const SizedBox(width: 16),
-              ],
-              if (listing.bathrooms != null) ...[
-                const Icon(Icons.bathtub),
-                const SizedBox(width: 4),
-                Text('${listing.bathrooms}'),
-                const SizedBox(width: 16),
-              ],
-              if (listing.builtUpSqft != null) ...[
-                Icon(PhosphorIcons.ruler(PhosphorIconsStyle.bold)),
-                const SizedBox(width: 4),
-                Text('${ListingFormatting.formatSqft(listing.builtUpSqft!)} ${'inventory_stat_sqft'.tr()}'),
-                const SizedBox(width: 16),
-              ],
-              if (listing.parkingBays != null) ...[
-                Icon(PhosphorIcons.car(PhosphorIconsStyle.bold)),
-                const SizedBox(width: 4),
-                Text('${listing.parkingBays}'),
-                const SizedBox(width: 16),
-              ],
-              if (listing.floorLevel != null) ...[
-                Icon(PhosphorIcons.stackSimple(PhosphorIconsStyle.bold)),
-                const SizedBox(width: 4),
-                Text('${listing.floorLevel}'),
-              ],
+              if (listing.bedrooms != null)
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.bed),
+                    const SizedBox(width: 4),
+                    Text('${listing.bedrooms}'),
+                  ],
+                ),
+              if (listing.bathrooms != null)
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.bathtub),
+                    const SizedBox(width: 4),
+                    Text('${listing.bathrooms}'),
+                  ],
+                ),
+              if (listing.builtUpSqft != null)
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(PhosphorIcons.ruler(PhosphorIconsStyle.bold)),
+                    const SizedBox(width: 4),
+                    Text('${ListingFormatting.formatSqft(listing.builtUpSqft!)} ${'inventory_stat_sqft'.tr()}'),
+                  ],
+                ),
+              if (listing.parkingBays != null)
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(PhosphorIcons.car(PhosphorIconsStyle.bold)),
+                    const SizedBox(width: 4),
+                    Text('${listing.parkingBays}'),
+                  ],
+                ),
+              if (listing.floorLevel != null)
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(PhosphorIcons.stackSimple(PhosphorIconsStyle.bold)),
+                    const SizedBox(width: 4),
+                    Text('${listing.floorLevel}'),
+                  ],
+                ),
+              if (listing.furnishingStatus != null)
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(PhosphorIcons.armchair(PhosphorIconsStyle.bold)),
+                    const SizedBox(width: 4),
+                    Text(listing.furnishingStatus == 'furnished'
+                        ? 'listing_furnishing_furnished'.tr()
+                        : listing.furnishingStatus == 'partially_furnished'
+                            ? 'listing_furnishing_partially_furnished'.tr()
+                            : 'listing_furnishing_unfurnished'.tr()),
+                  ],
+                ),
             ],
           ),
-          if (listing.furnishingStatus != null) ...[
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Icon(PhosphorIcons.armchair(PhosphorIconsStyle.bold)),
-                const SizedBox(width: 4),
-                Text(listing.furnishingStatus == 'furnished'
-                    ? 'listing_furnishing_furnished'.tr()
-                    : listing.furnishingStatus == 'partially_furnished'
-                        ? 'listing_furnishing_partially_furnished'.tr()
-                        : 'listing_furnishing_unfurnished'.tr()),
-              ],
-            ),
-          ],
           const SizedBox(height: 16),
           Text('property_overview'.tr(), style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 4),
@@ -556,14 +610,23 @@ class _CoBrokingTermsCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Icon(PhosphorIcons.handshake(PhosphorIconsStyle.bold), size: 18),
-                  const SizedBox(width: 6),
-                  Text('property_co_broking_terms_title'.tr(), style: Theme.of(context).textTheme.titleMedium),
-                ],
+              Flexible(
+                child: Row(
+                  children: [
+                    Icon(PhosphorIcons.handshake(PhosphorIconsStyle.bold), size: 18),
+                    const SizedBox(width: 6),
+                    Flexible(
+                      child: Text(
+                        'property_co_broking_terms_title'.tr(),
+                        style: Theme.of(context).textTheme.titleMedium,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              if (split != null)
+              if (split != null) ...[
+                const SizedBox(width: 8),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(6), border: Border.all(color: Colors.black)),
@@ -572,6 +635,7 @@ class _CoBrokingTermsCard extends StatelessWidget {
                     style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 10),
                   ),
                 ),
+              ],
             ],
           ),
           const SizedBox(height: 10),
@@ -586,10 +650,14 @@ class _CoBrokingTermsCard extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          'property_total_commission_row'.tr(namedArgs: {'percent': '${listing.totalAgencyCommissionPercent!.round()}'}),
-                          style: Theme.of(context).textTheme.labelSmall,
+                        Expanded(
+                          child: Text(
+                            'property_total_commission_row'.tr(namedArgs: {'percent': '${listing.totalAgencyCommissionPercent!.round()}'}),
+                            style: Theme.of(context).textTheme.labelSmall,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
+                        const SizedBox(width: 8),
                         Text(
                           'RM ${(listing.price * listing.totalAgencyCommissionPercent! / 100).round()}',
                           style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold),
@@ -601,10 +669,14 @@ class _CoBrokingTermsCard extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        'property_your_share_row'.tr(namedArgs: {'percent': '$split'}),
-                        style: Theme.of(context).textTheme.labelSmall,
+                      Expanded(
+                        child: Text(
+                          'property_your_share_row'.tr(namedArgs: {'percent': '$split'}),
+                          style: Theme.of(context).textTheme.labelSmall,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
+                      const SizedBox(width: 8),
                       Text(
                         'RM ${(listing.price * split / 100).round()}',
                         style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold, color: const Color(0xFF047857)),
@@ -666,9 +738,15 @@ class _AgentCard extends ConsumerWidget {
       loading: () => const SizedBox.shrink(),
       error: (error, stack) => const SizedBox.shrink(),
       data: (owner) {
-        final ratingText = ratingsAsync.valueOrNull == null || ratingsAsync.valueOrNull!.isEmpty
-            ? 'property_no_ratings_short'.tr()
-            : '${(ratingsAsync.valueOrNull!.map((c) => c.rating.stars).reduce((a, b) => a + b) / ratingsAsync.valueOrNull!.length).toStringAsFixed(1)} (${ratingsAsync.valueOrNull!.length})';
+        // Real, non-empty candidate list only -- per the design doc, a
+        // negotiator with no ratings yet (or whose ratings are still
+        // loading) shows NO rating row at all, never a fabricated "New
+        // Agent" placeholder standing in for a real average.
+        final ratings = ratingsAsync.valueOrNull;
+        final hasRatings = ratings != null && ratings.isNotEmpty;
+        final ratingText = hasRatings
+            ? '${(ratings.map((c) => c.rating.stars).reduce((a, b) => a + b) / ratings.length).toStringAsFixed(1)} (${ratings.length})'
+            : null;
         return Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -694,15 +772,25 @@ class _AgentCard extends ConsumerWidget {
                     Text(
                       owner.agencyName == null ? 'REN: ${owner.renNumber}' : 'REN: ${owner.renNumber} • ${owner.agencyName}',
                       style: Theme.of(context).textTheme.labelSmall,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Icon(PhosphorIcons.star(PhosphorIconsStyle.fill), size: 13, color: const Color(0xFFF59E0B)),
-                        const SizedBox(width: 4),
-                        Text(ratingText, style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold)),
-                      ],
-                    ),
+                    if (hasRatings) ...[
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(PhosphorIcons.star(PhosphorIconsStyle.fill), size: 13, color: const Color(0xFFF59E0B)),
+                          const SizedBox(width: 4),
+                          Flexible(
+                            child: Text(
+                              ratingText!,
+                              style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -798,14 +886,23 @@ class _ActionBar extends ConsumerWidget {
 
     return Row(
       children: [
+        // Deliberately tight (default OutlinedButton padding/min-size claims
+        // much more width than this icon+label content needs) -- the CTA
+        // beside it is the primary action and needs the room; this button
+        // is secondary and only needs to fit "Client".
         OutlinedButton(
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
           onPressed: () => SharePlus.instance.share(
             ShareParams(text: '${listing.title} - ${ListingFormatting.formatPrice(listing.price, listing.transactionType)} - ${listing.area}, ${listing.state}'),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(PhosphorIcons.paperPlaneTilt(PhosphorIconsStyle.bold)),
+              Icon(PhosphorIcons.paperPlaneTilt(PhosphorIconsStyle.bold), size: 20),
               Text('property_client_share_label'.tr(), style: Theme.of(context).textTheme.labelSmall),
             ],
           ),
@@ -814,10 +911,24 @@ class _ActionBar extends ConsumerWidget {
         Expanded(
           child: Tooltip(
             message: ownMatch == null ? 'property_request_co_broke_disabled_reason'.tr() : '',
-            child: BrutalistButton(
-              label: 'cobroke_request_send'.tr(),
-              icon: PhosphorIcons.arrowRight(PhosphorIconsStyle.bold),
-              onPressed: ownMatch == null ? null : () => sendCobrokeRequest(context, ref, ownMatch!.matchId),
+            // A smaller labelLarge for this specific placement, on top of
+            // the width freed up from the Client button above -- the CTA's
+            // own icon+label Row still can't wrap (BrutalistButton is a
+            // shared, already-tested component; this project's convention
+            // is to fix overflow at the call site, not inside it), and this
+            // slot next to a second button is tighter than every other
+            // (full-width) place BrutalistButton is used.
+            child: Theme(
+              data: Theme.of(context).copyWith(
+                textTheme: Theme.of(context).textTheme.copyWith(
+                      labelLarge: Theme.of(context).textTheme.labelLarge?.copyWith(fontSize: 13),
+                    ),
+              ),
+              child: BrutalistButton(
+                label: 'cobroke_request_send'.tr(),
+                icon: PhosphorIcons.arrowRight(PhosphorIconsStyle.bold),
+                onPressed: ownMatch == null ? null : () => sendCobrokeRequest(context, ref, ownMatch!.matchId),
+              ),
             ),
           ),
         ),
