@@ -10,6 +10,28 @@
 -- listing/requirement/match they're a legitimate counterparty to;
 -- verification_status is no more sensitive than those.
 --
+-- 0004_listing_hardening.sql explicitly named verification_status
+-- (alongside ic_number/phone_number) as a column this RPC pattern exists
+-- to AVOID leaking -- worth addressing head-on rather than silently
+-- contradicting that stance. Re-reading 0004's own comment: the risk it
+-- was avoiding was broadening the raw `negotiator` table's row-level
+-- SELECT policy so any authenticated user could just query the table
+-- directly, which would ALSO expose ic_number/phone_number since all
+-- three columns live on the same row -- a policy change can't be scoped
+-- to one column. This migration does not touch that policy, or any
+-- grant, at all. It extends a DIFFERENT, already-narrow RPC that has
+-- always returned a fixed, curated list of columns (never `select *`,
+-- never the full row) and has been reachable by any authenticated user
+-- since 0004 itself. Adding one more coarse, non-PII column
+-- (verification_status is a pending/approved/rejected enum, not an
+-- identifier or contact detail) to that existing curated list is a
+-- narrower, additive change to an RPC's output shape, not a widening of
+-- table-level access -- it cannot reopen the ic_number/phone_number
+-- exposure 0004 was guarding against, because this function still never
+-- selects those columns. A public verified/pending badge on a listing's
+-- agent is also a normal, low-sensitivity product pattern on its own
+-- merits, independent of this distinction.
+--
 -- Postgres does NOT allow CREATE OR REPLACE FUNCTION to change a
 -- function's return type (RETURNS TABLE compiles to OUT parameters) --
 -- the function must be dropped and recreated instead, same as 0019 had
