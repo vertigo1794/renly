@@ -101,6 +101,14 @@ class ListingRepository {
     double? commissionSplitPercent,
     bool titleVerified = false,
     bool exclusiveMandate = false,
+    double? maintenanceFeeMyr,
+    String? tenure,
+    int? parkingBays,
+    int? floorLevel,
+    String? furnishingStatus,
+    bool keysOnHand = false,
+    bool protectedCoBrokeReg = false,
+    double? totalAgencyCommissionPercent,
   }) async {
     final row = await _client
         .from('listing')
@@ -119,6 +127,14 @@ class ListingRepository {
           'commission_split_percent': commissionSplitPercent,
           'title_verified': titleVerified,
           'exclusive_mandate': exclusiveMandate,
+          'maintenance_fee_myr': maintenanceFeeMyr,
+          'tenure': tenure,
+          'parking_bays': parkingBays,
+          'floor_level': floorLevel,
+          'furnishing_status': furnishingStatus,
+          'keys_on_hand': keysOnHand,
+          'protected_co_broke_reg': protectedCoBrokeReg,
+          'total_agency_commission_percent': totalAgencyCommissionPercent,
         })
         .select()
         .single();
@@ -170,6 +186,14 @@ class ListingRepository {
     double? commissionSplitPercent,
     required bool titleVerified,
     required bool exclusiveMandate,
+    double? maintenanceFeeMyr,
+    String? tenure,
+    int? parkingBays,
+    int? floorLevel,
+    String? furnishingStatus,
+    bool keysOnHand = false,
+    bool protectedCoBrokeReg = false,
+    double? totalAgencyCommissionPercent,
   }) {
     return _client.from('listing').update({
       'title': title,
@@ -185,6 +209,14 @@ class ListingRepository {
       'commission_split_percent': commissionSplitPercent,
       'title_verified': titleVerified,
       'exclusive_mandate': exclusiveMandate,
+      'maintenance_fee_myr': maintenanceFeeMyr,
+      'tenure': tenure,
+      'parking_bays': parkingBays,
+      'floor_level': floorLevel,
+      'furnishing_status': furnishingStatus,
+      'keys_on_hand': keysOnHand,
+      'protected_co_broke_reg': protectedCoBrokeReg,
+      'total_agency_commission_percent': totalAgencyCommissionPercent,
     }).eq('listing_id', listingId);
   }
 
