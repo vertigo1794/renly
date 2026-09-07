@@ -603,15 +603,15 @@ class _OverviewCard extends StatelessWidget {
               if (listing.keysOnHand)
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(color: const Color(0xFFDBEAFE), borderRadius: BorderRadius.circular(6), border: Border.all(color: const Color(0xFFBFDBFE))),
+                  decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(6)),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(PhosphorIcons.key(PhosphorIconsStyle.bold), size: 12, color: const Color(0xFF2563EB)),
+                      Icon(PhosphorIcons.key(PhosphorIconsStyle.bold), size: 12, color: AppColors.primary),
                       const SizedBox(width: 4),
                       Text(
                         'property_badge_keys_on_hand'.tr(),
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(color: const Color(0xFF2563EB), fontWeight: FontWeight.bold, fontSize: 10),
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 10),
                       ),
                     ],
                   ),
@@ -619,15 +619,15 @@ class _OverviewCard extends StatelessWidget {
               if (listing.protectedCoBrokeReg)
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(color: const Color(0xFFF3E8FF), borderRadius: BorderRadius.circular(6), border: Border.all(color: const Color(0xFFE9D5FF))),
+                  decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(6)),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(PhosphorIcons.lockKey(PhosphorIconsStyle.bold), size: 12, color: const Color(0xFF7C3AED)),
+                      Icon(PhosphorIcons.lockKey(PhosphorIconsStyle.bold), size: 12, color: AppColors.primary),
                       const SizedBox(width: 4),
                       Text(
                         'property_badge_protected_co_broke_reg'.tr(),
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(color: const Color(0xFF7C3AED), fontWeight: FontWeight.bold, fontSize: 10),
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 10),
                       ),
                     ],
                   ),
