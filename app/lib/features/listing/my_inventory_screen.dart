@@ -14,6 +14,7 @@ import '../matching/matching_providers.dart' hide currentNegotiatorIdProvider;
 import '../notifications/notification_providers.dart';
 import '../profile/profile_providers.dart' hide currentNegotiatorIdProvider;
 import '../subscription/subscription_providers.dart' hide currentNegotiatorIdProvider;
+import 'broadcast_badge.dart';
 import 'listing_drafts_provider.dart';
 import 'listing_formatting.dart';
 import 'listing_photo.dart';
@@ -253,44 +254,28 @@ class _MyInventoryScreenState extends ConsumerState<MyInventoryScreen> {
                                   ),
                                   const SizedBox(height: 12),
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(16),
-                                      border: Border.all(color: const Color(0xFFE5E7EB)),
-                                    ),
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                    decoration:
+                                        BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(12)),
                                     child: Row(
                                       children: [
-                                        Container(
-                                          width: 10,
-                                          height: 10,
-                                          decoration: BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
-                                        ),
+                                        BroadcastBadge(label: 'broadcast_live_badge'.tr(), color: AppColors.primary),
                                         const SizedBox(width: 8),
                                         Expanded(
-                                          child: Text.rich(
-                                            TextSpan(
-                                              children: [
-                                                TextSpan(
-                                                  text: '$pendingOnMyListings ',
-                                                  style: const TextStyle(fontWeight: FontWeight.bold),
-                                                ),
-                                                TextSpan(text: 'inventory_ticker_inquiries'.tr()),
-                                              ],
-                                            ),
-                                            style: Theme.of(context).textTheme.labelSmall,
+                                          child: Text(
+                                            '$pendingOnMyListings ${'inventory_ticker_inquiries'.tr()}',
+                                            style: const TextStyle(
+                                                color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
                                           ),
                                         ),
+                                        const SizedBox(width: 8),
                                         InkWell(
                                           onTap: () => context.push('/my-requests'),
                                           child: Text(
                                             '${'inventory_ticker_review'.tr()} →',
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .labelSmall
-                                                ?.copyWith(fontWeight: FontWeight.bold),
+                                            style: const TextStyle(color: AppColors.primary, fontSize: 11, fontWeight: FontWeight.bold),
                                           ),
                                         ),
                                       ],

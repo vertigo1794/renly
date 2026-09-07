@@ -7,9 +7,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../core/constants/malaysian_states.dart';
+import '../../core/theme/app_colors.dart';
 import '../../core/widgets/brutalist_button.dart';
+import '../listing/broadcast_badge.dart';
 import '../listing/listing_providers.dart' hide currentNegotiatorIdProvider;
 import '../listing/models/listing.dart';
 import '../matching/live_match_preview.dart';
@@ -36,6 +39,11 @@ class _PostRequirementFormBodyState extends ConsumerState<PostRequirementFormBod
   final _bathroomsMinController = TextEditingController();
   final _sqftMinController = TextEditingController();
   final _commissionSplitController = TextEditingController();
+
+  /// Same tracking as PostListingFormBody's own _splitPreset -- see its
+  /// doc comment for why this can't just be inferred from the
+  /// controller's text alone.
+  String? _splitPreset;
   String _propertyType = 'apartment';
   String _transactionType = 'sale';
   String _state = malaysianStates.first;
@@ -266,6 +274,43 @@ class _PostRequirementFormBodyState extends ConsumerState<PostRequirementFormBod
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFECFDF5),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.black),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(PhosphorIcons.lightning(PhosphorIconsStyle.fill), size: 16, color: AppColors.primary),
+                        const SizedBox(width: 6),
+                        Text(
+                          'broadcast_instant_matching_title'.tr(),
+                          style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text('broadcast_instant_matching_body'.tr(), style: Theme.of(context).textTheme.bodySmall),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              Align(
+                alignment: Alignment.centerRight,
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: BroadcastBadge(
+                    label: 'broadcast_high_demand_badge'.tr(),
+                    color: const Color(0xFFBBF7D0),
+                    textColor: const Color(0xFF166534),
+                  ),
+                ),
+              ),
               DropdownButtonFormField<String>(
                 key: const Key('requirement_property_type_field'),
                 initialValue: _propertyType,
@@ -315,23 +360,15 @@ class _PostRequirementFormBodyState extends ConsumerState<PostRequirementFormBod
                 decoration: InputDecoration(labelText: 'listing_field_area'.tr()),
                 validator: _requiredValidator,
               ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                children: [
-                  for (final area in const ['Mont Kiara', 'KLCC', 'Bangsar', 'Petaling Jaya'])
-                    ActionChip(
-                      label: Text(area, style: const TextStyle(fontSize: 12)),
-                      onPressed: () => setState(() => _areaController.text = area),
-                    ),
-                ],
-              ),
               const SizedBox(height: 12),
               TextFormField(
                 key: const Key('requirement_budget_min_field'),
                 controller: _budgetMinController,
                 keyboardType: TextInputType.number,
-                decoration: InputDecoration(labelText: 'requirement_field_budget_min'.tr()),
+                decoration: InputDecoration(
+                  labelText: 'requirement_field_budget_min'.tr(),
+                  prefixText: 'MIN  ',
+                ),
                 validator: (value) {
                   final requiredError = _requiredValidator(value);
                   if (requiredError != null) return requiredError;
@@ -344,7 +381,10 @@ class _PostRequirementFormBodyState extends ConsumerState<PostRequirementFormBod
                 key: const Key('requirement_budget_max_field'),
                 controller: _budgetMaxController,
                 keyboardType: TextInputType.number,
-                decoration: InputDecoration(labelText: 'requirement_field_budget_max'.tr()),
+                decoration: InputDecoration(
+                  labelText: 'requirement_field_budget_max'.tr(),
+                  prefixText: 'MAX  ',
+                ),
                 validator: (value) {
                   final requiredError = _requiredValidator(value);
                   if (requiredError != null) return requiredError;
@@ -356,54 +396,113 @@ class _PostRequirementFormBodyState extends ConsumerState<PostRequirementFormBod
                 },
               ),
               const SizedBox(height: 12),
+              Text('listing_key_specs_label'.tr(), style: Theme.of(context).textTheme.labelSmall),
+              const SizedBox(height: 8),
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
-                    child: TextFormField(
+                    child: SpecStatField(
+                      icon: PhosphorIcons.bed(PhosphorIconsStyle.bold),
                       controller: _bedroomsController,
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(labelText: 'listing_field_bedrooms'.tr()),
+                      label: 'inventory_stat_beds'.tr(),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: TextFormField(
-                      key: const Key('requirement_bathrooms_min_field'),
+                    child: SpecStatField(
+                      fieldKey: const Key('requirement_bathrooms_min_field'),
+                      icon: PhosphorIcons.bathtub(PhosphorIconsStyle.bold),
                       controller: _bathroomsMinController,
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(labelText: 'requirement_field_bathrooms_min'.tr()),
+                      label: 'inventory_stat_baths'.tr(),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: TextFormField(
-                      key: const Key('requirement_sqft_min_field'),
+                    child: SpecStatField(
+                      fieldKey: const Key('requirement_sqft_min_field'),
+                      icon: PhosphorIcons.ruler(PhosphorIconsStyle.bold),
                       controller: _sqftMinController,
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(labelText: 'requirement_field_sqft_min'.tr()),
+                      label: 'inventory_stat_sqft'.tr(),
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 12),
-              TextFormField(
-                key: const Key('requirement_commission_split_field'),
-                controller: _commissionSplitController,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(labelText: 'requirement_field_commission_split'.tr()),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) return null;
-                  final parsed = double.tryParse(value.trim());
-                  if (parsed == null || parsed <= 0 || parsed > 100) return 'validation_required'.tr();
-                  return null;
-                },
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('requirement_field_commission_split'.tr(), style: Theme.of(context).textTheme.labelSmall),
+                  BroadcastBadge(
+                    label: 'requirement_split_standard_badge'.tr(),
+                    color: AppColors.primary,
+                  ),
+                ],
               ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: SplitPresetChip(
+                      label: 'split_preset_5050'.tr(),
+                      sublabel: 'requirement_split_5050_sub'.tr(),
+                      selected: _splitPreset == '5050',
+                      onTap: () => setState(() {
+                        _splitPreset = '5050';
+                        _commissionSplitController.text = '50';
+                        _recomputePreview();
+                      }),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: SplitPresetChip(
+                      label: 'split_preset_full'.tr(),
+                      sublabel: 'requirement_split_full_sub'.tr(),
+                      selected: _splitPreset == 'full',
+                      onTap: () => setState(() {
+                        _splitPreset = 'full';
+                        _commissionSplitController.text = '100';
+                        _recomputePreview();
+                      }),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: SplitPresetChip(
+                      label: 'split_preset_custom'.tr(),
+                      sublabel: 'requirement_split_custom_sub'.tr(),
+                      selected: _splitPreset == 'custom',
+                      onTap: () => setState(() {
+                        _splitPreset = 'custom';
+                        _commissionSplitController.clear();
+                        _recomputePreview();
+                      }),
+                    ),
+                  ),
+                ],
+              ),
+              if (_splitPreset == 'custom') ...[
+                const SizedBox(height: 8),
+                TextFormField(
+                  key: const Key('requirement_commission_split_field'),
+                  controller: _commissionSplitController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(border: OutlineInputBorder()),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) return null;
+                    final parsed = double.tryParse(value.trim());
+                    if (parsed == null || parsed <= 0 || parsed > 100) return 'validation_required'.tr();
+                    return null;
+                  },
+                ),
+              ],
               const SizedBox(height: 12),
-              Text('listing_self_attestation_notice'.tr(), style: Theme.of(context).textTheme.labelSmall),
               SwitchListTile(
                 key: const Key('requirement_loan_ready_switch'),
                 contentPadding: EdgeInsets.zero,
                 title: Text('requirement_field_loan_ready'.tr()),
+                subtitle: Text('requirement_loan_ready_caption'.tr()),
                 value: _loanReady,
                 onChanged: (value) => setState(() => _loanReady = value),
               ),
@@ -411,6 +510,7 @@ class _PostRequirementFormBodyState extends ConsumerState<PostRequirementFormBod
                 key: const Key('requirement_urgent_viewing_switch'),
                 contentPadding: EdgeInsets.zero,
                 title: Text('requirement_field_urgent_viewing'.tr()),
+                subtitle: Text('requirement_urgent_viewing_caption'.tr()),
                 value: _urgentViewingRequired,
                 onChanged: (value) => setState(() => _urgentViewingRequired = value),
               ),
@@ -465,16 +565,7 @@ class _PostRequirementFormBodyState extends ConsumerState<PostRequirementFormBod
                     );
                   }),
                   if (_photos.length < _maxPhotos)
-                    OutlinedButton(
-                      onPressed: _pickPhotos,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.add_a_photo),
-                          Text('listing_add_photo'.tr(), style: Theme.of(context).textTheme.labelSmall),
-                        ],
-                      ),
-                    ),
+                    AddPhotoTile(label: 'listing_add_photo'.tr(), onTap: _pickPhotos),
                 ],
               ),
               if (tierAsync.valueOrNull?.tier == 'free') ...[
@@ -494,36 +585,12 @@ class _PostRequirementFormBodyState extends ConsumerState<PostRequirementFormBod
               ],
               if (_previewResult.matchCount > 0) ...[
                 const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF9FAFB),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.black, width: 2),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('requirement_preview_radar_label'.tr(), style: Theme.of(context).textTheme.labelSmall),
-                      const SizedBox(height: 4),
-                      Text(
-                        'requirement_preview_match_count'.tr(namedArgs: {'count': '${_previewResult.matchCount}'}),
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
-                      ),
-                      if (_previewResult.topMatchLabel != null)
-                        Text(
-                          _previewResult.topMatchLabel!,
-                          style: Theme.of(context).textTheme.labelSmall,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                    ],
-                  ),
-                ),
+                MatchPreviewCard(result: _previewResult, radarLabelKey: 'requirement_preview_radar_label'),
               ],
               const SizedBox(height: 24),
               BrutalistButton(
                 label: 'requirement_post_now'.tr(),
+                icon: PhosphorIcons.arrowRight(PhosphorIconsStyle.bold),
                 onPressed: (_submitting || atCap) ? null : _submit,
               ),
             ],

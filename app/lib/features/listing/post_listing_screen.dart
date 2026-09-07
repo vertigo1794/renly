@@ -7,13 +7,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../core/constants/malaysian_states.dart';
+import '../../core/theme/app_colors.dart';
 import '../../core/widgets/brutalist_button.dart';
 import '../matching/live_match_preview.dart';
 import '../matching/matching_providers.dart' hide currentNegotiatorIdProvider;
 import '../requirement/models/requirement.dart';
 import '../requirement/requirement_providers.dart' hide currentNegotiatorIdProvider;
+import 'broadcast_badge.dart';
 import 'listing_drafts_provider.dart';
 import 'listing_providers.dart';
 import 'models/listing.dart';
@@ -47,6 +50,24 @@ class _PostListingFormBodyState extends ConsumerState<PostListingFormBody> {
   final _bathroomsController = TextEditingController();
   final _sqftController = TextEditingController();
   final _commissionSplitController = TextEditingController();
+
+  /// Which commission-split preset is currently highlighted -- '5050',
+  /// 'full', or 'custom' (which reveals the raw percentage field below
+  /// the presets), or null when nothing has been picked yet. Tracked
+  /// separately from _commissionSplitController.text because tapping
+  /// Custom clears the field to prompt fresh input, and a cleared field's
+  /// text alone can't distinguish "no preset chosen" from "Custom chosen,
+  /// not yet typed".
+  String? _splitPreset;
+
+  static String? _presetForSplitValue(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) return null;
+    if (trimmed == '50') return '5050';
+    if (trimmed == '100') return 'full';
+    return 'custom';
+  }
+
   Timer? _previewDebounce;
   List<Requirement>? _previewCandidates;
   LiveMatchPreviewResult _previewResult = const LiveMatchPreviewResult(matchCount: 0);
@@ -92,6 +113,7 @@ class _PostListingFormBodyState extends ConsumerState<PostListingFormBody> {
       _bathroomsController.text = draft.bathrooms ?? '';
       _sqftController.text = draft.sqft ?? '';
       _commissionSplitController.text = draft.commissionSplitPercent ?? '';
+      _splitPreset = _presetForSplitValue(_commissionSplitController.text);
       _titleVerified = draft.titleVerified;
       _exclusiveMandate = draft.exclusiveMandate;
     }
@@ -156,6 +178,7 @@ class _PostListingFormBodyState extends ConsumerState<PostListingFormBody> {
     _bathroomsController.text = listing.bathrooms?.toString() ?? '';
     _sqftController.text = listing.builtUpSqft?.toString() ?? '';
     _commissionSplitController.text = listing.commissionSplitPercent?.toString() ?? '';
+    _splitPreset = _presetForSplitValue(_commissionSplitController.text);
     _titleVerified = listing.titleVerified;
     _exclusiveMandate = listing.exclusiveMandate;
   }
@@ -428,6 +451,17 @@ class _PostListingFormBodyState extends ConsumerState<PostListingFormBody> {
                   validator: _requiredValidator,
                 ),
                 const SizedBox(height: 12),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: BroadcastBadge(
+                      label: 'broadcast_high_demand_badge'.tr(),
+                      color: const Color(0xFFBBF7D0),
+                      textColor: const Color(0xFF166534),
+                    ),
+                  ),
+                ),
                 DropdownButtonFormField<String>(
                   key: const Key('listing_property_type_field'),
                   initialValue: _propertyType,
@@ -477,17 +511,6 @@ class _PostListingFormBodyState extends ConsumerState<PostListingFormBody> {
                   decoration: InputDecoration(labelText: 'listing_field_area'.tr()),
                   validator: _requiredValidator,
                 ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  children: [
-                    for (final area in const ['Mont Kiara', 'KLCC', 'Bangsar', 'Petaling Jaya'])
-                      ActionChip(
-                        label: Text(area, style: const TextStyle(fontSize: 12)),
-                        onPressed: () => setState(() => _areaController.text = area),
-                      ),
-                  ],
-                ),
                 const SizedBox(height: 12),
                 TextFormField(
                   key: const Key('listing_price_field'),
@@ -502,53 +525,112 @@ class _PostListingFormBodyState extends ConsumerState<PostListingFormBody> {
                   },
                 ),
                 const SizedBox(height: 12),
+                Text('listing_key_specs_label'.tr(), style: Theme.of(context).textTheme.labelSmall),
+                const SizedBox(height: 8),
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
-                      child: TextFormField(
+                      child: SpecStatField(
+                        icon: PhosphorIcons.bed(PhosphorIconsStyle.bold),
                         controller: _bedroomsController,
-                        keyboardType: TextInputType.number,
-                        decoration: InputDecoration(labelText: 'listing_field_bedrooms'.tr()),
+                        label: 'inventory_stat_beds'.tr(),
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: TextFormField(
+                      child: SpecStatField(
+                        icon: PhosphorIcons.bathtub(PhosphorIconsStyle.bold),
                         controller: _bathroomsController,
-                        keyboardType: TextInputType.number,
-                        decoration: InputDecoration(labelText: 'listing_field_bathrooms'.tr()),
+                        label: 'inventory_stat_baths'.tr(),
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: TextFormField(
-                        key: const Key('listing_sqft_field'),
+                      child: SpecStatField(
+                        fieldKey: const Key('listing_sqft_field'),
+                        icon: PhosphorIcons.ruler(PhosphorIconsStyle.bold),
                         controller: _sqftController,
-                        keyboardType: TextInputType.number,
-                        decoration: InputDecoration(labelText: 'listing_field_sqft'.tr()),
+                        label: 'inventory_stat_sqft'.tr(),
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 12),
-                TextFormField(
-                  key: const Key('listing_commission_split_field'),
-                  controller: _commissionSplitController,
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(labelText: 'listing_field_commission_split'.tr()),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) return null;
-                    final parsed = double.tryParse(value.trim());
-                    if (parsed == null || parsed <= 0 || parsed > 100) return 'validation_required'.tr();
-                    return null;
-                  },
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('listing_field_commission_split'.tr(), style: Theme.of(context).textTheme.labelSmall),
+                    BroadcastBadge(
+                      label: 'listing_split_fast_matching_badge'.tr(),
+                      color: AppColors.primary,
+                    ),
+                  ],
                 ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: SplitPresetChip(
+                        label: 'split_preset_5050'.tr(),
+                        sublabel: 'listing_split_5050_sub'.tr(),
+                        selected: _splitPreset == '5050',
+                        onTap: () => setState(() {
+                          _splitPreset = '5050';
+                          _commissionSplitController.text = '50';
+                          _recomputePreview();
+                        }),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: SplitPresetChip(
+                        label: 'split_preset_full'.tr(),
+                        sublabel: 'listing_split_full_sub'.tr(),
+                        selected: _splitPreset == 'full',
+                        onTap: () => setState(() {
+                          _splitPreset = 'full';
+                          _commissionSplitController.text = '100';
+                          _recomputePreview();
+                        }),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: SplitPresetChip(
+                        label: 'split_preset_custom'.tr(),
+                        sublabel: 'listing_split_custom_sub'.tr(),
+                        selected: _splitPreset == 'custom',
+                        onTap: () => setState(() {
+                          _splitPreset = 'custom';
+                          _commissionSplitController.clear();
+                          _recomputePreview();
+                        }),
+                      ),
+                    ),
+                  ],
+                ),
+                if (_splitPreset == 'custom') ...[
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    key: const Key('listing_commission_split_field'),
+                    controller: _commissionSplitController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(border: OutlineInputBorder()),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) return null;
+                      final parsed = double.tryParse(value.trim());
+                      if (parsed == null || parsed <= 0 || parsed > 100) return 'validation_required'.tr();
+                      return null;
+                    },
+                  ),
+                ],
                 const SizedBox(height: 12),
-                Text('listing_self_attestation_notice'.tr(), style: Theme.of(context).textTheme.labelSmall),
                 SwitchListTile(
                   key: const Key('listing_title_verified_switch'),
                   contentPadding: EdgeInsets.zero,
                   title: Text('listing_field_title_verified'.tr()),
+                  subtitle: Text('listing_title_verified_caption'.tr()),
                   value: _titleVerified,
                   onChanged: (value) => setState(() => _titleVerified = value),
                 ),
@@ -556,6 +638,7 @@ class _PostListingFormBodyState extends ConsumerState<PostListingFormBody> {
                   key: const Key('listing_exclusive_mandate_switch'),
                   contentPadding: EdgeInsets.zero,
                   title: Text('listing_field_exclusive_mandate'.tr()),
+                  subtitle: Text('listing_exclusive_mandate_caption'.tr()),
                   value: _exclusiveMandate,
                   onChanged: (value) => setState(() => _exclusiveMandate = value),
                 ),
@@ -621,17 +704,7 @@ class _PostListingFormBodyState extends ConsumerState<PostListingFormBody> {
                           ],
                         );
                       }),
-                      if (_photos.length < 10)
-                        OutlinedButton(
-                          onPressed: _pickPhotos,
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(Icons.add_a_photo),
-                              Text('listing_add_photo'.tr(), style: Theme.of(context).textTheme.labelSmall),
-                            ],
-                          ),
-                        ),
+                      if (_photos.length < 10) AddPhotoTile(label: 'listing_add_photo'.tr(), onTap: _pickPhotos),
                     ],
                   ),
                 ],
@@ -652,36 +725,12 @@ class _PostListingFormBodyState extends ConsumerState<PostListingFormBody> {
                 ],
                 if (_previewResult.matchCount > 0) ...[
                   const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF9FAFB),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.black, width: 2),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('listing_preview_radar_label'.tr(), style: Theme.of(context).textTheme.labelSmall),
-                        const SizedBox(height: 4),
-                        Text(
-                          'listing_preview_match_count'.tr(namedArgs: {'count': '${_previewResult.matchCount}'}),
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
-                        ),
-                        if (_previewResult.topMatchLabel != null)
-                          Text(
-                            _previewResult.topMatchLabel!,
-                            style: Theme.of(context).textTheme.labelSmall,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                      ],
-                    ),
-                  ),
+                  MatchPreviewCard(result: _previewResult, radarLabelKey: 'listing_preview_radar_label'),
                 ],
                 const SizedBox(height: 24),
                 BrutalistButton(
                   label: _isEditMode ? 'listing_save_changes'.tr() : 'listing_post_now'.tr(),
+                  icon: _isEditMode ? null : PhosphorIcons.arrowRight(PhosphorIconsStyle.bold),
                   onPressed: (_submitting || atCap) ? null : _submit,
                 ),
                 if (!_isEditMode) ...[

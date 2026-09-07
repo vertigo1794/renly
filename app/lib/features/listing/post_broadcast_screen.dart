@@ -11,6 +11,7 @@ import '../notifications/notification_providers.dart';
 import '../profile/profile_providers.dart' hide currentNegotiatorIdProvider;
 import '../requirement/post_requirement_screen.dart';
 import '../requirement/requirement_providers.dart';
+import 'broadcast_badge.dart';
 import 'listing_providers.dart';
 import 'models/listing_draft.dart';
 import 'post_listing_screen.dart';
@@ -129,11 +130,15 @@ class _PostBroadcastScreenState extends ConsumerState<PostBroadcastScreen> {
           if (showToggle) ...[
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-              child: _ModeToggle(mode: _mode, onChanged: (mode) => setState(() => _mode = mode)),
+              child: _mode == PostBroadcastMode.listing ? const _ListingHeaderTitle() : const _RequirementHeaderTitle(),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
               child: _mode == PostBroadcastMode.listing ? const _ActiveListingsTicker() : const _BuyerDemandsTicker(),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+              child: _ModeToggle(mode: _mode, onChanged: (mode) => setState(() => _mode = mode)),
             ),
           ],
           Expanded(
@@ -224,6 +229,86 @@ class _ToggleButton extends StatelessWidget {
   }
 }
 
+class _ListingHeaderTitle extends StatelessWidget {
+  const _ListingHeaderTitle();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Text(
+                'broadcast_listing_headline'.tr(),
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900),
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(6)),
+              child: Text(
+                'broadcast_instant_badge'.tr(),
+                style: Theme.of(context)
+                    .textTheme
+                    .labelSmall
+                    ?.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'broadcast_listing_subtitle'.tr(),
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: const Color(0xFF6B7280)),
+        ),
+      ],
+    );
+  }
+}
+
+class _RequirementHeaderTitle extends StatelessWidget {
+  const _RequirementHeaderTitle();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Text(
+                'broadcast_requirement_headline'.tr(),
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900),
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(6)),
+              child: Text(
+                'broadcast_radar_badge'.tr(),
+                style: Theme.of(context)
+                    .textTheme
+                    .labelSmall
+                    ?.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'broadcast_requirement_subtitle'.tr(),
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: const Color(0xFF6B7280)),
+        ),
+      ],
+    );
+  }
+}
+
 class _ActiveListingsTicker extends ConsumerWidget {
   const _ActiveListingsTicker();
 
@@ -258,11 +343,17 @@ class _TickerBar extends StatelessWidget {
       decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(12)),
       child: Row(
         children: [
-          Container(width: 8, height: 8, decoration: const BoxDecoration(color: Colors.greenAccent, shape: BoxShape.circle)),
+          BroadcastBadge(label: 'broadcast_live_badge'.tr(), color: AppColors.primary),
           const SizedBox(width: 8),
           Expanded(
-            child: Text(text, style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+            child: Text(
+              text,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+            ),
           ),
+          const SizedBox(width: 6),
+          Icon(PhosphorIcons.lightning(PhosphorIconsStyle.fill), size: 14, color: AppColors.primary),
         ],
       ),
     );

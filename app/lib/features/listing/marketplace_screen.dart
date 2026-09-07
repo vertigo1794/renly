@@ -10,6 +10,7 @@ import '../matching/matching_providers.dart' hide currentNegotiatorIdProvider;
 import '../matching/models/match_candidate.dart';
 import '../notifications/notification_providers.dart';
 import '../profile/profile_providers.dart' hide currentNegotiatorIdProvider;
+import 'broadcast_badge.dart';
 import 'listing_formatting.dart';
 import 'listing_photo.dart';
 import 'listing_providers.dart';
@@ -338,39 +339,22 @@ class _LiveTicker extends StatelessWidget {
   Widget build(BuildContext context) {
     final total = listings.fold<double>(0, (sum, l) => sum + l.price);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E5DC)),
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(12)),
       child: Row(
         children: [
-          Container(
-            width: 10,
-            height: 10,
-            decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle),
-          ),
+          BroadcastBadge(label: 'broadcast_live_badge'.tr(), color: AppColors.primary),
           const SizedBox(width: 8),
           Expanded(
-            child: Text.rich(
-              TextSpan(
-                children: [
-                  TextSpan(
-                    text: '${'marketplace_ticker_live'.tr()} ',
-                    style: const TextStyle(fontWeight: FontWeight.w900),
-                  ),
-                  TextSpan(
-                    text:
-                        '${listings.length} ${'marketplace_ticker_active_units'.tr()} • ${ListingFormatting.formatPrice(total, 'sale')} ${'marketplace_ticker_total_value'.tr()}',
-                  ),
-                ],
-              ),
-              style: Theme.of(context).textTheme.labelSmall,
+            child: Text(
+              '${listings.length} ${'marketplace_ticker_active_units'.tr()} • ${ListingFormatting.formatPrice(total, 'sale')} ${'marketplace_ticker_total_value'.tr()}',
+              style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
           ),
+          const SizedBox(width: 6),
+          Icon(PhosphorIcons.lightning(PhosphorIconsStyle.fill), size: 14, color: AppColors.primary),
         ],
       ),
     );

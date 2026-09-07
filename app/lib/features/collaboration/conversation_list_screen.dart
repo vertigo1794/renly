@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/r_star_badge.dart';
+import '../listing/broadcast_badge.dart';
 import '../listing/listing_formatting.dart';
 import '../notifications/notification_providers.dart';
 import '../profile/profile_providers.dart' hide currentNegotiatorIdProvider;
@@ -265,40 +266,22 @@ class _ConversationListScreenState extends ConsumerState<ConversationListScreen>
                           ),
                           const SizedBox(height: 14),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: const Color(0xFFE5E7EB)),
-                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                            decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(12)),
                             child: Row(
                               children: [
-                                Container(
-                                  width: 10,
-                                  height: 10,
-                                  decoration: BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
-                                ),
+                                BroadcastBadge(label: 'broadcast_live_badge'.tr(), color: AppColors.primary),
                                 const SizedBox(width: 8),
                                 Expanded(
-                                  child: Text.rich(
-                                    TextSpan(
-                                      children: [
-                                        TextSpan(
-                                          text: '${notArchived.length} ${'conversation_ticker_active'.tr()}',
-                                          style: const TextStyle(fontWeight: FontWeight.bold),
-                                        ),
-                                        const TextSpan(text: '  •  '),
-                                        TextSpan(
-                                          text: '$pendingReceivedCount ${'conversation_ticker_inquiries'.tr()}',
-                                          style: const TextStyle(color: Color(0xFF4B5563)),
-                                        ),
-                                      ],
-                                    ),
-                                    style: Theme.of(context).textTheme.labelSmall,
+                                  child: Text(
+                                    '${notArchived.length} ${'conversation_ticker_active'.tr()} • $pendingReceivedCount ${'conversation_ticker_inquiries'.tr()}',
+                                    style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
+                                const SizedBox(width: 6),
+                                Icon(PhosphorIcons.lightning(PhosphorIconsStyle.fill), size: 14, color: AppColors.primary),
                               ],
                             ),
                           ),

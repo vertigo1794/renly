@@ -100,9 +100,9 @@ void main() {
     await tester.pumpWidget(_wrap(router));
     await tester.pumpAndSettle();
 
-    await tester.ensureVisible(find.widgetWithText(BrutalistButton, 'Post Requirement'));
+    await tester.ensureVisible(find.widgetWithText(BrutalistButton, 'Find Matches'));
     await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(BrutalistButton, 'Post Requirement'));
+    await tester.tap(find.widgetWithText(BrutalistButton, 'Find Matches'));
     await tester.pumpAndSettle();
 
     expect(find.text('This field is required'), findsWidgets);
@@ -127,9 +127,9 @@ void main() {
     FocusManager.instance.primaryFocus?.unfocus();
     await tester.pumpAndSettle();
 
-    await tester.ensureVisible(find.widgetWithText(BrutalistButton, 'Post Requirement'));
+    await tester.ensureVisible(find.widgetWithText(BrutalistButton, 'Find Matches'));
     await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(BrutalistButton, 'Post Requirement'));
+    await tester.tap(find.widgetWithText(BrutalistButton, 'Find Matches'));
     await tester.pumpAndSettle();
 
     expect(find.text('Maximum budget must be at least the minimum'), findsOneWidget);
@@ -205,6 +205,6 @@ void main() {
     await tester.enterText(find.byKey(const Key('requirement_budget_max_field')), '600000');
     await tester.pumpAndSettle(const Duration(milliseconds: 600));
 
-    expect(find.text('requirement_preview_match_count'.tr(namedArgs: {'count': '1'})), findsOneWidget);
+    expect(find.text('preview_units_count'.tr(namedArgs: {'count': '1'})), findsOneWidget);
   });
 }

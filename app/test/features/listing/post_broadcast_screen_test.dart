@@ -221,13 +221,13 @@ void main() {
     await tester.enterText(find.byKey(const Key('listing_price_field')), '500000');
     await tester.pumpAndSettle(const Duration(milliseconds: 600));
 
-    expect(find.text('listing_preview_match_count'.tr(namedArgs: {'count': '1'})), findsOneWidget);
+    expect(find.text('preview_units_count'.tr(namedArgs: {'count': '1'})), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('listing_state_field')));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Selangor').last);
     await tester.pumpAndSettle();
 
-    expect(find.text('listing_preview_match_count'.tr(namedArgs: {'count': '1'})), findsNothing);
+    expect(find.text('preview_units_count'.tr(namedArgs: {'count': '1'})), findsNothing);
   });
 }
