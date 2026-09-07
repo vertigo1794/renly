@@ -227,4 +227,68 @@ void main() {
 
     expect(find.text('preview_units_count'.tr(namedArgs: {'count': '1'})), findsOneWidget);
   });
+
+  testWidgets('renders the new property-attribute fields', (tester) async {
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const Scaffold(body: PostListingFormBody())),
+    ]);
+
+    await tester.pumpWidget(_wrap(router));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('listing_tenure_field')), findsOneWidget);
+    expect(find.byKey(const Key('listing_maintenance_fee_field')), findsOneWidget);
+    expect(find.byKey(const Key('listing_parking_field')), findsOneWidget);
+    expect(find.byKey(const Key('listing_floor_field')), findsOneWidget);
+    expect(find.byKey(const Key('listing_furnishing_field')), findsOneWidget);
+    expect(find.byKey(const Key('listing_total_commission_field')), findsOneWidget);
+    expect(find.byKey(const Key('listing_keys_on_hand_switch')), findsOneWidget);
+    expect(find.byKey(const Key('listing_protected_co_broke_reg_switch')), findsOneWidget);
+  });
+
+  testWidgets('edit mode pre-fills the new property-attribute fields', (tester) async {
+    final existingListing = Listing(
+      listingId: 'l-1',
+      negotiatorId: 'n-1',
+      title: 'Existing Title',
+      description: 'Existing description',
+      propertyType: 'house',
+      transactionType: 'sale',
+      state: 'Selangor',
+      area: 'Shah Alam',
+      price: 500000,
+      photoUrls: const [],
+      status: 'active',
+      createdAt: DateTime(2024, 1, 1),
+      maintenanceFeeMyr: 580,
+      tenure: 'freehold',
+      parkingBays: 2,
+      floorLevel: 38,
+      furnishingStatus: 'furnished',
+      keysOnHand: true,
+      protectedCoBrokeReg: true,
+      totalAgencyCommissionPercent: 3,
+    );
+
+    final router = GoRouter(routes: [
+      GoRoute(
+        path: '/',
+        builder: (context, state) => const Scaffold(body: PostListingFormBody(editListingId: 'l-1')),
+      ),
+    ]);
+
+    await tester.pumpWidget(_wrap(router, overrides: [
+      currentNegotiatorIdProvider.overrideWithValue('n-1'),
+      listingDetailProvider('l-1').overrideWith((ref) async => existingListing),
+      subscription_providers.subscriptionStatusProvider.overrideWith(
+        (ref) => Stream.value(const subscription.SubscriptionStatus(tier: 'professional')),
+      ),
+    ]));
+    await tester.pumpAndSettle();
+
+    final maintenanceField = tester.widget<TextFormField>(find.byKey(const Key('listing_maintenance_fee_field')));
+    expect(maintenanceField.controller?.text, '580.0');
+    final keysOnHandSwitch = tester.widget<SwitchListTile>(find.byKey(const Key('listing_keys_on_hand_switch')));
+    expect(keysOnHandSwitch.value, true);
+  });
 }

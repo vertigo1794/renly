@@ -50,6 +50,14 @@ class _PostListingFormBodyState extends ConsumerState<PostListingFormBody> {
   final _bathroomsController = TextEditingController();
   final _sqftController = TextEditingController();
   final _commissionSplitController = TextEditingController();
+  final _maintenanceFeeController = TextEditingController();
+  final _parkingBaysController = TextEditingController();
+  final _floorLevelController = TextEditingController();
+  final _totalCommissionController = TextEditingController();
+  String? _tenure;
+  String? _furnishingStatus;
+  bool _keysOnHand = false;
+  bool _protectedCoBrokeReg = false;
 
   /// Which commission-split preset is currently highlighted -- '5050',
   /// 'full', or 'custom' (which reveals the raw percentage field below
@@ -161,6 +169,10 @@ class _PostListingFormBodyState extends ConsumerState<PostListingFormBody> {
     _bathroomsController.dispose();
     _sqftController.dispose();
     _commissionSplitController.dispose();
+    _maintenanceFeeController.dispose();
+    _parkingBaysController.dispose();
+    _floorLevelController.dispose();
+    _totalCommissionController.dispose();
     super.dispose();
   }
 
@@ -181,6 +193,14 @@ class _PostListingFormBodyState extends ConsumerState<PostListingFormBody> {
     _splitPreset = _presetForSplitValue(_commissionSplitController.text);
     _titleVerified = listing.titleVerified;
     _exclusiveMandate = listing.exclusiveMandate;
+    _maintenanceFeeController.text = listing.maintenanceFeeMyr?.toString() ?? '';
+    _tenure = listing.tenure;
+    _parkingBaysController.text = listing.parkingBays?.toString() ?? '';
+    _floorLevelController.text = listing.floorLevel?.toString() ?? '';
+    _furnishingStatus = listing.furnishingStatus;
+    _totalCommissionController.text = listing.totalAgencyCommissionPercent?.toString() ?? '';
+    _keysOnHand = listing.keysOnHand;
+    _protectedCoBrokeReg = listing.protectedCoBrokeReg;
   }
 
   Future<void> _pickPhotos() async {
@@ -220,6 +240,30 @@ class _PostListingFormBodyState extends ConsumerState<PostListingFormBody> {
     final text = _sqftController.text.trim();
     if (text.isEmpty) return null;
     return int.tryParse(text);
+  }
+
+  double? get _maintenanceFeeValue {
+    final text = _maintenanceFeeController.text.trim();
+    if (text.isEmpty) return null;
+    return double.tryParse(text);
+  }
+
+  int? get _parkingBaysValue {
+    final text = _parkingBaysController.text.trim();
+    if (text.isEmpty) return null;
+    return int.tryParse(text);
+  }
+
+  int? get _floorLevelValue {
+    final text = _floorLevelController.text.trim();
+    if (text.isEmpty) return null;
+    return int.tryParse(text);
+  }
+
+  double? get _totalCommissionValue {
+    final text = _totalCommissionController.text.trim();
+    if (text.isEmpty) return null;
+    return double.tryParse(text);
   }
 
   Future<void> _saveAsDraft() async {
@@ -316,6 +360,14 @@ class _PostListingFormBodyState extends ConsumerState<PostListingFormBody> {
           commissionSplitPercent: _commissionSplitValue,
           titleVerified: _titleVerified,
           exclusiveMandate: _exclusiveMandate,
+          maintenanceFeeMyr: _maintenanceFeeValue,
+          tenure: _tenure,
+          parkingBays: _parkingBaysValue,
+          floorLevel: _floorLevelValue,
+          furnishingStatus: _furnishingStatus,
+          keysOnHand: _keysOnHand,
+          protectedCoBrokeReg: _protectedCoBrokeReg,
+          totalAgencyCommissionPercent: _totalCommissionValue,
         );
         ref.invalidate(listingDetailProvider(widget.editListingId!));
         ref.invalidate(marketplaceListingsProvider);
@@ -343,6 +395,14 @@ class _PostListingFormBodyState extends ConsumerState<PostListingFormBody> {
           commissionSplitPercent: _commissionSplitValue,
           titleVerified: _titleVerified,
           exclusiveMandate: _exclusiveMandate,
+          maintenanceFeeMyr: _maintenanceFeeValue,
+          tenure: _tenure,
+          parkingBays: _parkingBaysValue,
+          floorLevel: _floorLevelValue,
+          furnishingStatus: _furnishingStatus,
+          keysOnHand: _keysOnHand,
+          protectedCoBrokeReg: _protectedCoBrokeReg,
+          totalAgencyCommissionPercent: _totalCommissionValue,
         );
         _createdListingId = listing.listingId;
       }
@@ -479,6 +539,18 @@ class _PostListingFormBodyState extends ConsumerState<PostListingFormBody> {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
+                  key: const Key('listing_tenure_field'),
+                  initialValue: _tenure,
+                  decoration: InputDecoration(labelText: 'listing_field_tenure'.tr()),
+                  hint: Text('-'),
+                  items: [
+                    DropdownMenuItem(value: 'freehold', child: Text('listing_tenure_freehold'.tr())),
+                    DropdownMenuItem(value: 'leasehold', child: Text('listing_tenure_leasehold'.tr())),
+                  ],
+                  onChanged: (value) => setState(() => _tenure = value),
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
                   key: const Key('listing_transaction_type_field'),
                   initialValue: _transactionType,
                   decoration: InputDecoration(labelText: 'listing_field_transaction_type'.tr()),
@@ -525,6 +597,18 @@ class _PostListingFormBodyState extends ConsumerState<PostListingFormBody> {
                   },
                 ),
                 const SizedBox(height: 12),
+                TextFormField(
+                  key: const Key('listing_maintenance_fee_field'),
+                  controller: _maintenanceFeeController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(labelText: 'listing_field_maintenance_fee'.tr()),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) return null;
+                    if (double.tryParse(value.trim()) == null) return 'validation_required'.tr();
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 12),
                 Text('listing_key_specs_label'.tr(), style: Theme.of(context).textTheme.labelSmall),
                 const SizedBox(height: 8),
                 Row(
@@ -552,6 +636,45 @@ class _PostListingFormBodyState extends ConsumerState<PostListingFormBody> {
                         icon: PhosphorIcons.ruler(PhosphorIconsStyle.bold),
                         controller: _sqftController,
                         label: 'inventory_stat_sqft'.tr(),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: SpecStatField(
+                        fieldKey: const Key('listing_parking_field'),
+                        icon: PhosphorIcons.car(PhosphorIconsStyle.bold),
+                        controller: _parkingBaysController,
+                        label: 'listing_stat_parking'.tr(),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: SpecStatField(
+                        fieldKey: const Key('listing_floor_field'),
+                        icon: PhosphorIcons.stackSimple(PhosphorIconsStyle.bold),
+                        controller: _floorLevelController,
+                        label: 'listing_stat_floor'.tr(),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: SpecStatField(
+                        fieldKey: const Key('listing_furnishing_field'),
+                        icon: PhosphorIcons.armchair(PhosphorIconsStyle.bold),
+                        controller: TextEditingController(),
+                        label: 'listing_stat_furnishing'.tr(),
+                        dropdownValue: _furnishingStatus,
+                        dropdownItems: [
+                          DropdownMenuItem(value: 'furnished', child: Text('listing_furnishing_furnished'.tr())),
+                          DropdownMenuItem(value: 'partially_furnished', child: Text('listing_furnishing_partially_furnished'.tr())),
+                          DropdownMenuItem(value: 'unfurnished', child: Text('listing_furnishing_unfurnished'.tr())),
+                        ],
+                        onDropdownChanged: (value) => setState(() => _furnishingStatus = value),
                       ),
                     ),
                   ],
@@ -626,6 +749,19 @@ class _PostListingFormBodyState extends ConsumerState<PostListingFormBody> {
                   ),
                 ],
                 const SizedBox(height: 12),
+                TextFormField(
+                  key: const Key('listing_total_commission_field'),
+                  controller: _totalCommissionController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(labelText: 'listing_field_total_commission'.tr()),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) return null;
+                    final parsed = double.tryParse(value.trim());
+                    if (parsed == null || parsed <= 0 || parsed > 100) return 'validation_required'.tr();
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 12),
                 SwitchListTile(
                   key: const Key('listing_title_verified_switch'),
                   contentPadding: EdgeInsets.zero,
@@ -641,6 +777,22 @@ class _PostListingFormBodyState extends ConsumerState<PostListingFormBody> {
                   subtitle: Text('listing_exclusive_mandate_caption'.tr()),
                   value: _exclusiveMandate,
                   onChanged: (value) => setState(() => _exclusiveMandate = value),
+                ),
+                SwitchListTile(
+                  key: const Key('listing_keys_on_hand_switch'),
+                  contentPadding: EdgeInsets.zero,
+                  title: Text('listing_field_keys_on_hand'.tr()),
+                  subtitle: Text('listing_keys_on_hand_caption'.tr()),
+                  value: _keysOnHand,
+                  onChanged: (value) => setState(() => _keysOnHand = value),
+                ),
+                SwitchListTile(
+                  key: const Key('listing_protected_co_broke_reg_switch'),
+                  contentPadding: EdgeInsets.zero,
+                  title: Text('listing_field_protected_co_broke_reg'.tr()),
+                  subtitle: Text('listing_protected_co_broke_reg_caption'.tr()),
+                  value: _protectedCoBrokeReg,
+                  onChanged: (value) => setState(() => _protectedCoBrokeReg = value),
                 ),
                 const SizedBox(height: 12),
                 // Photo editing has no wired-up submit path in edit mode --

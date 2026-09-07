@@ -27,8 +27,11 @@ class BroadcastBadge extends StatelessWidget {
 /// A single editable spec field styled as a bordered "stat card" (icon on
 /// top, the real value centered, a short unit label underneath) -- shared
 /// by both PostListingFormBody's and PostRequirementFormBody's
-/// bedrooms/bathrooms/built-up rows. Stays a real, editable TextFormField;
-/// only the decoration changes from the previous plain-box style.
+/// bedrooms/bathrooms/built-up rows. Stays a real, editable TextFormField
+/// by default; passing [dropdownItems] switches it to a compact dropdown
+/// instead (used for Furnishing Status, the one stat cell that's an enum
+/// rather than a free-typed number) -- every other existing caller leaves
+/// [dropdownItems] null and sees no behavior change.
 class SpecStatField extends StatelessWidget {
   const SpecStatField({
     super.key,
@@ -36,12 +39,18 @@ class SpecStatField extends StatelessWidget {
     required this.controller,
     required this.label,
     this.fieldKey,
+    this.dropdownItems,
+    this.dropdownValue,
+    this.onDropdownChanged,
   });
 
   final IconData icon;
   final TextEditingController controller;
   final String label;
   final Key? fieldKey;
+  final List<DropdownMenuItem<String>>? dropdownItems;
+  final String? dropdownValue;
+  final ValueChanged<String?>? onDropdownChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -55,19 +64,32 @@ class SpecStatField extends StatelessWidget {
         children: [
           Icon(icon, size: 16, color: const Color(0xFF6B7280)),
           const SizedBox(height: 4),
-          TextFormField(
-            key: fieldKey,
-            controller: controller,
-            keyboardType: TextInputType.number,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-            decoration: const InputDecoration(
-              border: InputBorder.none,
+          if (dropdownItems != null)
+            DropdownButton<String>(
+              key: fieldKey,
+              value: dropdownValue,
+              items: dropdownItems,
+              onChanged: onDropdownChanged,
               isDense: true,
-              contentPadding: EdgeInsets.zero,
-              hintText: '-',
+              isExpanded: true,
+              underline: const SizedBox.shrink(),
+              hint: Text('-', style: Theme.of(context).textTheme.titleMedium),
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: Colors.black),
+            )
+          else
+            TextFormField(
+              key: fieldKey,
+              controller: controller,
+              keyboardType: TextInputType.number,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              decoration: const InputDecoration(
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding: EdgeInsets.zero,
+                hintText: '-',
+              ),
             ),
-          ),
           Text(label, style: Theme.of(context).textTheme.labelSmall?.copyWith(color: const Color(0xFF6B7280))),
         ],
       ),
