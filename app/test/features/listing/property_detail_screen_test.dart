@@ -291,11 +291,17 @@ void main() {
     await tester.pumpWidget(_wrap(router, listing: listingWithSplit));
     await tester.pumpAndSettle();
 
-    // findsWidgets, not findsOneWidget: since Task 8, the Co-Broking Terms
-    // card also renders a "50/50" split badge in its own header (a second,
-    // deliberate showing of the same ratio, distinct from this deal-terms
-    // banner's at-a-glance badge) whenever commissionSplitPercent is set.
-    expect(find.text('50/50'), findsWidgets);
+    // Scoped to the deal-terms banner's own split badge: since Task 8, the
+    // Co-Broking Terms card also renders a "50/50" split badge in its own
+    // header (a second, deliberate showing of the same ratio, distinct from
+    // this deal-terms banner's at-a-glance badge) whenever
+    // commissionSplitPercent is set. Scoping via the badge's Key keeps this
+    // assertion specific to the banner's own rendering, so a regression
+    // there is still caught even if the co-broking card keeps working.
+    expect(
+      find.descendant(of: find.byKey(const Key('deal_terms_split_badge')), matching: find.text('50/50')),
+      findsOneWidget,
+    );
     expect(find.text('property_price_per_sqft'.tr(namedArgs: {'value': '1000'})), findsOneWidget);
   });
 

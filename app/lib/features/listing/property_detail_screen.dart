@@ -360,6 +360,7 @@ class _DealTermsBanner extends StatelessWidget {
               ),
               if (listing.commissionSplitPercent != null)
                 Container(
+                  key: const Key('deal_terms_split_badge'),
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                   decoration: BoxDecoration(
                     color: AppColors.primary,
