@@ -158,7 +158,7 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
           ),
           const SizedBox(width: 8),
           IconButton(
-            icon: Icon(PhosphorIcons.paperPlaneTilt(PhosphorIconsStyle.bold)),
+            icon: Icon(PhosphorIcons.shareNetwork(PhosphorIconsStyle.bold)),
             onPressed: ownListing == null
                 ? null
                 : () => SharePlus.instance.share(
