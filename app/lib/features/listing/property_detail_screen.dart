@@ -155,25 +155,6 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
                             ],
                           ),
                         ),
-                      if (listing.exclusiveMandate)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(color: const Color(0xFF7C3AED), borderRadius: BorderRadius.circular(6)),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(PhosphorIcons.crown(PhosphorIconsStyle.bold), size: 12, color: Colors.white),
-                              const SizedBox(width: 4),
-                              Text(
-                                'inventory_badge_exclusive_mandate'.tr(),
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .labelSmall
-                                    ?.copyWith(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10),
-                              ),
-                            ],
-                          ),
-                        ),
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -293,6 +274,19 @@ class _HeroHeader extends StatelessWidget {
       height: 260,
       child: Stack(
         children: [
+          if (!hasPhotos)
+            Positioned.fill(
+              child: Container(
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                child: Center(
+                  child: Icon(
+                    PhosphorIcons.buildingApartment(PhosphorIconsStyle.light),
+                    size: 72,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ),
           if (hasPhotos)
             Positioned.fill(
               child: PageView(

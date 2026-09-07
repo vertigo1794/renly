@@ -294,4 +294,33 @@ void main() {
     expect(find.text('50/50'), findsOneWidget);
     expect(find.text('property_price_per_sqft'.tr(namedArgs: {'value': '1000'})), findsOneWidget);
   });
+
+  testWidgets('shows the exclusive-mandate badge exactly once, from the hero header only', (tester) async {
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const PropertyDetailScreen(listingId: 'l-1')),
+    ]);
+
+    final exclusiveMandateListing = Listing(
+      listingId: 'l-1',
+      negotiatorId: 'n-1',
+      title: 'The Vertex Residency',
+      description: 'A modern apartment with lots of light.',
+      propertyType: 'apartment',
+      transactionType: 'sale',
+      state: 'Selangor',
+      area: 'Petaling Jaya',
+      price: 1250000,
+      bedrooms: 3,
+      bathrooms: 2,
+      photoUrls: const [],
+      status: 'active',
+      createdAt: DateTime(2024, 1, 1),
+      exclusiveMandate: true,
+    );
+
+    await tester.pumpWidget(_wrap(router, listing: exclusiveMandateListing));
+    await tester.pumpAndSettle();
+
+    expect(find.text('inventory_badge_exclusive_mandate'.tr()), findsOneWidget);
+  });
 }
