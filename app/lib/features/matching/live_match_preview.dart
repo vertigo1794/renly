@@ -60,6 +60,23 @@ class LiveMatchPreview {
       topMatchScore: topScore,
     );
   }
+
+  /// The real per-viewer match score for the Property Detail screen's
+  /// hero "N% MATCH" badge -- the highest MatchingEngine.score() between
+  /// [listing] and any of [viewerRequirements] (the CURRENT VIEWER's own
+  /// open requirements, not the listing owner's), or null if none clear
+  /// qualifyingThreshold (including the trivial empty-list case). Zero DB
+  /// writes, same reasoning as forRequirement/forListing -- this is a
+  /// pure read-time computation, not a stored Match row.
+  static int? bestScoreForListing(Listing listing, List<Requirement> viewerRequirements) {
+    int? best;
+    for (final requirement in viewerRequirements) {
+      final score = MatchingEngine.score(listing, requirement);
+      if (score == null || score < MatchingEngine.qualifyingThreshold) continue;
+      if (best == null || score > best) best = score;
+    }
+    return best;
+  }
 }
 
 class LiveMatchPreviewResult {

@@ -151,4 +151,64 @@ void main() {
       expect(result.topMatchScore, isNull);
     });
   });
+
+  group('LiveMatchPreview.bestScoreForListing', () {
+    final matchingListing = _listing('l-1', title: 'The Vertex Residency');
+
+    test('returns the highest qualifying score across multiple own requirements', () {
+      const lowerScoring = Requirement(
+        requirementId: 'r-1',
+        negotiatorId: 'n-viewer',
+        propertyType: 'apartment',
+        transactionType: 'sale',
+        state: 'Selangor',
+        area: 'Shah Alam',
+        budgetMin: 300000,
+        budgetMax: 500000,
+        photoUrls: [],
+        status: 'open',
+      );
+      const higherScoring = Requirement(
+        requirementId: 'r-2',
+        negotiatorId: 'n-viewer',
+        propertyType: 'apartment',
+        transactionType: 'sale',
+        state: 'Selangor',
+        area: 'Petaling Jaya',
+        budgetMin: 300000,
+        budgetMax: 500000,
+        photoUrls: [],
+        status: 'open',
+      );
+
+      final score = LiveMatchPreview.bestScoreForListing(matchingListing, [lowerScoring, higherScoring]);
+
+      expect(score, 100);
+    });
+
+    test('returns null when the viewer has no open requirements', () {
+      final score = LiveMatchPreview.bestScoreForListing(matchingListing, []);
+
+      expect(score, isNull);
+    });
+
+    test('returns null when no requirement clears the qualifying threshold', () {
+      const belowThreshold = Requirement(
+        requirementId: 'r-3',
+        negotiatorId: 'n-viewer',
+        propertyType: 'house',
+        transactionType: 'rent',
+        state: 'Johor',
+        area: 'Shah Alam',
+        budgetMin: 300000,
+        budgetMax: 500000,
+        photoUrls: [],
+        status: 'open',
+      );
+
+      final score = LiveMatchPreview.bestScoreForListing(matchingListing, [belowThreshold]);
+
+      expect(score, isNull);
+    });
+  });
 }
