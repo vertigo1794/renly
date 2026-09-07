@@ -273,7 +273,16 @@ class _HeroHeaderState extends State<_HeroHeader> {
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  'property_photo_counter'.tr(namedArgs: {'current': '${_currentPage + 1}', 'total': '${listing.photoUrls.length}'}),
+                  // Defensive clamp: not reachable today (PageView only ever
+                  // reports indices within photoUrls' own range via
+                  // onPageChanged), but guards against a future off-by-one
+                  // or a stale _currentPage surviving a photoUrls change.
+                  'property_photo_counter'.tr(
+                    namedArgs: {
+                      'current': '${(_currentPage + 1).clamp(1, listing.photoUrls.length)}',
+                      'total': '${listing.photoUrls.length}',
+                    },
+                  ),
                   style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11),
                 ),
               ),
@@ -912,12 +921,14 @@ class _ActionBar extends ConsumerWidget {
           child: Tooltip(
             message: ownMatch == null ? 'property_request_co_broke_disabled_reason'.tr() : '',
             // A smaller labelLarge for this specific placement, on top of
-            // the width freed up from the Client button above -- the CTA's
-            // own icon+label Row still can't wrap (BrutalistButton is a
-            // shared, already-tested component; this project's convention
-            // is to fix overflow at the call site, not inside it), and this
-            // slot next to a second button is tighter than every other
-            // (full-width) place BrutalistButton is used.
+            // the width freed up from the Client button above -- this slot
+            // next to a second button is tighter than every other
+            // (full-width) place BrutalistButton is used. BrutalistButton
+            // itself now wraps its label in Flexible+ellipsis, so a genuine
+            // width shortfall here truncates instead of throwing a
+            // RenderFlex overflow; this smaller font is still kept so the
+            // real-world label reads in full rather than ellipsizing on
+            // narrow phones.
             child: Theme(
               data: Theme.of(context).copyWith(
                 textTheme: Theme.of(context).textTheme.copyWith(

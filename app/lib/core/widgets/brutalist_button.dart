@@ -71,7 +71,16 @@ class BrutalistButton extends StatelessWidget {
             Icon(icon, color: textStyle?.color, size: 20),
             const SizedBox(width: 8),
           ],
-          Text(label, style: textStyle),
+          // Flexible+ellipsis is a no-op for every button that already fits
+          // its available width (the overwhelming majority of call sites):
+          // Flexible's own intrinsic-width contribution to the Row equals
+          // its child's natural width, so IntrinsicWidth-based shrink-wrap
+          // (the fullWidth:false branch below) is unaffected. It only
+          // engages when the Row is laid out inside a bounded-width parent
+          // narrower than the label's natural width (e.g. _ActionBar's
+          // Expanded CTA slot on tight phone widths), truncating instead of
+          // throwing a RenderFlex overflow.
+          Flexible(child: Text(label, style: textStyle, maxLines: 1, overflow: TextOverflow.ellipsis)),
         ],
       ),
     );

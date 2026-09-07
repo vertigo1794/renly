@@ -55,10 +55,20 @@ class _FakeListingRepositoryForMatchScore extends ListingRepository {
 /// resolves an image; SignedPhoto's own errorBuilder falls back to a
 /// placeholder, which is all this test needs.
 class _FakeListingRepositoryForPhotos extends ListingRepository {
-  _FakeListingRepositoryForPhotos() : super(_FakeSupabaseClient());
+  _FakeListingRepositoryForPhotos(this._listing) : super(_FakeSupabaseClient());
+
+  final Listing _listing;
 
   @override
   Future<String> createSignedUrl(String path) async => 'https://example.invalid/$path';
+
+  // Same reason as _FakeListingRepositoryForMatchScore above:
+  // _loadBestMatchScore calls this directly, independent of
+  // listingDetailProvider. Without this override it fell through to the
+  // real ListingRepository implementation, which printed a
+  // NoSuchMethodError debugPrint into test output instead of failing.
+  @override
+  Future<Listing> fetchListingById(String listingId) async => _listing;
 }
 
 /// Symmetric fake for _loadBestMatchScore's fetchOwnRequirements call.
@@ -536,7 +546,7 @@ void main() {
       router,
       listing: threePhotoListing,
       extraOverrides: [
-        listingRepositoryProvider.overrideWithValue(_FakeListingRepositoryForPhotos()),
+        listingRepositoryProvider.overrideWithValue(_FakeListingRepositoryForPhotos(threePhotoListing)),
       ],
     ));
     await tester.pumpAndSettle();
@@ -593,8 +603,14 @@ void main() {
     // The default 800x600 test surface is wide enough to hide the overflows
     // this fixture is meant to catch -- a real phone portrait width (and a
     // tall-enough height to fit the whole scrollable column without needing
-    // to actually scroll) is required to reproduce them.
-    tester.view.physicalSize = const Size(390, 2400);
+    // to actually scroll) is required to reproduce them. 360dp (not 390) is
+    // deliberate: it's the width originally reviewed and specified in the
+    // finding this test guards against (most Android phones, and narrower
+    // than iPhone SE/8/12-13 mini's 375dp) -- 390dp is wide enough that the
+    // _ActionBar CTA overflow this test is meant to catch does not reproduce
+    // there, which is exactly how a prior version of this test at 390dp
+    // falsely passed against the un-fixed BrutalistButton.
+    tester.view.physicalSize = const Size(360, 2400);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
@@ -690,5 +706,68 @@ void main() {
     expect(find.textContaining('CONDOMINIUM'), findsOneWidget);
     expect(find.text('property_co_broking_terms_title'.tr()), findsOneWidget);
     expect(find.text('Mohammad Aliff Iskandar bin Abdullah Al-Hafiz'), findsOneWidget);
+  });
+
+  testWidgets('does not overflow the agent card rating row at a realistic phone width for a well-rated agent', (tester) async {
+    // Regression test for a genuine RenderFlex overflow in _AgentCard that
+    // the "fully-populated listing" test above does NOT catch: that test's
+    // own rating fixture only has 2 candidates ("4.7 (2)" -- 7 characters),
+    // which fits comfortably even at 360dp. The rating row's Text (icon +
+    // bold count string, as a plain non-Flexible Row child before this
+    // fix) only overflows once the count string is long enough -- verified
+    // empirically by reverting _AgentCard's Flexible-wrapped rating Text
+    // back to a plain Text and confirming this exact fixture threw "A
+    // RenderFlex overflowed by 7.6 pixels on the right"; restoring the
+    // Flexible+ellipsis wrap makes that overflow disappear. A double-digit
+    // rating count (27 here) is a realistic value for an established
+    // agent -- not a contrived edge case.
+    tester.view.physicalSize = const Size(360, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const PropertyDetailScreen(listingId: 'l-1')),
+    ]);
+
+    // Long owner name + agency name (same combination as the fully-populated
+    // fixture above) alongside the verified-badge icon, so this test also
+    // covers the name/REN/agency row width squeeze in combination with the
+    // rating row, not the rating row in isolation.
+    final longNameOwner = const ListingOwner(
+      fullName: 'Mohammad Aliff Iskandar bin Abdullah Al-Hafiz',
+      renNumber: '9988776',
+      agencyName: 'Prestige International Property Consultants Sdn Bhd',
+      verificationStatus: 'approved',
+    );
+
+    final manyRatings = List.generate(
+      27,
+      (i) => RatingCandidate(
+        rating: Rating(
+          ratingId: 'r-$i',
+          agreementId: 'a-$i',
+          raterId: 'n-$i',
+          ratedId: 'n-1',
+          stars: 5,
+          createdAt: DateTime(2024, 1, 1),
+        ),
+        rater: ListingOwner(fullName: 'Rater $i', renNumber: '$i'),
+      ),
+    );
+
+    await tester.pumpWidget(_wrap(
+      router,
+      currentNegotiatorId: 'n-2',
+      extraOverrides: [
+        listingOwnerProvider.overrideWith((ref, negotiatorId) async => longNameOwner),
+        ratingsForNegotiatorProvider('n-1').overrideWith((ref) async => manyRatings),
+        matchesForListingProvider('l-1').overrideWith((ref) async => []),
+      ],
+    ));
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(find.text('5.0 (27)'), findsOneWidget);
   });
 }
