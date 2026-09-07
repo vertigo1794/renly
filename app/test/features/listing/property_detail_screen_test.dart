@@ -16,6 +16,8 @@ import 'package:renly/features/listing/listing_repository.dart';
 import 'package:renly/features/listing/models/listing.dart';
 import 'package:renly/features/listing/models/listing_owner.dart';
 import 'package:renly/features/listing/property_detail_screen.dart';
+import 'package:renly/features/matching/matching_providers.dart' hide currentNegotiatorIdProvider;
+import 'package:renly/features/ratings/rating_providers.dart' hide currentNegotiatorIdProvider;
 import 'package:renly/features/requirement/models/requirement.dart';
 import 'package:renly/features/requirement/requirement_providers.dart' hide currentNegotiatorIdProvider;
 import 'package:renly/features/requirement/requirement_repository.dart';
@@ -401,5 +403,38 @@ void main() {
 
     expect(find.text('property_badge_keys_on_hand'.tr()), findsOneWidget);
     expect(find.text('property_badge_protected_co_broke_reg'.tr()), findsNothing);
+  });
+
+  testWidgets('shows the real rating and Message button on the agent card', (tester) async {
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const PropertyDetailScreen(listingId: 'l-1')),
+    ]);
+
+    await tester.pumpWidget(_wrap(router, extraOverrides: [
+      ratingsForNegotiatorProvider('n-1').overrideWith((ref) async => []),
+    ]));
+    await tester.pumpAndSettle();
+
+    expect(find.text('property_no_ratings_short'.tr()), findsOneWidget);
+    expect(find.text('property_message_button'.tr()), findsOneWidget);
+  });
+
+  testWidgets('disables Request Co-Broke when the viewer has no qualifying match for this listing', (tester) async {
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const PropertyDetailScreen(listingId: 'l-1')),
+    ]);
+
+    await tester.pumpWidget(_wrap(
+      router,
+      currentNegotiatorId: 'n-2',
+      extraOverrides: [
+        matchesForListingProvider('l-1').overrideWith((ref) async => []),
+        ratingsForNegotiatorProvider('n-1').overrideWith((ref) async => []),
+      ],
+    ));
+    await tester.pumpAndSettle();
+
+    final button = tester.widget<BrutalistButton>(find.widgetWithText(BrutalistButton, 'cobroke_request_send'.tr()));
+    expect(button.onPressed, isNull);
   });
 }

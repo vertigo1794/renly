@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'listing_formatting.dart';
@@ -13,7 +14,13 @@ import 'models/listing.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/brutalist_button.dart';
 import '../../core/widgets/status_badge.dart';
+import '../collaboration/cobroke_request_providers.dart' hide currentNegotiatorIdProvider;
+import '../collaboration/models/cobroke_request_candidate.dart';
+import '../collaboration/send_cobroke_request_action.dart';
 import '../matching/live_match_preview.dart';
+import '../matching/matching_providers.dart' hide currentNegotiatorIdProvider;
+import '../matching/models/match_candidate.dart';
+import '../ratings/rating_providers.dart' hide currentNegotiatorIdProvider;
 import '../requirement/requirement_providers.dart' hide currentNegotiatorIdProvider;
 import '../subscription/subscription_providers.dart' hide currentNegotiatorIdProvider;
 
@@ -134,59 +141,16 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
                   const SizedBox(height: 16),
                   _CoBrokingTermsCard(listing: listing),
                   const SizedBox(height: 16),
-                  Builder(builder: (context) {
-                    final ownerAsync = ref.watch(listingOwnerProvider(listing.negotiatorId));
-                    return ownerAsync.when(
-                      loading: () => const SizedBox.shrink(),
-                      error: (error, stack) => const SizedBox.shrink(),
-                      data: (owner) => Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(owner.fullName, style: Theme.of(context).textTheme.titleMedium),
-                          Text('REN: ${owner.renNumber}', style: Theme.of(context).textTheme.labelSmall),
-                        ],
-                      ),
-                    );
-                  }),
-                  const SizedBox(height: 24),
-                  if (isOwner) ...[
-                    BrutalistButton(
-                      label: 'matching_view_matches'.tr(),
-                      onPressed: () => context.push('/property/${widget.listingId}/matches'),
-                      variant: BrutalistButtonVariant.secondary,
-                    ),
-                    const SizedBox(height: 8),
-                    if (listing.status != 'sold') ...[
-                      BrutalistButton(
-                        label: 'property_mark_sold'.tr(),
-                        onPressed: () => _changeStatus(listing, 'sold'),
-                        variant: BrutalistButtonVariant.secondary,
-                      ),
-                      const SizedBox(height: 8),
-                    ],
-                    if (listing.status != 'withdrawn') ...[
-                      BrutalistButton(
-                        label: 'property_withdraw'.tr(),
-                        onPressed: () => _changeStatus(listing, 'withdrawn'),
-                        variant: BrutalistButtonVariant.secondary,
-                      ),
-                      const SizedBox(height: 8),
-                    ],
-                    if (listing.status != 'active') ...[
-                      if (atCap) ...[
-                        Text(
-                          'listing_cap_reached_message'.tr(),
-                          style: TextStyle(color: Theme.of(context).colorScheme.error),
-                        ),
-                        const SizedBox(height: 8),
-                      ],
-                      BrutalistButton(
-                        label: 'property_reactivate'.tr(),
-                        onPressed: atCap ? null : () => _changeStatus(listing, 'active'),
-                        variant: BrutalistButtonVariant.secondary,
-                      ),
-                    ],
-                  ],
+                  _AgentCard(listingId: listing.listingId, negotiatorId: listing.negotiatorId),
+                  const SizedBox(height: 16),
+                  _ActionBar(
+                    listing: listing,
+                    isOwner: isOwner,
+                    atCap: atCap,
+                    onMarkSold: () => _changeStatus(listing, 'sold'),
+                    onWithdraw: () => _changeStatus(listing, 'withdrawn'),
+                    onReactivate: () => _changeStatus(listing, 'active'),
+                  ),
                 ],
               ),
             ),
@@ -665,6 +629,199 @@ class _CoBrokingTermsCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _AgentCard extends ConsumerWidget {
+  const _AgentCard({required this.listingId, required this.negotiatorId});
+
+  final String listingId;
+  final String negotiatorId;
+
+  /// Plain-loop equivalent of `.firstWhereOrNull` -- avoids adding the
+  /// `collection` package as a new direct dependency for one call site
+  /// (it's currently only a transitive dependency via pubspec.lock).
+  static CobrokeRequestCandidate? _acceptedRequestForThisListing(List<CobrokeRequestCandidate> candidates, String listingId) {
+    for (final candidate in candidates) {
+      if (candidate.match.listing.listingId == listingId && candidate.request.status == 'accepted') {
+        return candidate;
+      }
+    }
+    return null;
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final ownerAsync = ref.watch(listingOwnerProvider(negotiatorId));
+    final ratingsAsync = ref.watch(ratingsForNegotiatorProvider(negotiatorId));
+    final sentAsync = ref.watch(sentRequestsProvider);
+    final receivedAsync = ref.watch(receivedRequestsProvider);
+    final acceptedCandidate = _acceptedRequestForThisListing(
+      [...?sentAsync.valueOrNull, ...?receivedAsync.valueOrNull],
+      listingId,
+    );
+
+    return ownerAsync.when(
+      loading: () => const SizedBox.shrink(),
+      error: (error, stack) => const SizedBox.shrink(),
+      data: (owner) {
+        final ratingText = ratingsAsync.valueOrNull == null || ratingsAsync.valueOrNull!.isEmpty
+            ? 'property_no_ratings_short'.tr()
+            : '${(ratingsAsync.valueOrNull!.map((c) => c.rating.stars).reduce((a, b) => a + b) / ratingsAsync.valueOrNull!.length).toStringAsFixed(1)} (${ratingsAsync.valueOrNull!.length})';
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.black, width: 2),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Flexible(child: Text(owner.fullName, style: Theme.of(context).textTheme.titleMedium, overflow: TextOverflow.ellipsis)),
+                        if (owner.verificationStatus == 'approved') ...[
+                          const SizedBox(width: 4),
+                          Icon(PhosphorIcons.sealCheck(PhosphorIconsStyle.fill), size: 15, color: const Color(0xFF059669)),
+                        ],
+                      ],
+                    ),
+                    Text(
+                      owner.agencyName == null ? 'REN: ${owner.renNumber}' : 'REN: ${owner.renNumber} • ${owner.agencyName}',
+                      style: Theme.of(context).textTheme.labelSmall,
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(PhosphorIcons.star(PhosphorIconsStyle.fill), size: 13, color: const Color(0xFFF59E0B)),
+                        const SizedBox(width: 4),
+                        Text(ratingText, style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              OutlinedButton.icon(
+                onPressed: acceptedCandidate == null
+                    ? null
+                    : () => context.push('/messages/${acceptedCandidate.request.requestId}'),
+                icon: Icon(PhosphorIcons.chatCircle(PhosphorIconsStyle.bold), size: 16),
+                label: Text('property_message_button'.tr()),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _ActionBar extends ConsumerWidget {
+  const _ActionBar({
+    required this.listing,
+    required this.isOwner,
+    required this.atCap,
+    required this.onMarkSold,
+    required this.onWithdraw,
+    required this.onReactivate,
+  });
+
+  final Listing listing;
+  final bool isOwner;
+  final bool atCap;
+  final VoidCallback onMarkSold;
+  final VoidCallback onWithdraw;
+  final VoidCallback onReactivate;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (isOwner) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          BrutalistButton(
+            label: 'matching_view_matches'.tr(),
+            onPressed: () => context.push('/property/${listing.listingId}/matches'),
+            variant: BrutalistButtonVariant.secondary,
+          ),
+          const SizedBox(height: 8),
+          if (listing.status != 'sold') ...[
+            BrutalistButton(
+              label: 'property_mark_sold'.tr(),
+              onPressed: onMarkSold,
+              variant: BrutalistButtonVariant.secondary,
+            ),
+            const SizedBox(height: 8),
+          ],
+          if (listing.status != 'withdrawn') ...[
+            BrutalistButton(
+              label: 'property_withdraw'.tr(),
+              onPressed: onWithdraw,
+              variant: BrutalistButtonVariant.secondary,
+            ),
+            const SizedBox(height: 8),
+          ],
+          if (listing.status != 'active') ...[
+            if (atCap) ...[
+              Text(
+                'listing_cap_reached_message'.tr(),
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+              const SizedBox(height: 8),
+            ],
+            BrutalistButton(
+              label: 'property_reactivate'.tr(),
+              onPressed: atCap ? null : onReactivate,
+              variant: BrutalistButtonVariant.secondary,
+            ),
+          ],
+        ],
+      );
+    }
+
+    final viewerId = ref.watch(currentNegotiatorIdProvider);
+    final matchesAsync = viewerId == null
+        ? const AsyncValue<List<MatchCandidate>>.data([])
+        : ref.watch(matchesForListingProvider(listing.listingId));
+    MatchCandidate? ownMatch;
+    for (final candidate in matchesAsync.valueOrNull ?? const <MatchCandidate>[]) {
+      if (candidate.requirement.negotiatorId == viewerId) {
+        ownMatch = candidate;
+        break;
+      }
+    }
+
+    return Row(
+      children: [
+        OutlinedButton(
+          onPressed: () => SharePlus.instance.share(
+            ShareParams(text: '${listing.title} - ${ListingFormatting.formatPrice(listing.price, listing.transactionType)} - ${listing.area}, ${listing.state}'),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(PhosphorIcons.paperPlaneTilt(PhosphorIconsStyle.bold)),
+              Text('property_client_share_label'.tr(), style: Theme.of(context).textTheme.labelSmall),
+            ],
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Tooltip(
+            message: ownMatch == null ? 'property_request_co_broke_disabled_reason'.tr() : '',
+            child: BrutalistButton(
+              label: 'cobroke_request_send'.tr(),
+              icon: PhosphorIcons.arrowRight(PhosphorIconsStyle.bold),
+              onPressed: ownMatch == null ? null : () => sendCobrokeRequest(context, ref, ownMatch!.matchId),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
