@@ -813,7 +813,13 @@ class _InventoryCard extends ConsumerWidget {
                         const SizedBox(width: 8),
                         Expanded(
                           child: FilledButton.icon(
-                            style: FilledButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.black),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: Colors.black,
+                              side: const BorderSide(color: Colors.black, width: 2),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              textStyle: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
                             onPressed: () async {
                               try {
                                 await ref.read(listingRepositoryProvider).bumpListing(listing.listingId);

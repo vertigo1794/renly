@@ -984,14 +984,12 @@ class _ActionBar extends ConsumerWidget {
           BrutalistButton(
             label: 'matching_view_matches'.tr(),
             onPressed: () => context.push('/property/${listing.listingId}/matches'),
-            variant: BrutalistButtonVariant.secondary,
           ),
           const SizedBox(height: 8),
           if (listing.status != 'sold') ...[
             BrutalistButton(
               label: 'property_mark_sold'.tr(),
               onPressed: onMarkSold,
-              variant: BrutalistButtonVariant.secondary,
             ),
             const SizedBox(height: 8),
           ],
@@ -999,7 +997,6 @@ class _ActionBar extends ConsumerWidget {
             BrutalistButton(
               label: 'property_withdraw'.tr(),
               onPressed: onWithdraw,
-              variant: BrutalistButtonVariant.secondary,
             ),
             const SizedBox(height: 8),
           ],
@@ -1014,7 +1011,6 @@ class _ActionBar extends ConsumerWidget {
             BrutalistButton(
               label: 'property_reactivate'.tr(),
               onPressed: atCap ? null : onReactivate,
-              variant: BrutalistButtonVariant.secondary,
             ),
           ],
         ],
