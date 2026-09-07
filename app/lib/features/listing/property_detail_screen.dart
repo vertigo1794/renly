@@ -14,7 +14,6 @@ import 'models/listing.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/brutalist_button.dart';
 import '../../core/widgets/r_star_badge.dart';
-import '../../core/widgets/status_badge.dart';
 import '../collaboration/cobroke_request_providers.dart' hide currentNegotiatorIdProvider;
 import '../collaboration/models/cobroke_request_candidate.dart';
 import '../collaboration/send_cobroke_request_action.dart';
@@ -533,21 +532,26 @@ class _OverviewCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              OutlinedButton(
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  side: BorderSide(color: Colors.black.withValues(alpha: 0.15)),
-                ),
-                onPressed: () => _openMap(context),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text('property_map_button'.tr(), style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold)),
-                    const SizedBox(width: 4),
-                    Icon(PhosphorIcons.arrowSquareOut(PhosphorIconsStyle.bold), size: 12),
-                  ],
+              Material(
+                color: Colors.black,
+                borderRadius: BorderRadius.circular(6),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(6),
+                  onTap: () => _openMap(context),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'property_map_button'.tr(),
+                          style: Theme.of(context).textTheme.labelSmall?.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(width: 4),
+                        Icon(PhosphorIcons.arrowSquareOut(PhosphorIconsStyle.bold), size: 12, color: AppColors.primary),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -563,7 +567,23 @@ class _OverviewCard extends StatelessWidget {
             spacing: 6,
             runSpacing: 6,
             children: [
-              StatusBadge(label: statusLabel),
+              // A locally-recolored pill rather than the shared StatusBadge
+              // widget -- StatusBadge is reused across My Inventory/
+              // Requirement Board with its own default purple, and this
+              // card's own lime treatment (matching deal_terms_split_badge)
+              // is specific to this screen's restyle, not a global change.
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  border: Border.all(color: Colors.black, width: 2),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  statusLabel,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Colors.black, fontWeight: FontWeight.bold),
+                ),
+              ),
               if (listing.titleVerified)
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -583,7 +603,7 @@ class _OverviewCard extends StatelessWidget {
               if (listing.keysOnHand)
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(color: const Color(0xFFF1F5F9), borderRadius: BorderRadius.circular(6), border: Border.all(color: const Color(0xFFE2E8F0))),
+                  decoration: BoxDecoration(color: const Color(0xFFDBEAFE), borderRadius: BorderRadius.circular(6), border: Border.all(color: const Color(0xFFBFDBFE))),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -591,7 +611,7 @@ class _OverviewCard extends StatelessWidget {
                       const SizedBox(width: 4),
                       Text(
                         'property_badge_keys_on_hand'.tr(),
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold, fontSize: 10),
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(color: const Color(0xFF2563EB), fontWeight: FontWeight.bold, fontSize: 10),
                       ),
                     ],
                   ),
@@ -599,7 +619,7 @@ class _OverviewCard extends StatelessWidget {
               if (listing.protectedCoBrokeReg)
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(color: const Color(0xFFF1F5F9), borderRadius: BorderRadius.circular(6), border: Border.all(color: const Color(0xFFE2E8F0))),
+                  decoration: BoxDecoration(color: const Color(0xFFF3E8FF), borderRadius: BorderRadius.circular(6), border: Border.all(color: const Color(0xFFE9D5FF))),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -607,7 +627,7 @@ class _OverviewCard extends StatelessWidget {
                       const SizedBox(width: 4),
                       Text(
                         'property_badge_protected_co_broke_reg'.tr(),
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold, fontSize: 10),
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(color: const Color(0xFF7C3AED), fontWeight: FontWeight.bold, fontSize: 10),
                       ),
                     ],
                   ),
