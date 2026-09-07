@@ -44,6 +44,38 @@ class Listing {
   /// verified. Same default-false reasoning as [titleVerified].
   final bool exclusiveMandate;
 
+  /// Monthly maintenance/service charge in MYR. Nullable -- absent if the
+  /// owner didn't set one, never estimated.
+  final double? maintenanceFeeMyr;
+
+  /// 'freehold' or 'leasehold'. Nullable -- absent if unset.
+  final String? tenure;
+
+  /// Number of covered parking bays. Nullable -- absent if unset.
+  final int? parkingBays;
+
+  /// Floor number the unit is on. Nullable -- absent if unset. Deliberately
+  /// a plain int, not validated against the property's actual floor count
+  /// (which this app has no record of).
+  final int? floorLevel;
+
+  /// 'furnished', 'partially_furnished', or 'unfurnished'. Nullable --
+  /// absent if unset.
+  final String? furnishingStatus;
+
+  /// Self-attested by the listing's own owner -- NOT third-party verified.
+  /// Same framing as [titleVerified]/[exclusiveMandate].
+  final bool keysOnHand;
+
+  /// Self-attested by the listing's own owner -- NOT third-party verified.
+  /// Same framing as [keysOnHand].
+  final bool protectedCoBrokeReg;
+
+  /// The deal's total agency commission rate, standalone from
+  /// [commissionSplitPercent] (which is the owner's own advertised split
+  /// OF this total to a co-broker). Nullable -- absent if unset.
+  final double? totalAgencyCommissionPercent;
+
   Listing({
     required this.listingId,
     required this.negotiatorId,
@@ -64,6 +96,14 @@ class Listing {
     this.commissionSplitPercent,
     this.titleVerified = false,
     this.exclusiveMandate = false,
+    this.maintenanceFeeMyr,
+    this.tenure,
+    this.parkingBays,
+    this.floorLevel,
+    this.furnishingStatus,
+    this.keysOnHand = false,
+    this.protectedCoBrokeReg = false,
+    this.totalAgencyCommissionPercent,
   });
 
   factory Listing.fromJson(Map<String, dynamic> json) {
@@ -87,6 +127,14 @@ class Listing {
       commissionSplitPercent: (json['commission_split_percent'] as num?)?.toDouble(),
       titleVerified: json['title_verified'] as bool? ?? false,
       exclusiveMandate: json['exclusive_mandate'] as bool? ?? false,
+      maintenanceFeeMyr: (json['maintenance_fee_myr'] as num?)?.toDouble(),
+      tenure: json['tenure'] as String?,
+      parkingBays: json['parking_bays'] as int?,
+      floorLevel: json['floor_level'] as int?,
+      furnishingStatus: json['furnishing_status'] as String?,
+      keysOnHand: json['keys_on_hand'] as bool? ?? false,
+      protectedCoBrokeReg: json['protected_co_broke_reg'] as bool? ?? false,
+      totalAgencyCommissionPercent: (json['total_agency_commission_percent'] as num?)?.toDouble(),
     );
   }
 }
