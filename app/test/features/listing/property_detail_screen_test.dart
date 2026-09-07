@@ -7,15 +7,50 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:renly/core/theme/app_theme.dart';
 import 'package:renly/core/widgets/brutalist_button.dart';
 import 'package:renly/features/listing/listing_providers.dart';
+import 'package:renly/features/listing/listing_repository.dart';
 import 'package:renly/features/listing/models/listing.dart';
 import 'package:renly/features/listing/models/listing_owner.dart';
 import 'package:renly/features/listing/property_detail_screen.dart';
+import 'package:renly/features/requirement/models/requirement.dart';
+import 'package:renly/features/requirement/requirement_providers.dart' hide currentNegotiatorIdProvider;
+import 'package:renly/features/requirement/requirement_repository.dart';
 import 'package:renly/features/subscription/models/subscription_status.dart' as subscription;
 import 'package:renly/features/subscription/subscription_providers.dart' as subscription_providers;
+
+/// Never actually invoked -- see the identical class in
+/// post_broadcast_screen_test.dart, which this mirrors.
+class _FakeSupabaseClient implements SupabaseClient {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+/// _loadBestMatchScore reads listingRepositoryProvider.fetchListingById
+/// directly (not listingDetailProvider, which _wrap already overrides for
+/// the main widget tree) -- this fake makes that second, independent
+/// fetch resolve instead of throwing on the uninitialized Supabase client.
+class _FakeListingRepositoryForMatchScore extends ListingRepository {
+  _FakeListingRepositoryForMatchScore(this._listing) : super(_FakeSupabaseClient());
+
+  final Listing _listing;
+
+  @override
+  Future<Listing> fetchListingById(String listingId) async => _listing;
+}
+
+/// Symmetric fake for _loadBestMatchScore's fetchOwnRequirements call.
+class _FakeRequirementRepositoryForMatchScore extends RequirementRepository {
+  _FakeRequirementRepositoryForMatchScore([this._requirements = const []]) : super(_FakeSupabaseClient());
+
+  final List<Requirement> _requirements;
+
+  @override
+  Future<List<Requirement>> fetchOwnRequirements(String negotiatorId) async => _requirements;
+}
 
 final _fixtureListing = Listing(
   listingId: 'l-1',
@@ -179,5 +214,84 @@ void main() {
       find.widgetWithText(BrutalistButton, 'property_reactivate'.tr()),
     );
     expect(reactivateButton.onPressed, isNotNull);
+  });
+
+  testWidgets('shows the real match badge when the viewer has a qualifying open requirement', (tester) async {
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const PropertyDetailScreen(listingId: 'l-1')),
+    ]);
+
+    const matchingRequirement = Requirement(
+      requirementId: 'r-1',
+      negotiatorId: 'n-2',
+      propertyType: 'apartment',
+      transactionType: 'sale',
+      state: 'Selangor',
+      area: 'Petaling Jaya',
+      budgetMin: 1000000,
+      budgetMax: 1500000,
+      bedrooms: 3,
+      photoUrls: [],
+      status: 'open',
+    );
+
+    await tester.pumpWidget(_wrap(
+      router,
+      currentNegotiatorId: 'n-2',
+      extraOverrides: [
+        listingRepositoryProvider.overrideWithValue(_FakeListingRepositoryForMatchScore(_fixtureListing)),
+        requirementRepositoryProvider.overrideWithValue(_FakeRequirementRepositoryForMatchScore([matchingRequirement])),
+      ],
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.text('property_match_badge'.tr(namedArgs: {'score': '100'})), findsOneWidget);
+  });
+
+  testWidgets('hides the match badge for the listing owner viewing their own listing', (tester) async {
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const PropertyDetailScreen(listingId: 'l-1')),
+    ]);
+
+    await tester.pumpWidget(_wrap(
+      router,
+      currentNegotiatorId: 'n-1',
+      extraOverrides: [
+        listingRepositoryProvider.overrideWithValue(_FakeListingRepositoryForMatchScore(_fixtureListing)),
+        requirementRepositoryProvider.overrideWithValue(_FakeRequirementRepositoryForMatchScore()),
+      ],
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('MATCH'), findsNothing);
+  });
+
+  testWidgets('shows real commission split and price-per-sqft in the deal terms banner', (tester) async {
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const PropertyDetailScreen(listingId: 'l-1')),
+    ]);
+
+    final listingWithSplit = Listing(
+      listingId: 'l-1',
+      negotiatorId: 'n-1',
+      title: 'The Vertex Residency',
+      description: 'A modern apartment with lots of light.',
+      propertyType: 'apartment',
+      transactionType: 'sale',
+      state: 'Selangor',
+      area: 'Petaling Jaya',
+      price: 1000000,
+      builtUpSqft: 1000,
+      photoUrls: const [],
+      status: 'active',
+      createdAt: DateTime(2024, 1, 1),
+      commissionSplitPercent: 50,
+    );
+
+    await tester.pumpWidget(_wrap(router, listing: listingWithSplit));
+    await tester.pumpAndSettle();
+
+    expect(find.text('50/50'), findsOneWidget);
+    expect(find.text('property_price_per_sqft'.tr(namedArgs: {'value': '1000'})), findsOneWidget);
   });
 }

@@ -9,8 +9,11 @@ import 'listing_formatting.dart';
 import 'listing_photo.dart';
 import 'listing_providers.dart';
 import 'models/listing.dart';
+import '../../core/theme/app_colors.dart';
 import '../../core/widgets/brutalist_button.dart';
 import '../../core/widgets/status_badge.dart';
+import '../matching/live_match_preview.dart';
+import '../requirement/requirement_providers.dart' hide currentNegotiatorIdProvider;
 import '../subscription/subscription_providers.dart' hide currentNegotiatorIdProvider;
 
 /// Ports stitch_renly_property_agent_network/property_detail.
@@ -24,6 +27,35 @@ class PropertyDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
+  int? _bestMatchScore;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBestMatchScore();
+  }
+
+  /// Best-effort, same reasoning as every other live-preview fetch this
+  /// session: the hero match badge is a real enhancement, never a
+  /// requirement for the screen to render. A failure here (offline,
+  /// backend hiccup, or an uninitialized Supabase client in tests) must
+  /// not crash the screen; `_bestMatchScore` simply stays null and the
+  /// badge's own null-check keeps it hidden.
+  Future<void> _loadBestMatchScore() async {
+    final viewerId = ref.read(currentNegotiatorIdProvider);
+    if (viewerId == null) return;
+    try {
+      final listing = await ref.read(listingRepositoryProvider).fetchListingById(widget.listingId);
+      if (listing.negotiatorId == viewerId) return; // never score your own listing
+      final ownRequirements = await ref.read(requirementRepositoryProvider).fetchOwnRequirements(viewerId);
+      final score = LiveMatchPreview.bestScoreForListing(listing, ownRequirements);
+      if (!mounted) return;
+      setState(() => _bestMatchScore = score);
+    } catch (e) {
+      debugPrint('_loadBestMatchScore failed: $e');
+    }
+  }
+
   /// Takes the listing (not just the new status) so the two list providers
   /// can be invalidated too -- otherwise a listing marked sold here stays
   /// in the marketplace and in My Inventory's Active tab until restart.
@@ -90,22 +122,12 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (listing.photoUrls.isNotEmpty)
-                    SizedBox(
-                      height: 220,
-                      child: PageView(
-                        children: [
-                          for (final photoPath in listing.photoUrls)
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 4),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(16),
-                                child: ListingPhoto(path: photoPath),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
+                  _HeroHeader(
+                    listing: listing,
+                    bestMatchScore: _bestMatchScore,
+                  ),
+                  const SizedBox(height: 16),
+                  _DealTermsBanner(listing: listing),
                   const SizedBox(height: 16),
                   Text(listing.title, style: Theme.of(context).textTheme.headlineLarge),
                   const SizedBox(height: 8),
@@ -153,11 +175,6 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
                           ),
                         ),
                     ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    ListingFormatting.formatPrice(listing.price, listing.transactionType),
-                    style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 8),
                   Row(
@@ -249,6 +266,184 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+class _HeroHeader extends StatelessWidget {
+  const _HeroHeader({required this.listing, required this.bestMatchScore});
+
+  final Listing listing;
+  final int? bestMatchScore;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasPhotos = listing.photoUrls.isNotEmpty;
+    final hasBadges = bestMatchScore != null || listing.exclusiveMandate;
+    // Bug fix vs. the original draft: an unconditional `if (photoUrls.isEmpty)
+    // return SizedBox.shrink()` here would also swallow the match badge and
+    // exclusive-mandate badge for any photo-less listing (the common case in
+    // this project's own test fixtures) -- those badges carry real signal
+    // independent of whether photos were uploaded, so only the photo
+    // carousel and photo counter (which have nothing to show without
+    // photos) are gated on `hasPhotos`.
+    if (!hasPhotos && !hasBadges) return const SizedBox.shrink();
+    return SizedBox(
+      height: 260,
+      child: Stack(
+        children: [
+          if (hasPhotos)
+            Positioned.fill(
+              child: PageView(
+                children: [
+                  for (final photoPath in listing.photoUrls)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: ListingPhoto(path: photoPath),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          Positioned(
+            top: 12,
+            left: 12,
+            child: Wrap(
+              spacing: 6,
+              children: [
+                if (bestMatchScore != null)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: Colors.black),
+                    ),
+                    child: Text(
+                      'property_match_badge'.tr(namedArgs: {'score': '$bestMatchScore'}),
+                      style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w900, fontSize: 11),
+                    ),
+                  ),
+                if (listing.exclusiveMandate)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(6)),
+                    child: Text(
+                      'inventory_badge_exclusive_mandate'.tr(),
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 11),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          if (hasPhotos)
+            Positioned(
+              bottom: 12,
+              right: 12,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.7),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  'property_photo_counter'.tr(namedArgs: {'current': '1', 'total': '${listing.photoUrls.length}'}),
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DealTermsBanner extends StatelessWidget {
+  const _DealTermsBanner({required this.listing});
+
+  final Listing listing;
+
+  @override
+  Widget build(BuildContext context) {
+    final pricePerSqft = listing.builtUpSqft != null && listing.builtUpSqft! > 0
+        ? (listing.price / listing.builtUpSqft!).round()
+        : null;
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0F172A),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.black, width: 2),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (listing.commissionSplitPercent != null) ...[
+            Row(
+              children: [
+                Container(width: 6, height: 6, decoration: BoxDecoration(color: AppColors.primary, shape: BoxShape.circle)),
+                const SizedBox(width: 6),
+                Text(
+                  'property_co_broke_ready'.tr(),
+                  style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w900, fontSize: 11),
+                ),
+              ],
+            ),
+            const Divider(color: Colors.white24, height: 20),
+          ],
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      ListingFormatting.formatPrice(listing.price, listing.transactionType),
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 24),
+                    ),
+                    if (pricePerSqft != null || listing.maintenanceFeeMyr != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        [
+                          if (pricePerSqft != null) 'property_price_per_sqft'.tr(namedArgs: {'value': '$pricePerSqft'}),
+                          if (listing.maintenanceFeeMyr != null)
+                            'property_maintenance_suffix'.tr(namedArgs: {'value': '${listing.maintenanceFeeMyr!.round()}'}),
+                        ].join(' • '),
+                        style: const TextStyle(color: Colors.white70, fontSize: 11),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              if (listing.commissionSplitPercent != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.black, width: 2),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        '${listing.commissionSplitPercent!.round()}/${100 - listing.commissionSplitPercent!.round()}',
+                        style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14),
+                      ),
+                      Text(
+                        'RM ${(listing.price * listing.commissionSplitPercent! / 100).round()}',
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 10),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        ],
       ),
     );
   }
