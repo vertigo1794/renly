@@ -149,6 +149,8 @@
   "property_price_per_sqft": "RM {value} / sqft",
   "property_maintenance_suffix": "Maint. RM {value}/mo",
   "property_co_broke_ready": "CO-BROKE READY",
+  "property_asking_price_label": "ASKING PRICE (MYR)",
+  "property_co_broke_split_label": "CO-BROKE SPLIT",
   "property_id_prefix": "ID: #{id}",
   "property_map_button": "Map",
   "property_badge_keys_on_hand": "Keys on Hand",

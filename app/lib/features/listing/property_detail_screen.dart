@@ -404,6 +404,11 @@ class _DealTermsBanner extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
+                      'property_asking_price_label'.tr(),
+                      style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.bold, fontSize: 10, letterSpacing: 0.5),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
                       ListingFormatting.formatPrice(listing.price, listing.transactionType),
                       style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 24),
                     ),
@@ -433,6 +438,10 @@ class _DealTermsBanner extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
+                      Text(
+                        'property_co_broke_split_label'.tr(),
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 9, letterSpacing: 0.3),
+                      ),
                       Text(
                         '$splitRounded/${100 - splitRounded}',
                         style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14),

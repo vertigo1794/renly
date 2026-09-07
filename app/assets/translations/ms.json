@@ -149,6 +149,8 @@
   "property_price_per_sqft": "RM {value} / kps",
   "property_maintenance_suffix": "Penyelenggaraan RM {value}/bulan",
   "property_co_broke_ready": "SEDIA CO-BROKE",
+  "property_asking_price_label": "HARGA DIMINTA (MYR)",
+  "property_co_broke_split_label": "PEMBAHAGIAN CO-BROKE",
   "property_id_prefix": "ID: #{id}",
   "property_map_button": "Peta",
   "property_badge_keys_on_hand": "Kunci Di Tangan",
