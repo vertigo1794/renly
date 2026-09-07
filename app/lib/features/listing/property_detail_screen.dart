@@ -13,6 +13,7 @@ import 'listing_providers.dart';
 import 'models/listing.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/brutalist_button.dart';
+import '../../core/widgets/r_star_badge.dart';
 import '../../core/widgets/status_badge.dart';
 import '../collaboration/cobroke_request_providers.dart' hide currentNegotiatorIdProvider;
 import '../collaboration/models/cobroke_request_candidate.dart';
@@ -20,6 +21,7 @@ import '../collaboration/send_cobroke_request_action.dart';
 import '../matching/live_match_preview.dart';
 import '../matching/matching_providers.dart' hide currentNegotiatorIdProvider;
 import '../matching/models/match_candidate.dart';
+import '../profile/profile_providers.dart' hide currentNegotiatorIdProvider;
 import '../ratings/rating_providers.dart' hide currentNegotiatorIdProvider;
 import '../requirement/requirement_providers.dart' hide currentNegotiatorIdProvider;
 import '../subscription/subscription_providers.dart' hide currentNegotiatorIdProvider;
@@ -104,9 +106,70 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
   Widget build(BuildContext context) {
     final listingAsync = ref.watch(listingDetailProvider(widget.listingId));
     final currentNegotiatorId = ref.watch(currentNegotiatorIdProvider);
+    final profileAsync = ref.watch(myProfileProvider);
+    final ownListing = listingAsync.valueOrNull;
 
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(
+        titleSpacing: 0,
+        title: Row(
+          children: [
+            const RStarBadge(size: 28),
+            const SizedBox(width: 8),
+            Text(
+              'app_name'.tr(),
+              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                    color: AppColors.ink,
+                    fontSize: 20,
+                    letterSpacing: -1.0,
+                    height: 1,
+                  ),
+            ),
+          ],
+        ),
+        actions: [
+          profileAsync.maybeWhen(
+            data: (profile) => profile.renNumber == null
+                ? const SizedBox.shrink()
+                : Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      border: Border.all(color: AppColors.ink.withValues(alpha: 0.1)),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 6,
+                          height: 6,
+                          decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          'REN ${profile.renNumber}',
+                          style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ),
+            orElse: () => const SizedBox.shrink(),
+          ),
+          const SizedBox(width: 8),
+          IconButton(
+            icon: Icon(PhosphorIcons.paperPlaneTilt(PhosphorIconsStyle.bold)),
+            onPressed: ownListing == null
+                ? null
+                : () => SharePlus.instance.share(
+                      ShareParams(
+                        text: '${ownListing.title} - ${ListingFormatting.formatPrice(ownListing.price, ownListing.transactionType)} - ${ownListing.area}, ${ownListing.state}',
+                      ),
+                    ),
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
       body: listingAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) => Center(child: Text('listing_error_generic'.tr())),
