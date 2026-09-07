@@ -193,15 +193,21 @@ void main() {
     });
 
     test('returns null when no requirement clears the qualifying threshold', () {
+      // Stacks multiple soft-dimension mismatches (area, price far below
+      // budgetMax, and propertyType) to land at a real non-null score of 10
+      // (bedrooms unset on requirement scores full 10), below the 40
+      // qualifyingThreshold. Keeps transactionType and state matching so
+      // MatchingEngine.score does NOT short-circuit to null via mandatory
+      // filters. See matching_engine_test.dart for the scoring details.
       const belowThreshold = Requirement(
         requirementId: 'r-3',
         negotiatorId: 'n-viewer',
         propertyType: 'house',
-        transactionType: 'rent',
-        state: 'Johor',
+        transactionType: 'sale',
+        state: 'Selangor',
         area: 'Shah Alam',
-        budgetMin: 300000,
-        budgetMax: 500000,
+        budgetMin: 50000,
+        budgetMax: 100000,
         photoUrls: [],
         status: 'open',
       );
