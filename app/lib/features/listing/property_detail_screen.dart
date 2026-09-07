@@ -522,14 +522,42 @@ class _OverviewCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(
-                child: Text('${listing.area}, ${listing.state}', style: Theme.of(context).textTheme.bodyMedium),
+                child: Row(
+                  children: [
+                    Icon(PhosphorIcons.mapPin(PhosphorIconsStyle.bold), size: 14, color: const Color(0xFF94A3B8)),
+                    const SizedBox(width: 4),
+                    Flexible(
+                      child: Text('${listing.area}, ${listing.state}', style: Theme.of(context).textTheme.bodyMedium),
+                    ),
+                  ],
+                ),
               ),
-              TextButton(
+              const SizedBox(width: 8),
+              OutlinedButton(
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  side: BorderSide(color: Colors.black.withValues(alpha: 0.15)),
+                ),
                 onPressed: () => _openMap(context),
-                child: Text('property_map_button'.tr()),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('property_map_button'.tr(), style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold)),
+                    const SizedBox(width: 4),
+                    Icon(PhosphorIcons.arrowSquareOut(PhosphorIconsStyle.bold), size: 12),
+                  ],
+                ),
               ),
             ],
           ),
+          const SizedBox(height: 12),
+          _SpecGrid(listing: listing),
+          const SizedBox(height: 16),
+          Text('property_overview'.tr(), style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 4),
+          Text(listing.description, style: Theme.of(context).textTheme.bodyMedium),
           const SizedBox(height: 12),
           Wrap(
             spacing: 6,
@@ -586,81 +614,101 @@ class _OverviewCard extends StatelessWidget {
                 ),
             ],
           ),
-          const SizedBox(height: 12),
-          // Wrap, not a plain Row: up to 6 stat items (5 numeric specs plus
-          // furnishing) can't all fit one line at phone width once 3+
-          // optional fields are populated -- items that don't fit flow to
-          // a second line instead of forcing a RenderFlex overflow, per
-          // this card's own original "bento grid" intent.
-          Wrap(
-            spacing: 16,
-            runSpacing: 8,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              if (listing.bedrooms != null)
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.bed),
-                    const SizedBox(width: 4),
-                    Text('${listing.bedrooms}'),
-                  ],
-                ),
-              if (listing.bathrooms != null)
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.bathtub),
-                    const SizedBox(width: 4),
-                    Text('${listing.bathrooms}'),
-                  ],
-                ),
-              if (listing.builtUpSqft != null)
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(PhosphorIcons.ruler(PhosphorIconsStyle.bold)),
-                    const SizedBox(width: 4),
-                    Text('${ListingFormatting.formatSqft(listing.builtUpSqft!)} ${'inventory_stat_sqft'.tr()}'),
-                  ],
-                ),
-              if (listing.parkingBays != null)
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(PhosphorIcons.car(PhosphorIconsStyle.bold)),
-                    const SizedBox(width: 4),
-                    Text('${listing.parkingBays}'),
-                  ],
-                ),
-              if (listing.floorLevel != null)
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(PhosphorIcons.stackSimple(PhosphorIconsStyle.bold)),
-                    const SizedBox(width: 4),
-                    Text('${listing.floorLevel}'),
-                  ],
-                ),
-              if (listing.furnishingStatus != null)
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(PhosphorIcons.armchair(PhosphorIconsStyle.bold)),
-                    const SizedBox(width: 4),
-                    Text(listing.furnishingStatus == 'furnished'
-                        ? 'listing_furnishing_furnished'.tr()
-                        : listing.furnishingStatus == 'partially_furnished'
-                            ? 'listing_furnishing_partially_furnished'.tr()
-                            : 'listing_furnishing_unfurnished'.tr()),
-                  ],
-                ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Text('property_overview'.tr(), style: Theme.of(context).textTheme.titleMedium),
+        ],
+      ),
+    );
+  }
+}
+
+/// The 6 optional property-attribute stats (beds/baths/sqft/parking/floor/
+/// furnishing), each in its own boxed card -- icon, bold value, small real
+/// caption below (the SAME labels PropertyDetailScreen's own key-specs Wrap
+/// used before this restyle, e.g. `inventory_stat_beds`/`listing_stat_floor`
+/// -- NOT the reference mockup's own decorative sub-captions like "En-Suite"
+/// or "Skyline View", which have no backing field anywhere in this app and
+/// would be fabricated per-listing marketing copy, the exact class of thing
+/// this project's own design doc has repeatedly rejected).
+class _SpecGrid extends StatelessWidget {
+  const _SpecGrid({required this.listing});
+
+  final Listing listing;
+
+  @override
+  Widget build(BuildContext context) {
+    final cards = <_SpecCardData>[
+      if (listing.bedrooms != null) _SpecCardData(Icons.bed, '${listing.bedrooms}', 'inventory_stat_beds'.tr()),
+      if (listing.bathrooms != null) _SpecCardData(Icons.bathtub, '${listing.bathrooms}', 'inventory_stat_baths'.tr()),
+      if (listing.builtUpSqft != null)
+        _SpecCardData(PhosphorIcons.ruler(PhosphorIconsStyle.bold), ListingFormatting.formatSqft(listing.builtUpSqft!), 'inventory_stat_sqft'.tr()),
+      if (listing.parkingBays != null) _SpecCardData(PhosphorIcons.car(PhosphorIconsStyle.bold), '${listing.parkingBays}', 'listing_stat_parking'.tr()),
+      if (listing.floorLevel != null) _SpecCardData(PhosphorIcons.stackSimple(PhosphorIconsStyle.bold), '${listing.floorLevel}', 'listing_stat_floor'.tr()),
+      if (listing.furnishingStatus != null)
+        _SpecCardData(
+          PhosphorIcons.armchair(PhosphorIconsStyle.bold),
+          listing.furnishingStatus == 'furnished'
+              ? 'listing_furnishing_furnished'.tr()
+              : listing.furnishingStatus == 'partially_furnished'
+                  ? 'listing_furnishing_partially_furnished'.tr()
+                  : 'listing_furnishing_unfurnished'.tr(),
+          'listing_stat_furnishing'.tr(),
+        ),
+    ];
+
+    if (cards.isEmpty) return const SizedBox.shrink();
+
+    return GridView.count(
+      crossAxisCount: 3,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      mainAxisSpacing: 8,
+      crossAxisSpacing: 8,
+      childAspectRatio: 1.1,
+      children: [for (final card in cards) _SpecCard(card)],
+    );
+  }
+}
+
+class _SpecCardData {
+  const _SpecCardData(this.icon, this.value, this.caption);
+
+  final IconData icon;
+  final String value;
+  final String caption;
+}
+
+class _SpecCard extends StatelessWidget {
+  const _SpecCard(this.data);
+
+  final _SpecCardData data;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(data.icon, size: 18),
           const SizedBox(height: 4),
-          Text(listing.description, style: Theme.of(context).textTheme.bodyMedium),
+          Text(
+            data.value,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w900),
+          ),
+          Text(
+            data.caption,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(color: const Color(0xFF64748B), fontSize: 10),
+          ),
         ],
       ),
     );
