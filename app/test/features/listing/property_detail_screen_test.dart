@@ -1,6 +1,7 @@
 // app/test/features/listing/property_detail_screen_test.dart
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -117,7 +118,13 @@ final _withdrawnListingOwnedByN1 = Listing(
 
 const _fixtureOwner = ListingOwner(fullName: 'Aiman Yusof', renNumber: '12345');
 
-Widget _wrap(GoRouter router, {String currentNegotiatorId = 'n-2', Listing? listing, List<Override> extraOverrides = const []}) {
+Widget _wrap(
+  GoRouter router, {
+  String currentNegotiatorId = 'n-2',
+  Listing? listing,
+  List<Override> extraOverrides = const [],
+  Locale locale = const Locale('en'),
+}) {
   return ProviderScope(
     overrides: [
       currentNegotiatorIdProvider.overrideWithValue(currentNegotiatorId),
@@ -129,7 +136,7 @@ Widget _wrap(GoRouter router, {String currentNegotiatorId = 'n-2', Listing? list
       supportedLocales: const [Locale('en'), Locale('ms')],
       path: 'assets/translations',
       fallbackLocale: const Locale('en'),
-      startLocale: const Locale('en'),
+      startLocale: locale,
       child: Builder(
         builder: (context) => MaterialApp.router(
           theme: AppTheme.light,
@@ -520,6 +527,67 @@ void main() {
 
     final button = tester.widget<BrutalistButton>(find.widgetWithText(BrutalistButton, 'cobroke_request_send'.tr()));
     expect(button.onPressed, isNull);
+  });
+
+  // Regression test for a finding from the re-review of this milestone's
+  // final fix round: the Request Co-Broke CTA's own arrow icon (~28px
+  // including its SizedBox(width: 8) gap) took just enough of the CTA's
+  // narrow Expanded slot next to the "Client" share button that the label
+  // silently ellipsized at 360dp (needed 209.6px, had 181.4px -- a 28.2px
+  // shortfall) despite BrutalistButton's own Flexible+ellipsis fix (round 2)
+  // correctly preventing a RenderFlex overflow exception. The icon is
+  // decorative, not load-bearing information, so it was removed from this
+  // one call site. Literal label strings (not 'cobroke_request_send'.tr())
+  // are used below rather than relying on easy_localization's global
+  // instance reflecting the just-pumped locale, since that instance is
+  // shared mutable state across every test in this file.
+  //
+  // Verified empirically: temporarily restoring the removed `icon:` argument
+  // makes both assertions below fail with `didExceedMaxLines: true`;
+  // removing it again (the shipped fix) makes both pass.
+  testWidgets('does not ellipsize the Request Co-Broke label at 360dp in English', (tester) async {
+    tester.view.physicalSize = const Size(360, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const PropertyDetailScreen(listingId: 'l-1')),
+    ]);
+
+    await tester.pumpWidget(_wrap(
+      router,
+      extraOverrides: [
+        matchesForListingProvider('l-1').overrideWith((ref) async => []),
+      ],
+    ));
+    await tester.pumpAndSettle();
+
+    final label = tester.renderObject<RenderParagraph>(find.text('Request Co-Broke'));
+    expect(label.didExceedMaxLines, isFalse);
+  });
+
+  testWidgets('does not ellipsize the Request Co-Broke label at 360dp in Malay', (tester) async {
+    tester.view.physicalSize = const Size(360, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const PropertyDetailScreen(listingId: 'l-1')),
+    ]);
+
+    await tester.pumpWidget(_wrap(
+      router,
+      locale: const Locale('ms'),
+      extraOverrides: [
+        matchesForListingProvider('l-1').overrideWith((ref) async => []),
+      ],
+    ));
+    await tester.pumpAndSettle();
+
+    final label = tester.renderObject<RenderParagraph>(find.text('Minta Co-Broke'));
+    expect(label.didExceedMaxLines, isFalse);
   });
 
   testWidgets('updates the photo counter to the real current page as the hero carousel is swiped', (tester) async {

@@ -926,18 +926,26 @@ class _ActionBar extends ConsumerWidget {
             // (full-width) place BrutalistButton is used. BrutalistButton
             // itself now wraps its label in Flexible+ellipsis, so a genuine
             // width shortfall here truncates instead of throwing a
-            // RenderFlex overflow; this smaller font is still kept so the
-            // real-world label reads in full rather than ellipsizing on
-            // narrow phones.
+            // RenderFlex overflow. This button's own leading arrow icon was
+            // removed (it was decorative, not load-bearing information) and
+            // the font size dropped from 16 to 12.5 -- at 13 the label still
+            // fell 0.2px short of the available width at 360dp (measured
+            // empirically), so 12.5 was chosen to clear it with real margin,
+            // not just barely. Verified at 360dp in both "Request Co-Broke"
+            // (en) and "Minta Co-Broke" (ms) that the label now renders in
+            // full; see property_detail_screen_test.dart's two
+            // "does not ellipsize the Request Co-Broke label" tests. A
+            // future translation meaningfully longer than either could still
+            // ellipsize -- that's an accepted, graceful fallback (thanks to
+            // BrutalistButton's own fix), not a bug.
             child: Theme(
               data: Theme.of(context).copyWith(
                 textTheme: Theme.of(context).textTheme.copyWith(
-                      labelLarge: Theme.of(context).textTheme.labelLarge?.copyWith(fontSize: 13),
+                      labelLarge: Theme.of(context).textTheme.labelLarge?.copyWith(fontSize: 12.5),
                     ),
               ),
               child: BrutalistButton(
                 label: 'cobroke_request_send'.tr(),
-                icon: PhosphorIcons.arrowRight(PhosphorIconsStyle.bold),
                 onPressed: ownMatch == null ? null : () => sendCobrokeRequest(context, ref, ownMatch!.matchId),
               ),
             ),
