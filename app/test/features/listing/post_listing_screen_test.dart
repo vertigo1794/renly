@@ -10,8 +10,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:renly/core/theme/app_theme.dart';
+import 'package:renly/features/listing/listing_drafts_provider.dart';
 import 'package:renly/features/listing/listing_providers.dart';
 import 'package:renly/features/listing/models/listing.dart';
+import 'package:renly/features/listing/models/listing_draft.dart';
 import 'package:renly/features/listing/post_listing_screen.dart';
 import 'package:renly/core/widgets/brutalist_button.dart';
 import 'package:renly/features/requirement/models/requirement.dart';
@@ -290,5 +292,106 @@ void main() {
     expect(maintenanceField.controller?.text, '580.0');
     final keysOnHandSwitch = tester.widget<SwitchListTile>(find.byKey(const Key('listing_keys_on_hand_switch')));
     expect(keysOnHandSwitch.value, true);
+  });
+
+  testWidgets('Save as Draft preserves tenure, maintenance fee, and keys-on-hand, and resuming restores them', (tester) async {
+    // A real ProviderContainer (rather than just a ProviderScope) so the
+    // saved draft can be read back directly via
+    // container.read(listingDraftsProvider) without depending on
+    // navigation to '/my-inventory' actually working in this test.
+    final container = ProviderContainer(overrides: _baseOverrides());
+    addTearDown(container.dispose);
+    // Eagerly instantiate the drafts notifier (and let its async
+    // SharedPreferences-backed _load() settle below) BEFORE the form
+    // itself first touches it in _saveAsDraft(). Without this, _load()
+    // racing a same-tick add() can finish AFTER add() and clobber it back
+    // to the empty list it read at construction time -- exactly what a
+    // real app avoids by having some other already-mounted screen (My
+    // Inventory) watch this provider well before the user ever reaches
+    // Post Listing's Save as Draft button.
+    container.read(listingDraftsProvider);
+
+    Widget wrapWithContainer(GoRouter router) {
+      return UncontrolledProviderScope(
+        container: container,
+        child: EasyLocalization(
+          supportedLocales: const [Locale('en'), Locale('ms')],
+          path: 'assets/translations',
+          fallbackLocale: const Locale('en'),
+          startLocale: const Locale('en'),
+          child: Builder(
+            builder: (context) => MaterialApp.router(
+              theme: AppTheme.light,
+              localizationsDelegates: context.localizationDelegates,
+              supportedLocales: context.supportedLocales,
+              locale: context.locale,
+              routerConfig: router,
+            ),
+          ),
+        ),
+      );
+    }
+
+    final saveRouter = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const Scaffold(body: PostListingFormBody())),
+      GoRoute(path: '/my-inventory', builder: (context, state) => const Scaffold(body: Text('inventory'))),
+    ]);
+
+    await tester.pumpWidget(wrapWithContainer(saveRouter));
+    await tester.pumpAndSettle();
+
+    // One representative field from each Dart-type category ListingDraft
+    // stores: a String-backed dropdown (tenure), a numeric text field
+    // (maintenance fee), and a boolean toggle (keys on hand).
+    await tester.enterText(find.byKey(const Key('listing_title_field')), 'Draft With New Fields');
+    await tester.enterText(find.byKey(const Key('listing_maintenance_fee_field')), '250');
+
+    await tester.ensureVisible(find.byKey(const Key('listing_tenure_field')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('listing_tenure_field')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('listing_tenure_freehold'.tr()).last);
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.byKey(const Key('listing_keys_on_hand_switch')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('listing_keys_on_hand_switch')));
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.text('listing_save_as_draft'.tr()));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('listing_save_as_draft'.tr()));
+    await tester.pumpAndSettle();
+
+    final drafts = container.read(listingDraftsProvider);
+    expect(drafts, hasLength(1));
+    final draft = drafts.single;
+    expect(draft.tenure, 'freehold');
+    expect(draft.maintenanceFeeMyr, '250');
+    expect(draft.keysOnHand, isTrue);
+
+    // Resuming the just-saved draft restores those same 3 fields into a
+    // fresh form -- proves the round trip through toJson/fromJson (real
+    // SharedPreferences persistence) and initState's hydration, not just
+    // the in-memory ListingDraft object.
+    final rawPersisted = draft.toJson();
+    final reloadedDraft = ListingDraft.fromJson(rawPersisted);
+
+    final resumeRouter = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => Scaffold(body: PostListingFormBody(initialDraft: reloadedDraft))),
+    ]);
+    await tester.pumpWidget(wrapWithContainer(resumeRouter));
+    await tester.pumpAndSettle();
+
+    final resumedMaintenanceField = tester.widget<TextFormField>(find.byKey(const Key('listing_maintenance_fee_field')));
+    expect(resumedMaintenanceField.controller?.text, '250');
+
+    expect(
+      find.descendant(of: find.byKey(const Key('listing_tenure_field')), matching: find.text('listing_tenure_freehold'.tr())),
+      findsOneWidget,
+    );
+
+    final resumedKeysOnHandSwitch = tester.widget<SwitchListTile>(find.byKey(const Key('listing_keys_on_hand_switch')));
+    expect(resumedKeysOnHandSwitch.value, isTrue);
   });
 }

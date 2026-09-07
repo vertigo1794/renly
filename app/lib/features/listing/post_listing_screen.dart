@@ -124,6 +124,14 @@ class _PostListingFormBodyState extends ConsumerState<PostListingFormBody> {
       _splitPreset = _presetForSplitValue(_commissionSplitController.text);
       _titleVerified = draft.titleVerified;
       _exclusiveMandate = draft.exclusiveMandate;
+      _maintenanceFeeController.text = draft.maintenanceFeeMyr ?? '';
+      _tenure = draft.tenure;
+      _parkingBaysController.text = draft.parkingBays ?? '';
+      _floorLevelController.text = draft.floorLevel ?? '';
+      _furnishingStatus = draft.furnishingStatus;
+      _keysOnHand = draft.keysOnHand;
+      _protectedCoBrokeReg = draft.protectedCoBrokeReg;
+      _totalCommissionController.text = draft.totalAgencyCommissionPercent ?? '';
     }
     _loadPreviewCandidates();
     for (final controller in [_areaController, _priceController, _bedroomsController, _bathroomsController, _sqftController]) {
@@ -285,6 +293,15 @@ class _PostListingFormBodyState extends ConsumerState<PostListingFormBody> {
           _commissionSplitController.text.trim().isEmpty ? null : _commissionSplitController.text.trim(),
       titleVerified: _titleVerified,
       exclusiveMandate: _exclusiveMandate,
+      maintenanceFeeMyr: _maintenanceFeeController.text.trim().isEmpty ? null : _maintenanceFeeController.text.trim(),
+      tenure: _tenure,
+      parkingBays: _parkingBaysController.text.trim().isEmpty ? null : _parkingBaysController.text.trim(),
+      floorLevel: _floorLevelController.text.trim().isEmpty ? null : _floorLevelController.text.trim(),
+      furnishingStatus: _furnishingStatus,
+      keysOnHand: _keysOnHand,
+      protectedCoBrokeReg: _protectedCoBrokeReg,
+      totalAgencyCommissionPercent:
+          _totalCommissionController.text.trim().isEmpty ? null : _totalCommissionController.text.trim(),
     );
     // Resuming an existing draft and saving again replaces it (same
     // draftId) rather than creating a duplicate entry.
