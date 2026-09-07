@@ -291,7 +291,11 @@ void main() {
     await tester.pumpWidget(_wrap(router, listing: listingWithSplit));
     await tester.pumpAndSettle();
 
-    expect(find.text('50/50'), findsOneWidget);
+    // findsWidgets, not findsOneWidget: since Task 8, the Co-Broking Terms
+    // card also renders a "50/50" split badge in its own header (a second,
+    // deliberate showing of the same ratio, distinct from this deal-terms
+    // banner's at-a-glance badge) whenever commissionSplitPercent is set.
+    expect(find.text('50/50'), findsWidgets);
     expect(find.text('property_price_per_sqft'.tr(namedArgs: {'value': '1000'})), findsOneWidget);
   });
 
@@ -322,5 +326,74 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('inventory_badge_exclusive_mandate'.tr()), findsOneWidget);
+  });
+
+  testWidgets('shows the real Co-Broking Terms card when a split or total commission is set', (tester) async {
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const PropertyDetailScreen(listingId: 'l-1')),
+    ]);
+
+    final listingWithTerms = Listing(
+      listingId: 'l-1',
+      negotiatorId: 'n-1',
+      title: 'The Vertex Residency',
+      description: 'A modern apartment with lots of light.',
+      propertyType: 'apartment',
+      transactionType: 'sale',
+      state: 'Selangor',
+      area: 'Petaling Jaya',
+      price: 1250000,
+      photoUrls: const [],
+      status: 'active',
+      createdAt: DateTime(2024, 1, 1),
+      commissionSplitPercent: 50,
+      totalAgencyCommissionPercent: 3,
+    );
+
+    await tester.pumpWidget(_wrap(router, listing: listingWithTerms));
+    await tester.pumpAndSettle();
+
+    expect(find.text('property_co_broking_terms_title'.tr()), findsOneWidget);
+    expect(find.text('property_total_commission_row'.tr(namedArgs: {'percent': '3'})), findsOneWidget);
+    expect(find.text('RM 37500'), findsOneWidget);
+  });
+
+  testWidgets('hides the Co-Broking Terms card when neither split nor total commission is set', (tester) async {
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const PropertyDetailScreen(listingId: 'l-1')),
+    ]);
+
+    await tester.pumpWidget(_wrap(router));
+    await tester.pumpAndSettle();
+
+    expect(find.text('property_co_broking_terms_title'.tr()), findsNothing);
+  });
+
+  testWidgets('shows keys-on-hand and protected-co-broke-reg badges only when true', (tester) async {
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const PropertyDetailScreen(listingId: 'l-1')),
+    ]);
+
+    final listingWithBadges = Listing(
+      listingId: 'l-1',
+      negotiatorId: 'n-1',
+      title: 'The Vertex Residency',
+      description: 'A modern apartment with lots of light.',
+      propertyType: 'apartment',
+      transactionType: 'sale',
+      state: 'Selangor',
+      area: 'Petaling Jaya',
+      price: 1250000,
+      photoUrls: const [],
+      status: 'active',
+      createdAt: DateTime(2024, 1, 1),
+      keysOnHand: true,
+    );
+
+    await tester.pumpWidget(_wrap(router, listing: listingWithBadges));
+    await tester.pumpAndSettle();
+
+    expect(find.text('property_badge_keys_on_hand'.tr()), findsOneWidget);
+    expect(find.text('property_badge_protected_co_broke_reg'.tr()), findsNothing);
   });
 }

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'listing_formatting.dart';
 import 'listing_photo.dart';
@@ -129,65 +130,9 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
                   const SizedBox(height: 16),
                   _DealTermsBanner(listing: listing),
                   const SizedBox(height: 16),
-                  Text(listing.title, style: Theme.of(context).textTheme.headlineLarge),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 6,
-                    children: [
-                      StatusBadge(label: _statusLabel(listing.status)),
-                      if (listing.titleVerified)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(color: const Color(0xFF2563EB), borderRadius: BorderRadius.circular(6)),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(PhosphorIcons.sealCheck(PhosphorIconsStyle.bold), size: 12, color: Colors.white),
-                              const SizedBox(width: 4),
-                              Text(
-                                'inventory_badge_title_verified'.tr(),
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .labelSmall
-                                    ?.copyWith(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10),
-                              ),
-                            ],
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      if (listing.bedrooms != null) ...[
-                        const Icon(Icons.bed),
-                        const SizedBox(width: 4),
-                        Text('${listing.bedrooms}'),
-                        const SizedBox(width: 16),
-                      ],
-                      if (listing.bathrooms != null) ...[
-                        const Icon(Icons.bathtub),
-                        const SizedBox(width: 4),
-                        Text('${listing.bathrooms}'),
-                        if (listing.builtUpSqft != null) const SizedBox(width: 16),
-                      ],
-                      if (listing.builtUpSqft != null) ...[
-                        Icon(PhosphorIcons.ruler(PhosphorIconsStyle.bold)),
-                        const SizedBox(width: 4),
-                        Text('${ListingFormatting.formatSqft(listing.builtUpSqft!)} ${'inventory_stat_sqft'.tr()}'),
-                      ],
-                    ],
-                  ),
+                  _OverviewCard(listing: listing, statusLabel: _statusLabel(listing.status)),
                   const SizedBox(height: 16),
-                  Text('property_overview'.tr(), style: Theme.of(context).textTheme.titleMedium),
-                  const SizedBox(height: 4),
-                  Text(listing.description, style: Theme.of(context).textTheme.bodyMedium),
-                  const SizedBox(height: 16),
-                  Text('property_location'.tr(), style: Theme.of(context).textTheme.titleMedium),
-                  const SizedBox(height: 4),
-                  Text('${listing.area}, ${listing.state}',
-                      style: Theme.of(context).textTheme.bodyMedium),
+                  _CoBrokingTermsCard(listing: listing),
                   const SizedBox(height: 16),
                   Builder(builder: (context) {
                     final ownerAsync = ref.watch(listingOwnerProvider(listing.negotiatorId));
@@ -435,6 +380,286 @@ class _DealTermsBanner extends StatelessWidget {
                     ],
                   ),
                 ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _OverviewCard extends StatelessWidget {
+  const _OverviewCard({required this.listing, required this.statusLabel});
+
+  final Listing listing;
+  final String statusLabel;
+
+  Future<void> _openMap(BuildContext context) async {
+    final query = Uri.encodeComponent('${listing.area}, ${listing.state}');
+    final uri = Uri.parse('https://www.google.com/maps/search/?api=1&query=$query');
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('listing_error_generic'.tr())));
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final shortId = listing.listingId.length >= 8 ? listing.listingId.substring(0, 8).toUpperCase() : listing.listingId.toUpperCase();
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.black, width: 2),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFECFDF5),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: const Color(0xFFA7F3D0)),
+                ),
+                child: Text(
+                  listing.tenure == null ? listing.propertyType.toUpperCase() : '${listing.propertyType.toUpperCase()} • ${listing.tenure!.toUpperCase()}',
+                  style: const TextStyle(color: Color(0xFF047857), fontWeight: FontWeight.bold, fontSize: 10),
+                ),
+              ),
+              Text(
+                'property_id_prefix'.tr(namedArgs: {'id': shortId}),
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(listing.title, style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900)),
+          const SizedBox(height: 6),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text('${listing.area}, ${listing.state}', style: Theme.of(context).textTheme.bodyMedium),
+              ),
+              TextButton(
+                onPressed: () => _openMap(context),
+                child: Text('property_map_button'.tr()),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              StatusBadge(label: statusLabel),
+              if (listing.titleVerified)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(color: const Color(0xFF2563EB), borderRadius: BorderRadius.circular(6)),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(PhosphorIcons.sealCheck(PhosphorIconsStyle.bold), size: 12, color: Colors.white),
+                      const SizedBox(width: 4),
+                      Text(
+                        'inventory_badge_title_verified'.tr(),
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10),
+                      ),
+                    ],
+                  ),
+                ),
+              if (listing.keysOnHand)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(color: const Color(0xFFF1F5F9), borderRadius: BorderRadius.circular(6), border: Border.all(color: const Color(0xFFE2E8F0))),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(PhosphorIcons.key(PhosphorIconsStyle.bold), size: 12, color: const Color(0xFF2563EB)),
+                      const SizedBox(width: 4),
+                      Text(
+                        'property_badge_keys_on_hand'.tr(),
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold, fontSize: 10),
+                      ),
+                    ],
+                  ),
+                ),
+              if (listing.protectedCoBrokeReg)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(color: const Color(0xFFF1F5F9), borderRadius: BorderRadius.circular(6), border: Border.all(color: const Color(0xFFE2E8F0))),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(PhosphorIcons.lockKey(PhosphorIconsStyle.bold), size: 12, color: const Color(0xFF7C3AED)),
+                      const SizedBox(width: 4),
+                      Text(
+                        'property_badge_protected_co_broke_reg'.tr(),
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold, fontSize: 10),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              if (listing.bedrooms != null) ...[
+                const Icon(Icons.bed),
+                const SizedBox(width: 4),
+                Text('${listing.bedrooms}'),
+                const SizedBox(width: 16),
+              ],
+              if (listing.bathrooms != null) ...[
+                const Icon(Icons.bathtub),
+                const SizedBox(width: 4),
+                Text('${listing.bathrooms}'),
+                const SizedBox(width: 16),
+              ],
+              if (listing.builtUpSqft != null) ...[
+                Icon(PhosphorIcons.ruler(PhosphorIconsStyle.bold)),
+                const SizedBox(width: 4),
+                Text('${ListingFormatting.formatSqft(listing.builtUpSqft!)} ${'inventory_stat_sqft'.tr()}'),
+                const SizedBox(width: 16),
+              ],
+              if (listing.parkingBays != null) ...[
+                Icon(PhosphorIcons.car(PhosphorIconsStyle.bold)),
+                const SizedBox(width: 4),
+                Text('${listing.parkingBays}'),
+                const SizedBox(width: 16),
+              ],
+              if (listing.floorLevel != null) ...[
+                Icon(PhosphorIcons.stackSimple(PhosphorIconsStyle.bold)),
+                const SizedBox(width: 4),
+                Text('${listing.floorLevel}'),
+              ],
+            ],
+          ),
+          if (listing.furnishingStatus != null) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Icon(PhosphorIcons.armchair(PhosphorIconsStyle.bold)),
+                const SizedBox(width: 4),
+                Text(listing.furnishingStatus == 'furnished'
+                    ? 'listing_furnishing_furnished'.tr()
+                    : listing.furnishingStatus == 'partially_furnished'
+                        ? 'listing_furnishing_partially_furnished'.tr()
+                        : 'listing_furnishing_unfurnished'.tr()),
+              ],
+            ),
+          ],
+          const SizedBox(height: 16),
+          Text('property_overview'.tr(), style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 4),
+          Text(listing.description, style: Theme.of(context).textTheme.bodyMedium),
+        ],
+      ),
+    );
+  }
+}
+
+class _CoBrokingTermsCard extends StatelessWidget {
+  const _CoBrokingTermsCard({required this.listing});
+
+  final Listing listing;
+
+  @override
+  Widget build(BuildContext context) {
+    if (listing.commissionSplitPercent == null && listing.totalAgencyCommissionPercent == null) {
+      return const SizedBox.shrink();
+    }
+    final split = listing.commissionSplitPercent?.round();
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.black, width: 2),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Icon(PhosphorIcons.handshake(PhosphorIconsStyle.bold), size: 18),
+                  const SizedBox(width: 6),
+                  Text('property_co_broking_terms_title'.tr(), style: Theme.of(context).textTheme.titleMedium),
+                ],
+              ),
+              if (split != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(6), border: Border.all(color: Colors.black)),
+                  child: Text(
+                    'property_split_badge'.tr(namedArgs: {'split': '$split/${100 - split}'}),
+                    style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 10),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(color: const Color(0xFFF7F8F5), borderRadius: BorderRadius.circular(10)),
+            child: Column(
+              children: [
+                if (listing.totalAgencyCommissionPercent != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'property_total_commission_row'.tr(namedArgs: {'percent': '${listing.totalAgencyCommissionPercent!.round()}'}),
+                          style: Theme.of(context).textTheme.labelSmall,
+                        ),
+                        Text(
+                          'RM ${(listing.price * listing.totalAgencyCommissionPercent! / 100).round()}',
+                          style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ),
+                if (split != null)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'property_your_share_row'.tr(namedArgs: {'percent': '$split'}),
+                        style: Theme.of(context).textTheme.labelSmall,
+                      ),
+                      Text(
+                        'RM ${(listing.price * split / 100).round()}',
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold, color: const Color(0xFF047857)),
+                      ),
+                    ],
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Icon(PhosphorIcons.shieldCheck(PhosphorIconsStyle.bold), size: 13, color: const Color(0xFF047857)),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  'property_registration_guarantee'.tr(),
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(color: const Color(0xFF64748B)),
+                ),
+              ),
             ],
           ),
         ],
