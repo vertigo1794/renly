@@ -375,6 +375,366 @@ void main() {
       expect(MatchingEngine.score(_listing, _requirement), 100);
     });
 
+    test('listing meeting the requirement\'s parkingBaysMin still scores normally', () {
+      final listing = Listing(
+        listingId: 'l-10',
+        negotiatorId: 'n-1',
+        title: 't',
+        description: 'd',
+        propertyType: 'apartment',
+        transactionType: 'sale',
+        state: 'Selangor',
+        area: 'Petaling Jaya',
+        price: 400000,
+        bedrooms: 3,
+        parkingBays: 2,
+        photoUrls: [],
+        status: 'active',
+        createdAt: DateTime(2024, 1, 1),
+      );
+      const requirement = Requirement(
+        requirementId: 'r-10',
+        negotiatorId: 'n-2',
+        propertyType: 'apartment',
+        transactionType: 'sale',
+        state: 'Selangor',
+        area: 'Petaling Jaya',
+        budgetMin: 300000,
+        budgetMax: 500000,
+        bedrooms: 3,
+        photoUrls: [],
+        status: 'open',
+        parkingBaysMin: 1,
+      );
+      expect(MatchingEngine.score(listing, requirement), 100);
+    });
+
+    test('listing below the requirement\'s parkingBaysMin is disqualified', () {
+      final listing = Listing(
+        listingId: 'l-11',
+        negotiatorId: 'n-1',
+        title: 't',
+        description: 'd',
+        propertyType: 'apartment',
+        transactionType: 'sale',
+        state: 'Selangor',
+        area: 'Petaling Jaya',
+        price: 400000,
+        bedrooms: 3,
+        parkingBays: 0,
+        photoUrls: [],
+        status: 'active',
+        createdAt: DateTime(2024, 1, 1),
+      );
+      const requirement = Requirement(
+        requirementId: 'r-11',
+        negotiatorId: 'n-2',
+        propertyType: 'apartment',
+        transactionType: 'sale',
+        state: 'Selangor',
+        area: 'Petaling Jaya',
+        budgetMin: 300000,
+        budgetMax: 500000,
+        bedrooms: 3,
+        photoUrls: [],
+        status: 'open',
+        parkingBaysMin: 1,
+      );
+      expect(MatchingEngine.score(listing, requirement), isNull);
+    });
+
+    test('listing with unset parkingBays is disqualified when requirement sets a minimum', () {
+      const requirement = Requirement(
+        requirementId: 'r-12',
+        negotiatorId: 'n-2',
+        propertyType: 'apartment',
+        transactionType: 'sale',
+        state: 'Selangor',
+        area: 'Petaling Jaya',
+        budgetMin: 300000,
+        budgetMax: 500000,
+        bedrooms: 3,
+        photoUrls: [],
+        status: 'open',
+        parkingBaysMin: 1,
+      );
+      expect(MatchingEngine.score(_listing, requirement), isNull);
+    });
+
+    test('requirement with no parkingBaysMin never filters on parking', () {
+      expect(MatchingEngine.score(_listing, _requirement), 100);
+    });
+
+    test('listing meeting the requirement\'s floorLevelMin still scores normally', () {
+      final listing = Listing(
+        listingId: 'l-12',
+        negotiatorId: 'n-1',
+        title: 't',
+        description: 'd',
+        propertyType: 'apartment',
+        transactionType: 'sale',
+        state: 'Selangor',
+        area: 'Petaling Jaya',
+        price: 400000,
+        bedrooms: 3,
+        floorLevel: 20,
+        photoUrls: [],
+        status: 'active',
+        createdAt: DateTime(2024, 1, 1),
+      );
+      const requirement = Requirement(
+        requirementId: 'r-13',
+        negotiatorId: 'n-2',
+        propertyType: 'apartment',
+        transactionType: 'sale',
+        state: 'Selangor',
+        area: 'Petaling Jaya',
+        budgetMin: 300000,
+        budgetMax: 500000,
+        bedrooms: 3,
+        photoUrls: [],
+        status: 'open',
+        floorLevelMin: 10,
+      );
+      expect(MatchingEngine.score(listing, requirement), 100);
+    });
+
+    test('listing below the requirement\'s floorLevelMin is disqualified', () {
+      final listing = Listing(
+        listingId: 'l-13',
+        negotiatorId: 'n-1',
+        title: 't',
+        description: 'd',
+        propertyType: 'apartment',
+        transactionType: 'sale',
+        state: 'Selangor',
+        area: 'Petaling Jaya',
+        price: 400000,
+        bedrooms: 3,
+        floorLevel: 5,
+        photoUrls: [],
+        status: 'active',
+        createdAt: DateTime(2024, 1, 1),
+      );
+      const requirement = Requirement(
+        requirementId: 'r-14',
+        negotiatorId: 'n-2',
+        propertyType: 'apartment',
+        transactionType: 'sale',
+        state: 'Selangor',
+        area: 'Petaling Jaya',
+        budgetMin: 300000,
+        budgetMax: 500000,
+        bedrooms: 3,
+        photoUrls: [],
+        status: 'open',
+        floorLevelMin: 10,
+      );
+      expect(MatchingEngine.score(listing, requirement), isNull);
+    });
+
+    test('listing with unset floorLevel is disqualified when requirement sets a minimum', () {
+      const requirement = Requirement(
+        requirementId: 'r-15',
+        negotiatorId: 'n-2',
+        propertyType: 'apartment',
+        transactionType: 'sale',
+        state: 'Selangor',
+        area: 'Petaling Jaya',
+        budgetMin: 300000,
+        budgetMax: 500000,
+        bedrooms: 3,
+        photoUrls: [],
+        status: 'open',
+        floorLevelMin: 10,
+      );
+      expect(MatchingEngine.score(_listing, requirement), isNull);
+    });
+
+    test('requirement with no floorLevelMin never filters on floor level', () {
+      expect(MatchingEngine.score(_listing, _requirement), 100);
+    });
+
+    test('listing matching the requirement\'s tenurePreference still scores normally', () {
+      final listing = Listing(
+        listingId: 'l-14',
+        negotiatorId: 'n-1',
+        title: 't',
+        description: 'd',
+        propertyType: 'apartment',
+        transactionType: 'sale',
+        state: 'Selangor',
+        area: 'Petaling Jaya',
+        price: 400000,
+        bedrooms: 3,
+        tenure: 'freehold',
+        photoUrls: [],
+        status: 'active',
+        createdAt: DateTime(2024, 1, 1),
+      );
+      const requirement = Requirement(
+        requirementId: 'r-16',
+        negotiatorId: 'n-2',
+        propertyType: 'apartment',
+        transactionType: 'sale',
+        state: 'Selangor',
+        area: 'Petaling Jaya',
+        budgetMin: 300000,
+        budgetMax: 500000,
+        bedrooms: 3,
+        photoUrls: [],
+        status: 'open',
+        tenurePreference: 'freehold',
+      );
+      expect(MatchingEngine.score(listing, requirement), 100);
+    });
+
+    test('listing with a different tenure than the requirement\'s tenurePreference is disqualified', () {
+      final listing = Listing(
+        listingId: 'l-15',
+        negotiatorId: 'n-1',
+        title: 't',
+        description: 'd',
+        propertyType: 'apartment',
+        transactionType: 'sale',
+        state: 'Selangor',
+        area: 'Petaling Jaya',
+        price: 400000,
+        bedrooms: 3,
+        tenure: 'leasehold',
+        photoUrls: [],
+        status: 'active',
+        createdAt: DateTime(2024, 1, 1),
+      );
+      const requirement = Requirement(
+        requirementId: 'r-17',
+        negotiatorId: 'n-2',
+        propertyType: 'apartment',
+        transactionType: 'sale',
+        state: 'Selangor',
+        area: 'Petaling Jaya',
+        budgetMin: 300000,
+        budgetMax: 500000,
+        bedrooms: 3,
+        photoUrls: [],
+        status: 'open',
+        tenurePreference: 'freehold',
+      );
+      expect(MatchingEngine.score(listing, requirement), isNull);
+    });
+
+    test('listing with unset tenure is disqualified when requirement sets a tenurePreference', () {
+      const requirement = Requirement(
+        requirementId: 'r-18',
+        negotiatorId: 'n-2',
+        propertyType: 'apartment',
+        transactionType: 'sale',
+        state: 'Selangor',
+        area: 'Petaling Jaya',
+        budgetMin: 300000,
+        budgetMax: 500000,
+        bedrooms: 3,
+        photoUrls: [],
+        status: 'open',
+        tenurePreference: 'freehold',
+      );
+      expect(MatchingEngine.score(_listing, requirement), isNull);
+    });
+
+    test('requirement with no tenurePreference never filters on tenure', () {
+      expect(MatchingEngine.score(_listing, _requirement), 100);
+    });
+
+    test('listing matching the requirement\'s furnishingPreference still scores normally', () {
+      final listing = Listing(
+        listingId: 'l-16',
+        negotiatorId: 'n-1',
+        title: 't',
+        description: 'd',
+        propertyType: 'apartment',
+        transactionType: 'sale',
+        state: 'Selangor',
+        area: 'Petaling Jaya',
+        price: 400000,
+        bedrooms: 3,
+        furnishingStatus: 'furnished',
+        photoUrls: [],
+        status: 'active',
+        createdAt: DateTime(2024, 1, 1),
+      );
+      const requirement = Requirement(
+        requirementId: 'r-19',
+        negotiatorId: 'n-2',
+        propertyType: 'apartment',
+        transactionType: 'sale',
+        state: 'Selangor',
+        area: 'Petaling Jaya',
+        budgetMin: 300000,
+        budgetMax: 500000,
+        bedrooms: 3,
+        photoUrls: [],
+        status: 'open',
+        furnishingPreference: 'furnished',
+      );
+      expect(MatchingEngine.score(listing, requirement), 100);
+    });
+
+    test('listing with a different furnishingStatus than the requirement\'s furnishingPreference is disqualified', () {
+      final listing = Listing(
+        listingId: 'l-17',
+        negotiatorId: 'n-1',
+        title: 't',
+        description: 'd',
+        propertyType: 'apartment',
+        transactionType: 'sale',
+        state: 'Selangor',
+        area: 'Petaling Jaya',
+        price: 400000,
+        bedrooms: 3,
+        furnishingStatus: 'unfurnished',
+        photoUrls: [],
+        status: 'active',
+        createdAt: DateTime(2024, 1, 1),
+      );
+      const requirement = Requirement(
+        requirementId: 'r-20',
+        negotiatorId: 'n-2',
+        propertyType: 'apartment',
+        transactionType: 'sale',
+        state: 'Selangor',
+        area: 'Petaling Jaya',
+        budgetMin: 300000,
+        budgetMax: 500000,
+        bedrooms: 3,
+        photoUrls: [],
+        status: 'open',
+        furnishingPreference: 'furnished',
+      );
+      expect(MatchingEngine.score(listing, requirement), isNull);
+    });
+
+    test('listing with unset furnishingStatus is disqualified when requirement sets a furnishingPreference', () {
+      const requirement = Requirement(
+        requirementId: 'r-21',
+        negotiatorId: 'n-2',
+        propertyType: 'apartment',
+        transactionType: 'sale',
+        state: 'Selangor',
+        area: 'Petaling Jaya',
+        budgetMin: 300000,
+        budgetMax: 500000,
+        bedrooms: 3,
+        photoUrls: [],
+        status: 'open',
+        furnishingPreference: 'furnished',
+      );
+      expect(MatchingEngine.score(_listing, requirement), isNull);
+    });
+
+    test('requirement with no furnishingPreference never filters on furnishing', () {
+      expect(MatchingEngine.score(_listing, _requirement), 100);
+    });
+
     test('qualifyingThreshold is 40', () {
       expect(MatchingEngine.qualifyingThreshold, 40);
     });

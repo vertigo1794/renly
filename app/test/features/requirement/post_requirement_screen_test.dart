@@ -90,6 +90,10 @@ void main() {
     expect(find.byKey(const Key('requirement_area_field')), findsOneWidget);
     expect(find.byKey(const Key('requirement_budget_min_field')), findsOneWidget);
     expect(find.byKey(const Key('requirement_budget_max_field')), findsOneWidget);
+    expect(find.byKey(const Key('requirement_tenure_field')), findsOneWidget);
+    expect(find.byKey(const Key('requirement_parking_bays_min_field')), findsOneWidget);
+    expect(find.byKey(const Key('requirement_floor_level_min_field')), findsOneWidget);
+    expect(find.byKey(const Key('requirement_furnishing_field')), findsOneWidget);
   });
 
   testWidgets('submitting with empty required fields shows validation errors', (tester) async {

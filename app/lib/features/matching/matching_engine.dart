@@ -10,10 +10,13 @@ class MatchingEngine {
   static const qualifyingThreshold = 40;
 
   /// Returns null if a mandatory filter disqualifies the pair (transaction
-  /// type mismatch, state mismatch, or the listing not meeting the
-  /// requirement's bathroomsMin/builtUpSqftMin, when set). Otherwise
-  /// returns the weighted score (0-100), rounded to the nearest integer --
-  /// callers decide whether it clears [qualifyingThreshold].
+  /// type mismatch, state mismatch, the listing not meeting the
+  /// requirement's bathroomsMin/builtUpSqftMin/parkingBaysMin/
+  /// floorLevelMin, when set, or the listing's tenure/furnishingStatus
+  /// not exactly matching the requirement's tenurePreference/
+  /// furnishingPreference, when set). Otherwise returns the weighted
+  /// score (0-100), rounded to the nearest integer -- callers decide
+  /// whether it clears [qualifyingThreshold].
   static int? score(Listing listing, Requirement requirement) {
     if (listing.transactionType != requirement.transactionType) return null;
     if (listing.state != requirement.state) return null;
@@ -23,6 +26,20 @@ class MatchingEngine {
     }
     if (requirement.builtUpSqftMin != null &&
         (listing.builtUpSqft == null || listing.builtUpSqft! < requirement.builtUpSqftMin!)) {
+      return null;
+    }
+    if (requirement.parkingBaysMin != null &&
+        (listing.parkingBays == null || listing.parkingBays! < requirement.parkingBaysMin!)) {
+      return null;
+    }
+    if (requirement.floorLevelMin != null &&
+        (listing.floorLevel == null || listing.floorLevel! < requirement.floorLevelMin!)) {
+      return null;
+    }
+    if (requirement.tenurePreference != null && listing.tenure != requirement.tenurePreference) {
+      return null;
+    }
+    if (requirement.furnishingPreference != null && listing.furnishingStatus != requirement.furnishingPreference) {
       return null;
     }
 

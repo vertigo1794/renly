@@ -38,6 +38,27 @@ class Requirement {
   /// verified. Same default-false reasoning as [loanReady].
   final bool urgentViewingRequired;
 
+  /// Buyer's required tenure -- 'freehold' or 'leasehold'. Nullable --
+  /// unset means no preference, so `MatchingEngine.score` never
+  /// disqualifies on this dimension. When set, `MatchingEngine.score`
+  /// requires an EXACT match against the listing's own `tenure` (unlike
+  /// [bathroomsMin]/[builtUpSqftMin], which are minimum thresholds, this
+  /// is a categorical preference).
+  final String? tenurePreference;
+
+  /// Minimum parking bays the buyer requires. Same null-means-unset,
+  /// minimum-threshold semantics as [bathroomsMin].
+  final int? parkingBaysMin;
+
+  /// Minimum floor level the buyer requires. Same null-means-unset,
+  /// minimum-threshold semantics as [bathroomsMin].
+  final int? floorLevelMin;
+
+  /// Buyer's required furnishing status -- 'furnished',
+  /// 'partially_furnished', or 'unfurnished'. Same null-means-unset,
+  /// exact-match semantics as [tenurePreference].
+  final String? furnishingPreference;
+
   const Requirement({
     required this.requirementId,
     required this.negotiatorId,
@@ -55,6 +76,10 @@ class Requirement {
     this.desiredCommissionSplitPercent,
     this.loanReady = false,
     this.urgentViewingRequired = false,
+    this.tenurePreference,
+    this.parkingBaysMin,
+    this.floorLevelMin,
+    this.furnishingPreference,
   });
 
   factory Requirement.fromJson(Map<String, dynamic> json) {
@@ -75,6 +100,10 @@ class Requirement {
       desiredCommissionSplitPercent: (json['desired_commission_split_percent'] as num?)?.toDouble(),
       loanReady: json['loan_ready'] as bool? ?? false,
       urgentViewingRequired: json['urgent_viewing_required'] as bool? ?? false,
+      tenurePreference: json['tenure_preference'] as String?,
+      parkingBaysMin: json['parking_bays_min'] as int?,
+      floorLevelMin: json['floor_level_min'] as int?,
+      furnishingPreference: json['furnishing_preference'] as String?,
     );
   }
 }

@@ -38,6 +38,8 @@ class _PostRequirementFormBodyState extends ConsumerState<PostRequirementFormBod
   final _bedroomsController = TextEditingController();
   final _bathroomsMinController = TextEditingController();
   final _sqftMinController = TextEditingController();
+  final _parkingBaysMinController = TextEditingController();
+  final _floorLevelMinController = TextEditingController();
   final _commissionSplitController = TextEditingController();
 
   /// Same tracking as PostListingFormBody's own _splitPreset -- see its
@@ -47,6 +49,8 @@ class _PostRequirementFormBodyState extends ConsumerState<PostRequirementFormBod
   String _propertyType = 'apartment';
   String _transactionType = 'sale';
   String _state = malaysianStates.first;
+  String? _tenurePreference;
+  String? _furnishingPreference;
   bool _loanReady = false;
   bool _urgentViewingRequired = false;
   final List<XFile> _photos = [];
@@ -66,7 +70,7 @@ class _PostRequirementFormBodyState extends ConsumerState<PostRequirementFormBod
   void initState() {
     super.initState();
     _loadPreviewCandidates();
-    for (final controller in [_areaController, _budgetMinController, _budgetMaxController, _bedroomsController, _bathroomsMinController, _sqftMinController]) {
+    for (final controller in [_areaController, _budgetMinController, _budgetMaxController, _bedroomsController, _bathroomsMinController, _sqftMinController, _parkingBaysMinController, _floorLevelMinController]) {
       controller.addListener(_onPreviewFieldChanged);
     }
   }
@@ -100,7 +104,7 @@ class _PostRequirementFormBodyState extends ConsumerState<PostRequirementFormBod
   @override
   void dispose() {
     _previewDebounce?.cancel();
-    for (final controller in [_areaController, _budgetMinController, _budgetMaxController, _bedroomsController, _bathroomsMinController, _sqftMinController]) {
+    for (final controller in [_areaController, _budgetMinController, _budgetMaxController, _bedroomsController, _bathroomsMinController, _sqftMinController, _parkingBaysMinController, _floorLevelMinController]) {
       controller.removeListener(_onPreviewFieldChanged);
     }
     _areaController.dispose();
@@ -109,6 +113,8 @@ class _PostRequirementFormBodyState extends ConsumerState<PostRequirementFormBod
     _bedroomsController.dispose();
     _bathroomsMinController.dispose();
     _sqftMinController.dispose();
+    _parkingBaysMinController.dispose();
+    _floorLevelMinController.dispose();
     _commissionSplitController.dispose();
     super.dispose();
   }
@@ -144,6 +150,10 @@ class _PostRequirementFormBodyState extends ConsumerState<PostRequirementFormBod
       status: 'open',
       bathroomsMin: _bathroomsMinController.text.trim().isEmpty ? null : int.tryParse(_bathroomsMinController.text.trim()),
       builtUpSqftMin: _sqftMinController.text.trim().isEmpty ? null : int.tryParse(_sqftMinController.text.trim()),
+      tenurePreference: _tenurePreference,
+      parkingBaysMin: _parkingBaysMinController.text.trim().isEmpty ? null : int.tryParse(_parkingBaysMinController.text.trim()),
+      floorLevelMin: _floorLevelMinController.text.trim().isEmpty ? null : int.tryParse(_floorLevelMinController.text.trim()),
+      furnishingPreference: _furnishingPreference,
     );
     _previewResult = LiveMatchPreview.forRequirement(draftRequirement, candidates);
   }
@@ -207,6 +217,10 @@ class _PostRequirementFormBodyState extends ConsumerState<PostRequirementFormBod
           desiredCommissionSplitPercent: _commissionSplitValue,
           loanReady: _loanReady,
           urgentViewingRequired: _urgentViewingRequired,
+          tenurePreference: _tenurePreference,
+          parkingBaysMin: _parkingBaysMinController.text.trim().isEmpty ? null : int.parse(_parkingBaysMinController.text.trim()),
+          floorLevelMin: _floorLevelMinController.text.trim().isEmpty ? null : int.parse(_floorLevelMinController.text.trim()),
+          furnishingPreference: _furnishingPreference,
         );
         _createdRequirementId = requirement.requirementId;
       }
@@ -328,6 +342,21 @@ class _PostRequirementFormBodyState extends ConsumerState<PostRequirementFormBod
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
+                key: const Key('requirement_tenure_field'),
+                initialValue: _tenurePreference,
+                decoration: InputDecoration(labelText: 'listing_field_tenure'.tr()),
+                hint: const Text('-'),
+                items: [
+                  DropdownMenuItem(value: 'freehold', child: Text('listing_tenure_freehold'.tr())),
+                  DropdownMenuItem(value: 'leasehold', child: Text('listing_tenure_leasehold'.tr())),
+                ],
+                onChanged: (value) => setState(() {
+                  _tenurePreference = value;
+                  _recomputePreview();
+                }),
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
                 key: const Key('requirement_transaction_type_field'),
                 initialValue: _transactionType,
                 decoration: InputDecoration(labelText: 'listing_field_transaction_type'.tr()),
@@ -424,6 +453,48 @@ class _PostRequirementFormBodyState extends ConsumerState<PostRequirementFormBod
                       icon: PhosphorIcons.ruler(PhosphorIconsStyle.bold),
                       controller: _sqftMinController,
                       label: 'inventory_stat_sqft'.tr(),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: SpecStatField(
+                      fieldKey: const Key('requirement_parking_bays_min_field'),
+                      icon: PhosphorIcons.car(PhosphorIconsStyle.bold),
+                      controller: _parkingBaysMinController,
+                      label: 'listing_stat_parking'.tr(),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: SpecStatField(
+                      fieldKey: const Key('requirement_floor_level_min_field'),
+                      icon: PhosphorIcons.stackSimple(PhosphorIconsStyle.bold),
+                      controller: _floorLevelMinController,
+                      label: 'listing_stat_floor'.tr(),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: SpecStatField(
+                      fieldKey: const Key('requirement_furnishing_field'),
+                      icon: PhosphorIcons.armchair(PhosphorIconsStyle.bold),
+                      controller: TextEditingController(),
+                      label: 'listing_stat_furnishing'.tr(),
+                      dropdownValue: _furnishingPreference,
+                      dropdownItems: [
+                        DropdownMenuItem(value: 'furnished', child: Text('listing_furnishing_furnished'.tr())),
+                        DropdownMenuItem(value: 'partially_furnished', child: Text('listing_furnishing_partially_furnished'.tr())),
+                        DropdownMenuItem(value: 'unfurnished', child: Text('listing_furnishing_unfurnished'.tr())),
+                      ],
+                      onDropdownChanged: (value) => setState(() {
+                        _furnishingPreference = value;
+                        _recomputePreview();
+                      }),
                     ),
                   ),
                 ],

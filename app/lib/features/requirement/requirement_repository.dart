@@ -92,6 +92,10 @@ class RequirementRepository {
     double? desiredCommissionSplitPercent,
     bool loanReady = false,
     bool urgentViewingRequired = false,
+    String? tenurePreference,
+    int? parkingBaysMin,
+    int? floorLevelMin,
+    String? furnishingPreference,
   }) async {
     final row = await _client
         .from('requirement')
@@ -109,6 +113,10 @@ class RequirementRepository {
           'desired_commission_split_percent': desiredCommissionSplitPercent,
           'loan_ready': loanReady,
           'urgent_viewing_required': urgentViewingRequired,
+          'tenure_preference': tenurePreference,
+          'parking_bays_min': parkingBaysMin,
+          'floor_level_min': floorLevelMin,
+          'furnishing_preference': furnishingPreference,
         })
         .select()
         .single();
