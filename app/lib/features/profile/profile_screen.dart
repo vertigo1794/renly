@@ -18,6 +18,7 @@ import '../auth/auth_providers.dart';
 import '../listing/listing_formatting.dart';
 import '../notifications/notification_providers.dart';
 import '../ratings/rating_providers.dart' hide currentNegotiatorIdProvider;
+import '../settings/settings_providers.dart' hide currentNegotiatorIdProvider;
 import 'models/profile.dart';
 import 'profile_providers.dart';
 
@@ -248,6 +249,8 @@ class ProfileScreen extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 20),
+                  _CoBrokingPreferencesCard(negotiatorId: profile.negotiatorId, territory: profile.territory),
+                  const SizedBox(height: 20),
                   Text('profile_language_label'.tr(), style: Theme.of(context).textTheme.titleMedium),
                   const SizedBox(height: 8),
                   SegmentedButton<String>(
@@ -338,6 +341,89 @@ class _TrustScoreCard extends ConsumerWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _CoBrokingPreferencesCard extends ConsumerStatefulWidget {
+  const _CoBrokingPreferencesCard({required this.negotiatorId, required this.territory});
+
+  final String negotiatorId;
+  final String? territory;
+
+  @override
+  ConsumerState<_CoBrokingPreferencesCard> createState() => _CoBrokingPreferencesCardState();
+}
+
+class _CoBrokingPreferencesCardState extends ConsumerState<_CoBrokingPreferencesCard> {
+  // Same optimistic-override pattern as NotificationSettingsScreen._toggle
+  // -- the switch's thumb moves the instant it's tapped, cleared once the
+  // write+refetch settles (success or failure).
+  bool? _matchOverride;
+
+  Future<void> _toggleMatch(bool value) async {
+    setState(() => _matchOverride = value);
+    try {
+      await ref.read(settingsRepositoryProvider).updateNotificationPreferences(
+            negotiatorId: widget.negotiatorId,
+            notifyMatch: value,
+          );
+      ref.invalidate(notificationPreferencesProvider);
+      try {
+        await ref.read(notificationPreferencesProvider.future);
+      } catch (_) {
+        // A refetch failure after a successful write shouldn't surface as
+        // a write error -- the write already succeeded.
+      }
+      if (mounted) setState(() => _matchOverride = null);
+    } catch (_) {
+      if (mounted) {
+        setState(() => _matchOverride = null);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('listing_error_generic'.tr())),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final prefsAsync = ref.watch(notificationPreferencesProvider);
+
+    return BrutalistCard(
+      padding: EdgeInsets.zero,
+      child: Material(
+        color: Colors.transparent,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text('profile_cobroking_preferences_title'.tr(), style: Theme.of(context).textTheme.titleMedium),
+              ),
+            ),
+            const Divider(height: 1),
+            prefsAsync.when(
+              loading: () => const SizedBox.shrink(),
+              error: (error, stack) => const SizedBox.shrink(),
+              data: (prefs) => SwitchListTile(
+                title: Text('profile_auto_match_radar_label'.tr()),
+                subtitle: Text('profile_auto_match_radar_subtitle'.tr()),
+                value: _matchOverride ?? prefs.notifyMatch,
+                onChanged: _toggleMatch,
+              ),
+            ),
+            if (widget.territory != null) ...[
+              const Divider(height: 1),
+              ListTile(
+                title: Text('profile_designated_area_label'.tr()),
+                subtitle: Text(widget.territory!),
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }
