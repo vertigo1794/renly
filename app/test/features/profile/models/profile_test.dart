@@ -41,5 +41,26 @@ void main() {
       expect(profile.territory, isNull);
       expect(profile.propertySpecialisation, isNull);
     });
+
+    test('parses avatar_url when present', () {
+      final profile = Profile.fromJson({
+        'negotiator_id': 'n-1',
+        'full_name': 'Aiman Yusof',
+        'verification_status': 'approved',
+        'avatar_url': 'https://example.test/avatar.jpg',
+      });
+
+      expect(profile.avatarUrl, 'https://example.test/avatar.jpg');
+    });
+
+    test('avatar_url is null when absent', () {
+      final profile = Profile.fromJson({
+        'negotiator_id': 'n-1',
+        'full_name': 'Aiman Yusof',
+        'verification_status': 'approved',
+      });
+
+      expect(profile.avatarUrl, isNull);
+    });
   });
 }

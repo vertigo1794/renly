@@ -1,4 +1,6 @@
 // app/lib/features/profile/profile_repository.dart
+import 'dart:typed_data';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'models/profile.dart';
@@ -15,7 +17,7 @@ class ProfileRepository {
   Future<Profile> fetchMyProfile(String negotiatorId) async {
     final row = await _client
         .from('negotiator')
-        .select('negotiator_id, full_name, ren_number, agency_id, territory, property_specialisation, verification_status')
+        .select('negotiator_id, full_name, ren_number, agency_id, territory, property_specialisation, verification_status, avatar_url')
         .eq('negotiator_id', negotiatorId)
         .single();
     final agencyId = row['agency_id'] as String?;
@@ -40,6 +42,34 @@ class ProfileRepository {
       'territory': territory,
       'property_specialisation': propertySpecialisation,
     }).eq('negotiator_id', negotiatorId);
+  }
+
+  /// The `avatar-photos` bucket is public (unlike `listing-photos`/
+  /// `requirement-photos`, both private + signed-URL), so this returns the
+  /// full public URL directly -- no signing step needed at any of this
+  /// URL's 9+ display call sites. Does NOT write `avatar_url` on the
+  /// negotiator row -- callers persist the returned URL via
+  /// [updateAvatarUrl], same two-step split as
+  /// `ListingRepository.uploadListingPhoto`/`updateListingPhotos`.
+  Future<String> uploadAvatar({required String negotiatorId, required Uint8List bytes}) async {
+    final path = '$negotiatorId/avatar.jpg';
+    await _client.storage.from('avatar-photos').uploadBinary(
+          path,
+          bytes,
+          fileOptions: const FileOptions(upsert: true),
+        );
+    return _client.storage.from('avatar-photos').getPublicUrl(path);
+  }
+
+  Future<void> updateAvatarUrl({required String negotiatorId, required String avatarUrl}) {
+    return _client.from('negotiator').update({'avatar_url': avatarUrl}).eq('negotiator_id', negotiatorId);
+  }
+
+  /// Best-effort heartbeat -- see `_PresenceHeartbeat` in main.dart for the
+  /// caller. A failure here (offline, backend hiccup) must never surface an
+  /// error or block the app; callers swallow exceptions from this method.
+  Future<void> updateLastSeen({required String negotiatorId}) {
+    return _client.from('negotiator').update({'last_seen_at': DateTime.now().toIso8601String()}).eq('negotiator_id', negotiatorId);
   }
 
   Future<int> countActiveListings(String negotiatorId) async {

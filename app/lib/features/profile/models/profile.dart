@@ -2,6 +2,9 @@
 /// plus a follow-up `agency` lookup for the firm name. Deliberately
 /// separate from the auth feature's own scoped-down `Negotiator` model
 /// (which only carries the 3 fields the router redirect needs).
+/// `avatarUrl` added for the Negotiator Avatar + Online Presence feature --
+/// a full public URL (the avatar-photos bucket is public), nullable
+/// meaning no photo uploaded yet.
 class Profile {
   final String negotiatorId;
   final String fullName;
@@ -10,6 +13,7 @@ class Profile {
   final String? territory;
   final String? propertySpecialisation;
   final String verificationStatus;
+  final String? avatarUrl;
 
   const Profile({
     required this.negotiatorId,
@@ -19,6 +23,7 @@ class Profile {
     this.territory,
     this.propertySpecialisation,
     required this.verificationStatus,
+    this.avatarUrl,
   });
 
   /// [agencyName] is passed separately because it comes from a second
@@ -33,6 +38,7 @@ class Profile {
       territory: json['territory'] as String?,
       propertySpecialisation: json['property_specialisation'] as String?,
       verificationStatus: json['verification_status'] as String,
+      avatarUrl: json['avatar_url'] as String?,
     );
   }
 }
