@@ -250,6 +250,8 @@ class ProfileScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 20),
                   _CoBrokingPreferencesCard(negotiatorId: profile.negotiatorId, territory: profile.territory),
+                  const SizedBox(height: 12),
+                  const _BiometricStatusRow(),
                   const SizedBox(height: 20),
                   Text('profile_language_label'.tr(), style: Theme.of(context).textTheme.titleMedium),
                   const SizedBox(height: 8),
@@ -424,6 +426,41 @@ class _CoBrokingPreferencesCardState extends ConsumerState<_CoBrokingPreferences
           ],
         ),
       ),
+    );
+  }
+}
+
+class _BiometricStatusRow extends ConsumerWidget {
+  const _BiometricStatusRow();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final availableAsync = ref.watch(biometricAvailableProvider);
+    final enabledAsync = ref.watch(biometricLoginEnabledProvider);
+
+    return availableAsync.when(
+      loading: () => const SizedBox.shrink(),
+      error: (error, stack) => const SizedBox.shrink(),
+      data: (available) {
+        if (!available) return const SizedBox.shrink();
+        return enabledAsync.when(
+          loading: () => const SizedBox.shrink(),
+          error: (error, stack) => const SizedBox.shrink(),
+          data: (enabled) => BrutalistCard(
+            padding: EdgeInsets.zero,
+            child: Material(
+              color: Colors.transparent,
+              child: ListTile(
+                leading: const Icon(Icons.fingerprint),
+                title: Text('profile_biometric_label'.tr()),
+                subtitle: Text(enabled ? 'account_settings_biometric_enabled'.tr() : 'account_settings_biometric_disabled'.tr()),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push('/settings/account'),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

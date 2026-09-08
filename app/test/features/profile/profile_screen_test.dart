@@ -11,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:renly/core/theme/app_theme.dart';
 import 'package:renly/core/widgets/negotiator_avatar.dart';
+import 'package:renly/features/auth/auth_providers.dart';
 import 'package:renly/features/notifications/notification_providers.dart';
 import 'package:renly/features/profile/models/profile.dart';
 import 'package:renly/features/profile/profile_providers.dart';
@@ -36,6 +37,8 @@ Widget _wrap(
   (int, int, double)? counts,
   List<RatingCandidate>? ratings,
   NotificationPreferences? notificationPreferences,
+  bool biometricAvailable = false,
+  bool biometricEnabled = false,
 }) {
   return ProviderScope(
     overrides: [
@@ -49,6 +52,8 @@ Widget _wrap(
             notificationPreferences ??
             const NotificationPreferences(notifyMatch: true, notifyMessage: true, notifyCobrokeRequest: true),
       ),
+      biometricAvailableProvider.overrideWith((ref) async => biometricAvailable),
+      biometricLoginEnabledProvider.overrideWith((ref) async => biometricEnabled),
     ],
     child: EasyLocalization(
       supportedLocales: const [Locale('en'), Locale('ms')],
@@ -255,5 +260,33 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Petaling Jaya'), findsOneWidget);
+  });
+
+  testWidgets('shows the real Security & Biometrics status when biometric login is available', (tester) async {
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const ProfileScreen()),
+      GoRoute(path: '/settings/account', builder: (context, state) => const Text('account screen')),
+    ]);
+
+    await tester.pumpWidget(_wrap(router, biometricAvailable: true, biometricEnabled: true));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Security & Biometrics'), findsOneWidget);
+
+    await tester.ensureVisible(find.text('Security & Biometrics'));
+    await tester.tap(find.text('Security & Biometrics'));
+    await tester.pumpAndSettle();
+    expect(find.text('account screen'), findsOneWidget);
+  });
+
+  testWidgets('hides Security & Biometrics when biometric login is unavailable', (tester) async {
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const ProfileScreen()),
+    ]);
+
+    await tester.pumpWidget(_wrap(router, biometricAvailable: false));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Security & Biometrics'), findsNothing);
   });
 }
