@@ -43,7 +43,11 @@ void main() {
         const MaterialApp(home: Scaffold(body: NegotiatorAvatar(fullName: 'Aiman Yusof'))),
       );
 
-      expect(find.byType(Stack), findsNothing);
+      // Scoped to NegotiatorAvatar's own subtree -- a bare find.byType(Stack)
+      // also matches Scaffold's own internal Stack (FAB/body layering),
+      // which exists regardless of isOnline and would make this assertion
+      // fail even when NegotiatorAvatar itself renders no Stack at all.
+      expect(find.descendant(of: find.byType(NegotiatorAvatar), matching: find.byType(Stack)), findsNothing);
     });
 
     testWidgets('shows an online dot when isOnline is true', (tester) async {
@@ -53,7 +57,7 @@ void main() {
         ),
       );
 
-      expect(find.byType(Stack), findsOneWidget);
+      expect(find.descendant(of: find.byType(NegotiatorAvatar), matching: find.byType(Stack)), findsOneWidget);
     });
   });
 }

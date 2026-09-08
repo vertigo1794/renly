@@ -41,6 +41,14 @@ class NegotiatorAvatar extends StatelessWidget {
       radius: size / 2,
       backgroundColor: const Color(0xFF0B0F19),
       backgroundImage: avatarUrl == null ? null : NetworkImage(avatarUrl!),
+      // A broken/unreachable avatarUrl must not crash every one of this
+      // widget's 9+ call sites -- same graceful-degradation intent as
+      // SignedPhoto's own errorBuilder, just via CircleAvatar's own error
+      // callback since backgroundImage (unlike Image.network) has no
+      // errorBuilder param. Swallowed, not logged: a stale/broken photo URL
+      // is an expected, harmless state (e.g. deleted storage object), not
+      // an error worth surfacing.
+      onBackgroundImageError: avatarUrl == null ? null : (exception, stackTrace) {},
       child: avatarUrl != null
           ? null
           : Text(
