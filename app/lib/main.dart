@@ -97,6 +97,7 @@ class _RenlyAppState extends ConsumerState<RenlyApp> with WidgetsBindingObserver
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _startHeartbeat();
     if (!widget.firebaseReady) return;
     _registerToken();
     Supabase.instance.client.auth.onAuthStateChange.listen((_) => _registerToken());
@@ -118,12 +119,22 @@ class _RenlyAppState extends ConsumerState<RenlyApp> with WidgetsBindingObserver
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      _sendHeartbeat();
-      _presenceHeartbeat ??= Timer.periodic(const Duration(seconds: 60), (_) => _sendHeartbeat());
+      _startHeartbeat();
     } else if (state == AppLifecycleState.paused || state == AppLifecycleState.detached) {
       _presenceHeartbeat?.cancel();
       _presenceHeartbeat = null;
     }
+  }
+
+  /// Sends an immediate heartbeat and (re)starts the periodic timer. Called
+  /// unconditionally from initState -- WidgetsBinding consumes the
+  /// platform's initial `resumed` state before initState registers this
+  /// observer, and Flutter dedups a same-state transition, so relying on
+  /// didChangeAppLifecycleState alone would mean a negotiator who opens the
+  /// app and never backgrounds it sends zero heartbeats all session.
+  void _startHeartbeat() {
+    _sendHeartbeat();
+    _presenceHeartbeat ??= Timer.periodic(const Duration(seconds: 60), (_) => _sendHeartbeat());
   }
 
   /// Best-effort, same reasoning as every other push/notification call site

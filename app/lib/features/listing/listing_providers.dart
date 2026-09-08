@@ -30,7 +30,7 @@ final listingDetailProvider = FutureProvider.family<Listing, String>((ref, listi
   return ref.watch(listingRepositoryProvider).fetchListingById(listingId);
 });
 
-final listingOwnerProvider = FutureProvider.family<ListingOwner, String>((ref, negotiatorId) {
+final listingOwnerProvider = FutureProvider.autoDispose.family<ListingOwner, String>((ref, negotiatorId) {
   return ref.watch(listingRepositoryProvider).fetchListingOwner(negotiatorId);
 });
 

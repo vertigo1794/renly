@@ -36,7 +36,7 @@ final requirementDetailProvider = FutureProvider.family<Requirement, String>((re
   return ref.watch(requirementRepositoryProvider).fetchRequirementById(requirementId);
 });
 
-final requirementOwnerProvider = FutureProvider.family<ListingOwner, String>((ref, negotiatorId) {
+final requirementOwnerProvider = FutureProvider.autoDispose.family<ListingOwner, String>((ref, negotiatorId) {
   return ref.watch(requirementRepositoryProvider).fetchRequirementOwner(negotiatorId);
 });
 

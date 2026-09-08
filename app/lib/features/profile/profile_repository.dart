@@ -58,7 +58,15 @@ class ProfileRepository {
           bytes,
           fileOptions: const FileOptions(upsert: true),
         );
-    return _client.storage.from('avatar-photos').getPublicUrl(path);
+    final publicUrl = _client.storage.from('avatar-photos').getPublicUrl(path);
+    // Cache-bust: the storage path is fixed ({negotiatorId}/avatar.jpg), so
+    // getPublicUrl returns the IDENTICAL string on every re-upload. Flutter's
+    // NetworkImage cache (and NegotiatorAvatar's own avatarUrl-changed
+    // detection) is keyed by URL, so without this every already-rendered
+    // avatar for this negotiator would keep showing the old photo bytes
+    // until app restart. Supabase's public URL serving ignores unknown
+    // query params, so this still resolves to the same underlying object.
+    return '$publicUrl?v=${DateTime.now().millisecondsSinceEpoch}';
   }
 
   Future<void> updateAvatarUrl({required String negotiatorId, required String avatarUrl}) {

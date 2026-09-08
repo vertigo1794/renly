@@ -313,13 +313,19 @@ class _EditFormState extends ConsumerState<_EditForm> {
     if (negotiatorId == null) return;
     final picked = await ImagePicker().pickImage(source: ImageSource.gallery, imageQuality: 85);
     if (picked == null) return;
-    setState(() => _uploadingAvatar = true);
+    if (mounted) setState(() => _submitError = null);
     try {
+      if (mounted) setState(() => _uploadingAvatar = true);
       final Uint8List bytes = await picked.readAsBytes();
       final repository = ref.read(profileRepositoryProvider);
       final avatarUrl = await repository.uploadAvatar(negotiatorId: negotiatorId, bytes: bytes);
       await repository.updateAvatarUrl(negotiatorId: negotiatorId, avatarUrl: avatarUrl);
       ref.invalidate(myProfileProvider);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('profile_save_success'.tr())),
+        );
+      }
     } catch (_) {
       if (mounted) setState(() => _submitError = 'listing_error_generic'.tr());
     } finally {
