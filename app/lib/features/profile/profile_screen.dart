@@ -161,6 +161,8 @@ class ProfileScreen extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 20),
+                  _ProfileAvatar(profile: profile),
+                  const SizedBox(height: 20),
                   _EditForm(profile: profile),
                   const SizedBox(height: 20),
                   BrutalistCard(
@@ -340,6 +342,71 @@ class _TrustScoreCard extends ConsumerWidget {
   }
 }
 
+class _ProfileAvatar extends ConsumerStatefulWidget {
+  const _ProfileAvatar({required this.profile});
+
+  final Profile profile;
+
+  @override
+  ConsumerState<_ProfileAvatar> createState() => _ProfileAvatarState();
+}
+
+class _ProfileAvatarState extends ConsumerState<_ProfileAvatar> {
+  bool _uploading = false;
+  String? _error;
+
+  Future<void> _upload() async {
+    final negotiatorId = ref.read(currentNegotiatorIdProvider);
+    if (negotiatorId == null) return;
+    final picked = await ImagePicker().pickImage(source: ImageSource.gallery, imageQuality: 85);
+    if (picked == null) return;
+    if (mounted) setState(() => _error = null);
+    try {
+      if (mounted) setState(() => _uploading = true);
+      final Uint8List bytes = await picked.readAsBytes();
+      final repository = ref.read(profileRepositoryProvider);
+      final avatarUrl = await repository.uploadAvatar(negotiatorId: negotiatorId, bytes: bytes);
+      await repository.updateAvatarUrl(negotiatorId: negotiatorId, avatarUrl: avatarUrl);
+      ref.invalidate(myProfileProvider);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('profile_save_success'.tr())),
+        );
+      }
+    } catch (_) {
+      if (mounted) setState(() => _error = 'listing_error_generic'.tr());
+    } finally {
+      if (mounted) setState(() => _uploading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: GestureDetector(
+        onTap: _uploading ? null : _upload,
+        child: Column(
+          children: [
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                NegotiatorAvatar(fullName: widget.profile.fullName, avatarUrl: widget.profile.avatarUrl, size: 72),
+                if (_uploading) const CircularProgressIndicator(),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text('profile_avatar_upload_hint'.tr(), style: Theme.of(context).textTheme.labelSmall),
+            if (_error != null) ...[
+              const SizedBox(height: 4),
+              Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _EditForm extends ConsumerStatefulWidget {
   const _EditForm({required this.profile});
 
@@ -353,7 +420,7 @@ class _EditFormState extends ConsumerState<_EditForm> {
   late final TextEditingController _territoryController;
   late final TextEditingController _specialisationController;
   bool _submitting = false;
-  bool _uploadingAvatar = false;
+  bool _editing = false;
   String? _submitError;
 
   @override
@@ -386,31 +453,6 @@ class _EditFormState extends ConsumerState<_EditForm> {
     super.dispose();
   }
 
-  Future<void> _uploadAvatar() async {
-    final negotiatorId = ref.read(currentNegotiatorIdProvider);
-    if (negotiatorId == null) return;
-    final picked = await ImagePicker().pickImage(source: ImageSource.gallery, imageQuality: 85);
-    if (picked == null) return;
-    if (mounted) setState(() => _submitError = null);
-    try {
-      if (mounted) setState(() => _uploadingAvatar = true);
-      final Uint8List bytes = await picked.readAsBytes();
-      final repository = ref.read(profileRepositoryProvider);
-      final avatarUrl = await repository.uploadAvatar(negotiatorId: negotiatorId, bytes: bytes);
-      await repository.updateAvatarUrl(negotiatorId: negotiatorId, avatarUrl: avatarUrl);
-      ref.invalidate(myProfileProvider);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('profile_save_success'.tr())),
-        );
-      }
-    } catch (_) {
-      if (mounted) setState(() => _submitError = 'listing_error_generic'.tr());
-    } finally {
-      if (mounted) setState(() => _uploadingAvatar = false);
-    }
-  }
-
   Future<void> _save() async {
     final negotiatorId = ref.read(currentNegotiatorIdProvider);
     if (negotiatorId == null) return;
@@ -438,49 +480,44 @@ class _EditFormState extends ConsumerState<_EditForm> {
     }
   }
 
+  Future<void> _saveAndClose() async {
+    await _save();
+    if (mounted && _submitError == null) setState(() => _editing = false);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Center(
-          child: GestureDetector(
-            onTap: _uploadingAvatar ? null : _uploadAvatar,
-            child: Column(
-              children: [
-                Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    NegotiatorAvatar(fullName: widget.profile.fullName, avatarUrl: widget.profile.avatarUrl, size: 72),
-                    if (_uploadingAvatar) const CircularProgressIndicator(),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text('profile_avatar_upload_hint'.tr(), style: Theme.of(context).textTheme.labelSmall),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 20),
-        TextField(
-          controller: _territoryController,
-          decoration: InputDecoration(labelText: 'profile_territory_label'.tr()),
-        ),
-        const SizedBox(height: 12),
-        TextField(
-          controller: _specialisationController,
-          decoration: InputDecoration(labelText: 'profile_specialisation_label'.tr()),
-        ),
-        if (_submitError != null) ...[
-          const SizedBox(height: 8),
-          Text(_submitError!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
-        ],
-        const SizedBox(height: 12),
         BrutalistButton(
-          label: 'profile_save'.tr(),
-          icon: PhosphorIcons.check(PhosphorIconsStyle.bold),
-          onPressed: _submitting ? null : _save,
+          label: 'profile_edit_button'.tr(),
+          icon: PhosphorIcons.pencilSimple(PhosphorIconsStyle.bold),
+          variant: BrutalistButtonVariant.secondary,
+          onPressed: () => setState(() => _editing = !_editing),
         ),
+        if (_editing) ...[
+          const SizedBox(height: 12),
+          TextField(
+            controller: _territoryController,
+            decoration: InputDecoration(labelText: 'profile_territory_label'.tr()),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _specialisationController,
+            decoration: InputDecoration(labelText: 'profile_specialisation_label'.tr()),
+          ),
+          if (_submitError != null) ...[
+            const SizedBox(height: 8),
+            Text(_submitError!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+          ],
+          const SizedBox(height: 12),
+          BrutalistButton(
+            label: 'profile_save'.tr(),
+            icon: PhosphorIcons.check(PhosphorIconsStyle.bold),
+            onPressed: _submitting ? null : _saveAndClose,
+          ),
+        ],
       ],
     );
   }

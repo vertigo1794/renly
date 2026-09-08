@@ -188,6 +188,23 @@ void main() {
     expect(find.byIcon(PhosphorIcons.bellSimple(PhosphorIconsStyle.bold)), findsOneWidget);
   });
 
+  testWidgets('territory field is hidden until Edit Profile is tapped', (tester) async {
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const ProfileScreen()),
+    ]);
+
+    await tester.pumpWidget(_wrap(router));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Territory'), findsNothing);
+
+    await tester.ensureVisible(find.text('Edit Profile'));
+    await tester.tap(find.text('Edit Profile'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Territory'), findsOneWidget);
+  });
+
   testWidgets('shows the real Co-Broke Volume stat', (tester) async {
     final router = GoRouter(routes: [
       GoRoute(path: '/', builder: (context, state) => const ProfileScreen()),
