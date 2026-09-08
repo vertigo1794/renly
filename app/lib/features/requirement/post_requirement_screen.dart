@@ -328,6 +328,7 @@ class _PostRequirementFormBodyState extends ConsumerState<PostRequirementFormBod
               DropdownButtonFormField<String>(
                 key: const Key('requirement_property_type_field'),
                 initialValue: _propertyType,
+                isExpanded: true,
                 decoration: InputDecoration(labelText: 'listing_field_property_type'.tr()),
                 items: [
                   DropdownMenuItem(value: 'apartment', child: Text('listing_property_type_apartment'.tr())),
@@ -373,6 +374,7 @@ class _PostRequirementFormBodyState extends ConsumerState<PostRequirementFormBod
               DropdownButtonFormField<String>(
                 key: const Key('requirement_state_field'),
                 initialValue: _state,
+                isExpanded: true,
                 decoration: InputDecoration(labelText: 'listing_field_state'.tr()),
                 items: [
                   for (final state in malaysianStates) DropdownMenuItem(value: state, child: Text(state)),
@@ -503,7 +505,13 @@ class _PostRequirementFormBodyState extends ConsumerState<PostRequirementFormBod
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('requirement_field_commission_split'.tr(), style: Theme.of(context).textTheme.labelSmall),
+                  Flexible(
+                    child: Text(
+                      'requirement_field_commission_split'.tr(),
+                      style: Theme.of(context).textTheme.labelSmall,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
                   BroadcastBadge(
                     label: 'requirement_split_standard_badge'.tr(),
                     color: AppColors.primary,

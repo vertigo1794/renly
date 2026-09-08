@@ -211,4 +211,24 @@ void main() {
 
     expect(find.text('preview_units_count'.tr(namedArgs: {'count': '1'})), findsOneWidget);
   });
+
+  testWidgets('renders with no overflow at a realistic 360dp phone width', (tester) async {
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const Scaffold(body: PostRequirementFormBody())),
+    ]);
+
+    final originalSize = tester.view.physicalSize;
+    final originalRatio = tester.view.devicePixelRatio;
+    tester.view.physicalSize = const Size(360, 1600);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(() {
+      tester.view.physicalSize = originalSize;
+      tester.view.devicePixelRatio = originalRatio;
+    });
+
+    await tester.pumpWidget(_wrap(router));
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+  });
 }
