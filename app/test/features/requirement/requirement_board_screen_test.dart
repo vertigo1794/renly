@@ -9,6 +9,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:renly/core/theme/app_theme.dart';
+import 'package:renly/core/widgets/negotiator_avatar.dart';
 import 'package:renly/features/listing/models/listing_owner.dart';
 import 'package:renly/features/requirement/models/requirement.dart';
 import 'package:renly/features/requirement/requirement_board_screen.dart';
@@ -124,5 +125,17 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('No requirements yet'), findsOneWidget);
+  });
+
+  testWidgets('renders a NegotiatorAvatar for each requirement card owner', (tester) async {
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const RequirementBoardScreen()),
+      GoRoute(path: '/requirement-board/:requirementId', builder: (context, state) => const Placeholder()),
+    ]);
+
+    await tester.pumpWidget(_wrap(router));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(NegotiatorAvatar), findsNWidgets(2));
   });
 }

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/widgets/brutalist_button.dart';
+import '../../core/widgets/negotiator_avatar.dart';
 import '../../core/widgets/signed_photo.dart';
 import '../../core/widgets/status_badge.dart';
 import 'models/requirement.dart';
@@ -141,11 +142,22 @@ class _RequirementDetailScreenState extends ConsumerState<RequirementDetailScree
                     return ownerAsync.when(
                       loading: () => const SizedBox.shrink(),
                       error: (error, stack) => const SizedBox.shrink(),
-                      data: (owner) => Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      data: (owner) => Row(
                         children: [
-                          Text(owner.fullName, style: Theme.of(context).textTheme.titleMedium),
-                          Text('REN: ${owner.renNumber}', style: Theme.of(context).textTheme.labelSmall),
+                          NegotiatorAvatar(
+                            fullName: owner.fullName,
+                            avatarUrl: owner.avatarUrl,
+                            isOnline: owner.isOnline,
+                            size: 40,
+                          ),
+                          const SizedBox(width: 10),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(owner.fullName, style: Theme.of(context).textTheme.titleMedium),
+                              Text('REN: ${owner.renNumber}', style: Theme.of(context).textTheme.labelSmall),
+                            ],
+                          ),
                         ],
                       ),
                     );

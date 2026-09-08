@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/brutalist_card.dart';
+import '../../core/widgets/negotiator_avatar.dart';
 import '../../core/widgets/signed_photo.dart';
 import 'models/requirement.dart';
 import 'requirement_formatting.dart';
@@ -156,9 +157,23 @@ class _RequirementBoardScreenState extends ConsumerState<RequirementBoardScreen>
                                           return ownerAsync.when(
                                             loading: () => const SizedBox.shrink(),
                                             error: (error, stack) => const SizedBox.shrink(),
-                                            data: (owner) => Text(
-                                              '${owner.fullName} (REN: ${owner.renNumber})',
-                                              style: Theme.of(context).textTheme.labelSmall,
+                                            data: (owner) => Row(
+                                              children: [
+                                                NegotiatorAvatar(
+                                                  fullName: owner.fullName,
+                                                  avatarUrl: owner.avatarUrl,
+                                                  isOnline: owner.isOnline,
+                                                  size: 24,
+                                                ),
+                                                const SizedBox(width: 6),
+                                                Flexible(
+                                                  child: Text(
+                                                    '${owner.fullName} (REN: ${owner.renNumber})',
+                                                    style: Theme.of(context).textTheme.labelSmall,
+                                                    overflow: TextOverflow.ellipsis,
+                                                  ),
+                                                ),
+                                              ],
                                             ),
                                           );
                                         }),

@@ -9,6 +9,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:renly/core/theme/app_theme.dart';
+import 'package:renly/core/widgets/negotiator_avatar.dart';
 import 'package:renly/features/collaboration/agreement_providers.dart' hide currentNegotiatorIdProvider;
 import 'package:renly/features/collaboration/cobroke_request_providers.dart';
 import 'package:renly/features/collaboration/models/agreement.dart';
@@ -560,5 +561,16 @@ void main() {
     expect(find.text('You rated: 2'), findsOneWidget);
     expect(find.text('Rate'), findsNothing);
     expect(find.text('Edit rating'), findsNothing);
+  });
+
+  testWidgets('renders a NegotiatorAvatar for the counterparty owner', (tester) async {
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const MyRequestsScreen()),
+    ]);
+
+    await tester.pumpWidget(_wrap(router));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(NegotiatorAvatar), findsOneWidget);
   });
 }

@@ -7,6 +7,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../core/widgets/brutalist_button.dart';
 import '../../core/widgets/brutalist_card.dart';
+import '../../core/widgets/negotiator_avatar.dart';
 import 'agreement_providers.dart' hide currentNegotiatorIdProvider;
 import 'cobroke_request_providers.dart';
 import 'models/cobroke_request_candidate.dart';
@@ -126,9 +127,23 @@ class _RequestList extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        '${counterpartyOwner.fullName} (REN: ${counterpartyOwner.renNumber})',
-                        style: Theme.of(context).textTheme.titleMedium,
+                      Row(
+                        children: [
+                          NegotiatorAvatar(
+                            fullName: counterpartyOwner.fullName,
+                            avatarUrl: counterpartyOwner.avatarUrl,
+                            isOnline: counterpartyOwner.isOnline,
+                            size: 32,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              '${counterpartyOwner.fullName} (REN: ${counterpartyOwner.renNumber})',
+                              style: Theme.of(context).textTheme.titleMedium,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 4),
                       Text('${candidate.match.score}/100'),

@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:renly/core/theme/app_theme.dart';
 import 'package:renly/core/widgets/brutalist_button.dart';
+import 'package:renly/core/widgets/negotiator_avatar.dart';
 import 'package:renly/features/listing/models/listing_owner.dart';
 import 'package:renly/features/requirement/models/requirement.dart';
 import 'package:renly/features/requirement/requirement_detail_screen.dart';
@@ -170,5 +171,16 @@ void main() {
       find.widgetWithText(BrutalistButton, 'requirement_reactivate'.tr()),
     );
     expect(reactivateButton.onPressed, isNotNull);
+  });
+
+  testWidgets('renders a NegotiatorAvatar for the requirement owner', (tester) async {
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const RequirementDetailScreen(requirementId: 'r-1')),
+    ]);
+
+    await tester.pumpWidget(_wrap(router));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(NegotiatorAvatar), findsOneWidget);
   });
 }
