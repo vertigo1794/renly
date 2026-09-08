@@ -44,99 +44,141 @@ class ProfileScreen extends ConsumerWidget {
     final ownProfile = profileAsync.valueOrNull;
 
     return Scaffold(
-      appBar: AppBar(
-        titleSpacing: 0,
-        title: Row(
-          children: [
-            const RStarBadge(size: 28),
-            const SizedBox(width: 8),
-            Text(
-              'app_name'.tr(),
-              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                    color: AppColors.ink,
-                    fontSize: 20,
-                    letterSpacing: -1.0,
-                    height: 1,
-                  ),
-            ),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: Icon(PhosphorIcons.shareNetwork(PhosphorIconsStyle.bold)),
-            onPressed: ownProfile == null
-                ? null
-                : () => SharePlus.instance.share(
-                      ShareParams(text: 'REN ${ownProfile.renNumber ?? '-'} • ${ownProfile.fullName}'),
-                    ),
-          ),
-          Stack(
-            children: [
-              IconButton(
-                icon: Icon(PhosphorIcons.bellSimple(PhosphorIconsStyle.bold)),
-                onPressed: () => context.push('/notifications'),
-              ),
-              if (unreadCount > 0)
-                Positioned(
-                  right: 8,
-                  top: 8,
-                  child: Container(
-                    width: 8,
-                    height: 8,
-                    decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
+      // Same bg tone as conversation_list_screen.dart/marketplace_screen.dart
+      // -- the header below now matches those screens' own header structure
+      // exactly (a plain Row in the body, not a Scaffold AppBar), so the
+      // page behind it should match too.
+      backgroundColor: const Color(0xFFF9FAF7),
       body: SafeArea(
-        child: profileAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, stack) => Center(child: Text('listing_error_generic'.tr())),
-          // Pull-to-refresh restores what this screen lost when '/profile'
-          // became a StatefulShellRoute.indexedStack branch: as a pushed
-          // route it disposed on pop, so myProfileProvider/profileCountsProvider
-          // (both autoDispose, refetch-on-entry) refetched on the next visit.
-          // The shell keeps every branch mounted for the whole session, so
-          // without this the listing/deal counts go stale until app restart.
-          data: (profile) => RefreshIndicator(
-            onRefresh: () async {
-              ref.invalidate(myProfileProvider);
-              ref.invalidate(profileCountsProvider);
-            },
-            child: SingleChildScrollView(
-              // Required, not decoration: the profile body is often shorter
-              // than the viewport, and a non-scrollable child gives
-              // RefreshIndicator no drag gesture to attach to.
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+        child: Column(
+          children: [
+            // Plain Row in the body, not an AppBar -- mirrors
+            // conversation_list_screen.dart's own header exactly (this
+            // screen is a bottom-tab root like Chat/Marketplace, not a
+            // pushed route like Property Detail, which is the one screen
+            // that legitimately uses a real AppBar with a back button).
+            // An AppBar's title slot reserves layout space differently and
+            // was pushing the wordmark further right than this screen's
+            // siblings render it.
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+              child: Row(
                 children: [
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Text(profile.fullName, style: Theme.of(context).textTheme.headlineMedium, overflow: TextOverflow.ellipsis),
-                      ),
-                      if (profile.verificationStatus == 'approved') ...[
-                        const SizedBox(width: 6),
-                        Icon(
-                          PhosphorIcons.sealCheck(PhosphorIconsStyle.fill),
-                          size: 18,
-                          color: const Color(0xFF059669),
-                          semanticLabel: _statusLabel(profile.verificationStatus),
+                  const RStarBadge(size: 28),
+                  const SizedBox(width: 8),
+                  Text(
+                    'app_name'.tr(),
+                    style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                          color: AppColors.ink,
+                          fontSize: 20,
+                          letterSpacing: -1.0,
+                          height: 1,
                         ),
-                      ],
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    icon: Icon(PhosphorIcons.shareNetwork(PhosphorIconsStyle.bold)),
+                    onPressed: ownProfile == null
+                        ? null
+                        : () => SharePlus.instance.share(
+                              ShareParams(text: 'REN ${ownProfile.renNumber ?? '-'} • ${ownProfile.fullName}'),
+                            ),
+                  ),
+                  Stack(
+                    children: [
+                      IconButton(
+                        icon: Icon(PhosphorIcons.bellSimple(PhosphorIconsStyle.bold)),
+                        onPressed: () => context.push('/notifications'),
+                      ),
+                      if (unreadCount > 0)
+                        Positioned(
+                          right: 8,
+                          top: 8,
+                          child: Container(
+                            width: 8,
+                            height: 8,
+                            decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                          ),
+                        ),
                     ],
                   ),
-                  const SizedBox(height: 4),
-                  Chip(label: Text(_statusLabel(profile.verificationStatus))),
-                  const SizedBox(height: 12),
-                  Text('${'profile_ren_number_label'.tr()}: ${profile.renNumber ?? '-'}'),
-                  const SizedBox(height: 4),
-                  Text('${'profile_agency_label'.tr()}: ${profile.agencyName ?? '-'}'),
+                ],
+              ),
+            ),
+            Expanded(
+              child: profileAsync.when(
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (error, stack) => Center(child: Text('listing_error_generic'.tr())),
+                // Pull-to-refresh restores what this screen lost when '/profile'
+                // became a StatefulShellRoute.indexedStack branch: as a pushed
+                // route it disposed on pop, so myProfileProvider/profileCountsProvider
+                // (both autoDispose, refetch-on-entry) refetched on the next visit.
+                // The shell keeps every branch mounted for the whole session, so
+                // without this the listing/deal counts go stale until app restart.
+                data: (profile) => RefreshIndicator(
+                  onRefresh: () async {
+                    ref.invalidate(myProfileProvider);
+                    ref.invalidate(profileCountsProvider);
+                  },
+                  child: SingleChildScrollView(
+                    // Required, not decoration: the profile body is often shorter
+                    // than the viewport, and a non-scrollable child gives
+                    // RefreshIndicator no drag gesture to attach to.
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                  // A single bordered/shadowed card for the profile-identity
+                  // section (avatar, name, verified icon, REN/agency, the
+                  // Edit Profile toggle) -- matches the reference mockup's
+                  // own card treatment for this section, instead of these
+                  // elements sitting loose in the page.
+                  BrutalistCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _ProfileAvatar(profile: profile),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Flexible(
+                                        child: Text(profile.fullName, style: Theme.of(context).textTheme.headlineMedium, overflow: TextOverflow.ellipsis),
+                                      ),
+                                      if (profile.verificationStatus == 'approved') ...[
+                                        const SizedBox(width: 6),
+                                        Icon(
+                                          PhosphorIcons.sealCheck(PhosphorIconsStyle.fill),
+                                          size: 18,
+                                          color: const Color(0xFF059669),
+                                          semanticLabel: _statusLabel(profile.verificationStatus),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Chip(label: Text(_statusLabel(profile.verificationStatus))),
+                                  const SizedBox(height: 8),
+                                  Text('${'profile_ren_number_label'.tr()}: ${profile.renNumber ?? '-'}'),
+                                  const SizedBox(height: 4),
+                                  Text('${'profile_agency_label'.tr()}: ${profile.agencyName ?? '-'}'),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        _EditForm(profile: profile),
+                      ],
+                    ),
+                  ),
                   const SizedBox(height: 20),
                   countsAsync.when(
                     loading: () => const SizedBox.shrink(),
@@ -180,10 +222,6 @@ class ProfileScreen extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  _ProfileAvatar(profile: profile),
-                  const SizedBox(height: 20),
-                  _EditForm(profile: profile),
                   const SizedBox(height: 20),
                   BrutalistCard(
                     padding: EdgeInsets.zero,
@@ -299,10 +337,13 @@ class ProfileScreen extends ConsumerWidget {
                       }
                     },
                   ),
-                ],
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ),
-          ),
+          ],
         ),
       ),
     );
@@ -581,7 +622,13 @@ class _ProfileAvatarState extends ConsumerState<_ProfileAvatar> {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
+    // No outer Center -- this now sits beside the name/REN column inside
+    // the profile-identity BrutalistCard (matching the reference mockup's
+    // own avatar-top-left layout), not standalone across the full page
+    // width. SizedBox caps the hint text's width so it wraps onto 2 short
+    // lines instead of forcing the Row wider than the avatar itself.
+    return SizedBox(
+      width: 72,
       child: GestureDetector(
         onTap: _uploading ? null : _upload,
         child: Column(
@@ -594,10 +641,18 @@ class _ProfileAvatarState extends ConsumerState<_ProfileAvatar> {
               ],
             ),
             const SizedBox(height: 6),
-            Text('profile_avatar_upload_hint'.tr(), style: Theme.of(context).textTheme.labelSmall),
+            Text(
+              'profile_avatar_upload_hint'.tr(),
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.labelSmall,
+            ),
             if (_error != null) ...[
               const SizedBox(height: 4),
-              Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+              Text(
+                _error!,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
             ],
           ],
         ),
