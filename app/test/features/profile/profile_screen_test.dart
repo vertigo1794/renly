@@ -174,7 +174,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('No ratings yet'), findsOneWidget);
-    expect(find.text('Trust Score'), findsOneWidget);
+    expect(find.text('TRUST SCORE'), findsOneWidget);
   });
 
   testWidgets('renders the 4 settings rows and navigates to each on tap', (tester) async {
@@ -267,7 +267,7 @@ void main() {
     await tester.pumpWidget(_wrap(router, counts: (5, 3, 250000.0)));
     await tester.pumpAndSettle();
 
-    expect(find.text('Co-Broke Vol.'), findsOneWidget);
+    expect(find.text('CO-BROKE VOL.'), findsOneWidget);
     expect(find.textContaining('250,000'), findsOneWidget);
   });
 

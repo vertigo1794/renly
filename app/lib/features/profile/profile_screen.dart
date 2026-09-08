@@ -50,55 +50,18 @@ class ProfileScreen extends ConsumerWidget {
           children: [
             const RStarBadge(size: 28),
             const SizedBox(width: 8),
-            // Flexible+ellipsis, not a bare Text -- this header has one more
-            // action (the REN pill) than property_detail_screen.dart's own
-            // copy of this pattern, so the title has less room and can run
-            // out of space at narrow widths or larger accessibility text
-            // scales. Same proven-safe fix as BrutalistButton's own label.
-            Flexible(
-              child: Text(
-                'app_name'.tr(),
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                      color: AppColors.ink,
-                      fontSize: 20,
-                      letterSpacing: -1.0,
-                      height: 1,
-                    ),
-              ),
+            Text(
+              'app_name'.tr(),
+              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                    color: AppColors.ink,
+                    fontSize: 20,
+                    letterSpacing: -1.0,
+                    height: 1,
+                  ),
             ),
           ],
         ),
         actions: [
-          profileAsync.maybeWhen(
-            data: (profile) => profile.renNumber == null
-                ? const SizedBox.shrink()
-                : Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      border: Border.all(color: AppColors.ink.withValues(alpha: 0.1)),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 6,
-                          height: 6,
-                          decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle),
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          'REN ${profile.renNumber}',
-                          style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                  ),
-            orElse: () => const SizedBox.shrink(),
-          ),
-          const SizedBox(width: 8),
           IconButton(
             icon: Icon(PhosphorIcons.shareNetwork(PhosphorIconsStyle.bold)),
             onPressed: ownProfile == null
@@ -182,9 +145,21 @@ class ProfileScreen extends ConsumerWidget {
                       children: [
                         Row(
                           children: [
-                            Expanded(child: _StatCard(value: '${counts.$1}', label: 'profile_active_listings_label'.tr())),
+                            Expanded(
+                              child: _StatCard(
+                                value: '${counts.$1}',
+                                label: 'profile_active_listings_label'.tr(),
+                                icon: PhosphorIcons.buildings(PhosphorIconsStyle.bold),
+                              ),
+                            ),
                             const SizedBox(width: 12),
-                            Expanded(child: _StatCard(value: '${counts.$2}', label: 'profile_deals_closed_label'.tr())),
+                            Expanded(
+                              child: _StatCard(
+                                value: '${counts.$2}',
+                                label: 'profile_deals_closed_label'.tr(),
+                                icon: PhosphorIcons.handshake(PhosphorIconsStyle.bold),
+                              ),
+                            ),
                           ],
                         ),
                         const SizedBox(height: 12),
@@ -196,6 +171,8 @@ class ProfileScreen extends ConsumerWidget {
                               child: _StatCard(
                                 value: ListingFormatting.formatPrice(counts.$3, 'sale'),
                                 label: 'profile_cobroke_volume_label'.tr(),
+                                icon: PhosphorIcons.trendUp(PhosphorIconsStyle.bold),
+                                highlight: true,
                               ),
                             ),
                           ],
@@ -333,21 +310,47 @@ class ProfileScreen extends ConsumerWidget {
 }
 
 class _StatCard extends StatelessWidget {
-  const _StatCard({required this.value, required this.label});
+  const _StatCard({required this.value, required this.label, this.icon, this.highlight = false});
 
   final String value;
   final String label;
+  final IconData? icon;
+
+  /// Purely a visual/style choice (matches the mockup's own lime-highlight
+  /// stat card) -- no data change based on it, defaults false so Active
+  /// Listings/Deals Closed stay plain white.
+  final bool highlight;
 
   @override
   Widget build(BuildContext context) {
+    final backgroundColor = highlight ? AppColors.primary : null;
+    const valueColor = AppColors.ink;
+    const labelColor = Color(0xFF64748B);
     return BrutalistCard(
+      color: backgroundColor,
+      padding: const EdgeInsets.all(12),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Flexible(
+                child: Text(
+                  label.toUpperCase(),
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(color: labelColor, letterSpacing: 0.5),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (icon != null) Icon(icon, size: 16, color: labelColor),
+            ],
+          ),
+          const SizedBox(height: 6),
           FittedBox(
             fit: BoxFit.scaleDown,
-            child: Text(value, maxLines: 1, style: Theme.of(context).textTheme.headlineSmall),
+            child: Text(value, maxLines: 1, style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: valueColor)),
           ),
-          Text(label),
         ],
       ),
     );
@@ -377,10 +380,30 @@ class _TrustScoreCard extends ConsumerWidget {
             borderRadius: BorderRadius.circular(12),
             onTap: () => context.push('/reviews'),
             child: BrutalistCard(
+              color: AppColors.ink,
+              padding: const EdgeInsets.all(12),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(display, style: Theme.of(context).textTheme.headlineSmall),
-                  Text('profile_trust_score_label'.tr()),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          'profile_trust_score_label'.tr().toUpperCase(),
+                          style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Colors.white70, letterSpacing: 0.5),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Icon(PhosphorIcons.star(PhosphorIconsStyle.fill), size: 16, color: AppColors.primary),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(display, maxLines: 1, style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Colors.white)),
+                  ),
                 ],
               ),
             ),
@@ -672,7 +695,7 @@ class _EditFormState extends ConsumerState<_EditForm> {
         BrutalistButton(
           label: 'profile_edit_button'.tr(),
           icon: PhosphorIcons.pencilSimple(PhosphorIconsStyle.bold),
-          variant: BrutalistButtonVariant.secondary,
+          variant: BrutalistButtonVariant.dark,
           onPressed: () => setState(() => _editing = !_editing),
         ),
         if (_editing) ...[
