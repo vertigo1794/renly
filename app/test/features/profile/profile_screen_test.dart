@@ -6,10 +6,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:renly/core/theme/app_theme.dart';
 import 'package:renly/core/widgets/negotiator_avatar.dart';
+import 'package:renly/features/notifications/notification_providers.dart';
 import 'package:renly/features/profile/models/profile.dart';
 import 'package:renly/features/profile/profile_providers.dart';
 import 'package:renly/features/profile/profile_screen.dart';
@@ -33,6 +35,7 @@ Widget _wrap(GoRouter router, {Profile? profile, (int, int)? counts, List<Rating
       myProfileProvider.overrideWith((ref) async => profile ?? _fixtureProfile),
       profileCountsProvider.overrideWith((ref) async => counts ?? (5, 3)),
       ratingsForNegotiatorProvider('n-1').overrideWith((ref) async => ratings ?? const []),
+      unreadNotificationCountProvider.overrideWithValue(0),
     ],
     child: EasyLocalization(
       supportedLocales: const [Locale('en'), Locale('ms')],
@@ -170,5 +173,18 @@ void main() {
 
     expect(find.byType(NegotiatorAvatar), findsOneWidget);
     expect(find.text('profile_avatar_upload_hint'.tr()), findsOneWidget);
+  });
+
+  testWidgets('shows the renly wordmark and a share/bell header', (tester) async {
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const ProfileScreen()),
+    ]);
+
+    await tester.pumpWidget(_wrap(router));
+    await tester.pumpAndSettle();
+
+    expect(find.text('renly'), findsOneWidget);
+    expect(find.byIcon(PhosphorIcons.shareNetwork(PhosphorIconsStyle.bold)), findsOneWidget);
+    expect(find.byIcon(PhosphorIcons.bellSimple(PhosphorIconsStyle.bold)), findsOneWidget);
   });
 }

@@ -7,11 +7,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:share_plus/share_plus.dart';
 
+import '../../core/theme/app_colors.dart';
 import '../../core/widgets/brutalist_button.dart';
 import '../../core/widgets/brutalist_card.dart';
 import '../../core/widgets/negotiator_avatar.dart';
+import '../../core/widgets/r_star_badge.dart';
 import '../auth/auth_providers.dart';
+import '../notifications/notification_providers.dart';
 import '../ratings/rating_providers.dart' hide currentNegotiatorIdProvider;
 import 'models/profile.dart';
 import 'profile_providers.dart';
@@ -34,9 +38,57 @@ class ProfileScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final profileAsync = ref.watch(myProfileProvider);
     final countsAsync = ref.watch(profileCountsProvider);
+    final unreadCount = ref.watch(unreadNotificationCountProvider);
+    final ownProfile = profileAsync.valueOrNull;
 
     return Scaffold(
-      appBar: AppBar(title: Text('profile_title'.tr())),
+      appBar: AppBar(
+        titleSpacing: 0,
+        title: Row(
+          children: [
+            const RStarBadge(size: 28),
+            const SizedBox(width: 8),
+            Text(
+              'app_name'.tr(),
+              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                    color: AppColors.ink,
+                    fontSize: 20,
+                    letterSpacing: -1.0,
+                    height: 1,
+                  ),
+            ),
+          ],
+        ),
+        actions: [
+          IconButton(
+            icon: Icon(PhosphorIcons.shareNetwork(PhosphorIconsStyle.bold)),
+            onPressed: ownProfile == null
+                ? null
+                : () => SharePlus.instance.share(
+                      ShareParams(text: 'REN ${ownProfile.renNumber ?? '-'} • ${ownProfile.fullName}'),
+                    ),
+          ),
+          Stack(
+            children: [
+              IconButton(
+                icon: Icon(PhosphorIcons.bellSimple(PhosphorIconsStyle.bold)),
+                onPressed: () => context.push('/notifications'),
+              ),
+              if (unreadCount > 0)
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
       body: SafeArea(
         child: profileAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
