@@ -13,6 +13,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:renly/core/theme/app_theme.dart';
 import 'package:renly/core/widgets/brutalist_button.dart';
+import 'package:renly/core/widgets/negotiator_avatar.dart';
 import 'package:renly/features/listing/listing_providers.dart';
 import 'package:renly/features/listing/listing_repository.dart';
 import 'package:renly/features/listing/models/listing.dart';
@@ -508,6 +509,17 @@ void main() {
     final average = ratingCandidates.map((c) => c.rating.stars).reduce((a, b) => a + b) / ratingCandidates.length;
     expect(find.text('${average.toStringAsFixed(1)} (${ratingCandidates.length})'), findsOneWidget);
     expect(find.byIcon(PhosphorIcons.star(PhosphorIconsStyle.fill)), findsOneWidget);
+  });
+
+  testWidgets('shows a NegotiatorAvatar for the listing owner', (tester) async {
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const PropertyDetailScreen(listingId: 'l-1')),
+    ]);
+
+    await tester.pumpWidget(_wrap(router));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(NegotiatorAvatar), findsOneWidget);
   });
 
   testWidgets('disables Request Co-Broke when the viewer has no qualifying match for this listing', (tester) async {

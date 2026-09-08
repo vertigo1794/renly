@@ -13,6 +13,7 @@ import 'listing_providers.dart';
 import 'models/listing.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/brutalist_button.dart';
+import '../../core/widgets/negotiator_avatar.dart';
 import '../../core/widgets/r_star_badge.dart';
 import '../collaboration/cobroke_request_providers.dart' hide currentNegotiatorIdProvider;
 import '../collaboration/models/cobroke_request_candidate.dart';
@@ -905,6 +906,13 @@ class _AgentCard extends ConsumerWidget {
           ),
           child: Row(
             children: [
+              NegotiatorAvatar(
+                fullName: owner.fullName,
+                avatarUrl: owner.avatarUrl,
+                isOnline: owner.isOnline,
+                size: 56,
+              ),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
