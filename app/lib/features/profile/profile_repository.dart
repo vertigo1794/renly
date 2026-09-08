@@ -102,4 +102,31 @@ class ProfileRepository {
         .count(CountOption.exact);
     return response.count;
   }
+
+  /// Sums `listing.price` across every accepted agreement this negotiator
+  /// is a party to. No `negotiator_id` filter in the query itself --
+  /// `agreement_select`'s own RLS policy (0009_agreement.sql) already
+  /// scopes visible rows to ones where the current user is a party (the
+  /// agreement's own initiator, or the owner of the underlying match's
+  /// listing/requirement), same reasoning as countDealsClosed() above. The
+  /// `negotiatorId` param exists only for interface symmetry with this
+  /// file's other counting methods.
+  ///
+  /// Returns 0.0 (never null, never a fabricated non-zero fallback) when
+  /// there are no accepted agreements yet -- a real "no volume yet" fact.
+  Future<double> fetchCoBrokeVolume(String negotiatorId) async {
+    final rows = await _client
+        .from('agreement')
+        .select('cobroke_request!inner(match!inner(listing!inner(price)))')
+        .eq('status', 'accepted') as List;
+    var total = 0.0;
+    for (final row in rows) {
+      final cobrokeRequest = row['cobroke_request'] as Map<String, dynamic>?;
+      final match = cobrokeRequest?['match'] as Map<String, dynamic>?;
+      final listing = match?['listing'] as Map<String, dynamic>?;
+      final price = listing?['price'] as num?;
+      if (price != null) total += price.toDouble();
+    }
+    return total;
+  }
 }

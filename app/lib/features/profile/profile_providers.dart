@@ -29,18 +29,22 @@ final myProfileProvider = FutureProvider.autoDispose<Profile>((ref) {
   return ref.watch(profileRepositoryProvider).fetchMyProfile(negotiatorId);
 });
 
-/// (activeListings, dealsClosed) -- both counts fetched concurrently via
-/// Future.wait, not sequential awaits, same concurrent-resolution pattern
-/// established across every prior milestone's repository code.
-final profileCountsProvider = FutureProvider.autoDispose<(int, int)>((ref) async {
+/// (activeListings, dealsClosed, coBrokeVolume) -- all three fetched
+/// concurrently via Future.wait, not sequential awaits, same
+/// concurrent-resolution pattern established across every prior
+/// milestone's repository code. Future.wait<dynamic> since the three
+/// results have different types (int, int, double); each is cast back to
+/// its real type before returning the tuple.
+final profileCountsProvider = FutureProvider.autoDispose<(int, int, double)>((ref) async {
   final negotiatorId = ref.watch(currentNegotiatorIdProvider);
   if (negotiatorId == null) {
     throw StateError('profileCountsProvider watched with no active session');
   }
   final repository = ref.watch(profileRepositoryProvider);
-  final results = await Future.wait([
+  final results = await Future.wait<dynamic>([
     repository.countActiveListings(negotiatorId),
     repository.countDealsClosed(),
+    repository.fetchCoBrokeVolume(negotiatorId),
   ]);
-  return (results[0], results[1]);
+  return (results[0] as int, results[1] as int, results[2] as double);
 });
