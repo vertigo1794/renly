@@ -350,4 +350,27 @@ void main() {
 
     expect(find.text('Security & Biometrics'), findsNothing);
   });
+
+  // Regression for a bug the final review's own fix round introduced: the
+  // header's REN pill (added to match property_detail_screen.dart's own
+  // header) leaves this screen with one more AppBar action than that
+  // screen has, so the bare wordmark Text (no Flexible/ellipsis) could
+  // overflow at narrow widths -- verified empirically: temporarily
+  // removing the Flexible wrapper makes this test fail with a RenderFlex
+  // overflow exception at 320dp; restoring it (the shipped fix) passes.
+  testWidgets('renders the header with no overflow at 320dp', (tester) async {
+    tester.view.physicalSize = const Size(320, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const ProfileScreen()),
+    ]);
+
+    await tester.pumpWidget(_wrap(router));
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+  });
 }

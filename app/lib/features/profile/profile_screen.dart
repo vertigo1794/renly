@@ -50,14 +50,22 @@ class ProfileScreen extends ConsumerWidget {
           children: [
             const RStarBadge(size: 28),
             const SizedBox(width: 8),
-            Text(
-              'app_name'.tr(),
-              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                    color: AppColors.ink,
-                    fontSize: 20,
-                    letterSpacing: -1.0,
-                    height: 1,
-                  ),
+            // Flexible+ellipsis, not a bare Text -- this header has one more
+            // action (the REN pill) than property_detail_screen.dart's own
+            // copy of this pattern, so the title has less room and can run
+            // out of space at narrow widths or larger accessibility text
+            // scales. Same proven-safe fix as BrutalistButton's own label.
+            Flexible(
+              child: Text(
+                'app_name'.tr(),
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                      color: AppColors.ink,
+                      fontSize: 20,
+                      letterSpacing: -1.0,
+                      height: 1,
+                    ),
+              ),
             ),
           ],
         ),
