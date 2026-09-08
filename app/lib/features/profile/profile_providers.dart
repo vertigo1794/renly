@@ -32,7 +32,7 @@ final myProfileProvider = FutureProvider.autoDispose<Profile>((ref) {
 /// (activeListings, dealsClosed, coBrokeVolume) -- all three fetched
 /// concurrently via Future.wait, not sequential awaits, same
 /// concurrent-resolution pattern established across every prior
-/// milestone's repository code. Future.wait<dynamic> since the three
+/// milestone's repository code. `Future.wait<dynamic>` since the three
 /// results have different types (int, int, double); each is cast back to
 /// its real type before returning the tuple.
 final profileCountsProvider = FutureProvider.autoDispose<(int, int, double)>((ref) async {

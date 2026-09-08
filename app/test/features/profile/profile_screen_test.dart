@@ -28,12 +28,12 @@ const _fixtureProfile = Profile(
   verificationStatus: 'approved',
 );
 
-Widget _wrap(GoRouter router, {Profile? profile, (int, int)? counts, List<RatingCandidate>? ratings}) {
+Widget _wrap(GoRouter router, {Profile? profile, (int, int, double)? counts, List<RatingCandidate>? ratings}) {
   return ProviderScope(
     overrides: [
       currentNegotiatorIdProvider.overrideWithValue('n-1'),
       myProfileProvider.overrideWith((ref) async => profile ?? _fixtureProfile),
-      profileCountsProvider.overrideWith((ref) async => counts ?? (5, 3)),
+      profileCountsProvider.overrideWith((ref) async => counts ?? (5, 3, 125000.0)),
       ratingsForNegotiatorProvider('n-1').overrideWith((ref) async => ratings ?? const []),
       unreadNotificationCountProvider.overrideWithValue(0),
     ],
@@ -186,5 +186,17 @@ void main() {
     expect(find.text('renly'), findsOneWidget);
     expect(find.byIcon(PhosphorIcons.shareNetwork(PhosphorIconsStyle.bold)), findsOneWidget);
     expect(find.byIcon(PhosphorIcons.bellSimple(PhosphorIconsStyle.bold)), findsOneWidget);
+  });
+
+  testWidgets('shows the real Co-Broke Volume stat', (tester) async {
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const ProfileScreen()),
+    ]);
+
+    await tester.pumpWidget(_wrap(router, counts: (5, 3, 250000.0)));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Co-Broke Vol.'), findsOneWidget);
+    expect(find.textContaining('250,000'), findsOneWidget);
   });
 }

@@ -15,6 +15,7 @@ import '../../core/widgets/brutalist_card.dart';
 import '../../core/widgets/negotiator_avatar.dart';
 import '../../core/widgets/r_star_badge.dart';
 import '../auth/auth_providers.dart';
+import '../listing/listing_formatting.dart';
 import '../notifications/notification_providers.dart';
 import '../ratings/rating_providers.dart' hide currentNegotiatorIdProvider;
 import 'models/profile.dart';
@@ -113,7 +114,17 @@ class ProfileScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(profile.fullName, style: Theme.of(context).textTheme.headlineMedium),
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(profile.fullName, style: Theme.of(context).textTheme.headlineMedium, overflow: TextOverflow.ellipsis),
+                      ),
+                      if (profile.verificationStatus == 'approved') ...[
+                        const SizedBox(width: 6),
+                        Icon(PhosphorIcons.sealCheck(PhosphorIconsStyle.fill), size: 18, color: const Color(0xFF059669)),
+                      ],
+                    ],
+                  ),
                   const SizedBox(height: 4),
                   Chip(label: Text(_statusLabel(profile.verificationStatus))),
                   const SizedBox(height: 12),
@@ -124,13 +135,28 @@ class ProfileScreen extends ConsumerWidget {
                   countsAsync.when(
                     loading: () => const SizedBox.shrink(),
                     error: (error, stack) => const SizedBox.shrink(),
-                    data: (counts) => Row(
+                    data: (counts) => Column(
                       children: [
-                        Expanded(child: _StatCard(value: '${counts.$1}', label: 'profile_active_listings_label'.tr())),
-                        const SizedBox(width: 12),
-                        Expanded(child: _StatCard(value: '${counts.$2}', label: 'profile_deals_closed_label'.tr())),
-                        const SizedBox(width: 12),
-                        Expanded(child: _TrustScoreCard(negotiatorId: profile.negotiatorId)),
+                        Row(
+                          children: [
+                            Expanded(child: _StatCard(value: '${counts.$1}', label: 'profile_active_listings_label'.tr())),
+                            const SizedBox(width: 12),
+                            Expanded(child: _StatCard(value: '${counts.$2}', label: 'profile_deals_closed_label'.tr())),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(child: _TrustScoreCard(negotiatorId: profile.negotiatorId)),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _StatCard(
+                                value: ListingFormatting.formatPrice(counts.$3, 'sale'),
+                                label: 'profile_cobroke_volume_label'.tr(),
+                              ),
+                            ),
+                          ],
+                        ),
                       ],
                     ),
                   ),
