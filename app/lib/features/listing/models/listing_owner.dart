@@ -8,18 +8,26 @@
 /// `verificationStatus` added for the Property Detail Ultra-Premium
 /// Restyle's real verified-checkmark -- nullable for the same reason as
 /// every other optional field here (absent means unknown, never assumed
-/// approved).
+/// approved). `avatarUrl`/`isOnline` added for the Negotiator Avatar +
+/// Online Presence feature -- `avatarUrl` is a full public URL (the
+/// avatar-photos bucket is public), nullable meaning no photo uploaded yet;
+/// `isOnline` is computed server-side by the RPC from `last_seen_at`,
+/// defaults false (never assumed online).
 class ListingOwner {
   final String fullName;
   final String renNumber;
   final String? agencyName;
   final String? verificationStatus;
+  final String? avatarUrl;
+  final bool isOnline;
 
   const ListingOwner({
     required this.fullName,
     required this.renNumber,
     this.agencyName,
     this.verificationStatus,
+    this.avatarUrl,
+    this.isOnline = false,
   });
 
   factory ListingOwner.fromJson(Map<String, dynamic> json) {
@@ -28,6 +36,8 @@ class ListingOwner {
       renNumber: json['ren_number'] as String? ?? '',
       agencyName: json['agency_name'] as String?,
       verificationStatus: json['verification_status'] as String?,
+      avatarUrl: json['avatar_url'] as String?,
+      isOnline: json['is_online'] as bool? ?? false,
     );
   }
 }
