@@ -9,6 +9,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:renly/core/theme/app_theme.dart';
+import 'package:renly/core/widgets/negotiator_avatar.dart';
 import 'package:renly/features/listing/models/listing.dart';
 import 'package:renly/features/listing/models/listing_owner.dart';
 import 'package:renly/features/matching/matching_providers.dart';
@@ -176,5 +177,18 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('property-detail-l-2'), findsOneWidget);
+  });
+
+  testWidgets('renders a NegotiatorAvatar for both my-listing and my-requirement matches', (tester) async {
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const MyMatchesScreen()),
+      GoRoute(path: '/requirement-board/:requirementId', builder: (context, state) => const Placeholder()),
+      GoRoute(path: '/property/:listingId', builder: (context, state) => const Placeholder()),
+    ]);
+
+    await tester.pumpWidget(_wrap(router));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(NegotiatorAvatar), findsNWidgets(2));
   });
 }

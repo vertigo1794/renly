@@ -8,6 +8,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:renly/core/theme/app_theme.dart';
+import 'package:renly/core/widgets/negotiator_avatar.dart';
 import 'package:renly/features/listing/models/listing.dart';
 import 'package:renly/features/listing/models/listing_owner.dart';
 import 'package:renly/features/matching/matches_for_requirement_screen.dart';
@@ -103,6 +104,18 @@ void main() {
     expect(find.text('RM 400,000'), findsOneWidget);
     expect(find.text('Petaling Jaya'), findsOneWidget);
     expect(find.text('Aiman Yusof (REN: 12345)'), findsOneWidget);
+  });
+
+  testWidgets('renders a NegotiatorAvatar for the listing owner', (tester) async {
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const MatchesForRequirementScreen(requirementId: 'r-1')),
+      GoRoute(path: '/property/:listingId', builder: (context, state) => const Placeholder()),
+    ]);
+
+    await tester.pumpWidget(_wrap(router));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(NegotiatorAvatar), findsOneWidget);
   });
 
   testWidgets('tapping a match navigates to the property detail route', (tester) async {

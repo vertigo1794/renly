@@ -7,6 +7,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/brutalist_button.dart';
 import '../../core/widgets/brutalist_card.dart';
+import '../../core/widgets/negotiator_avatar.dart';
 import '../collaboration/send_cobroke_request_action.dart';
 import '../listing/listing_formatting.dart';
 import 'matching_providers.dart';
@@ -70,9 +71,23 @@ class MatchesForRequirementScreen extends ConsumerWidget {
                           const SizedBox(height: 4),
                           Text(listing.area, style: Theme.of(context).textTheme.labelSmall),
                           const SizedBox(height: 4),
-                          Text(
-                            '${candidate.listingOwner.fullName} (REN: ${candidate.listingOwner.renNumber})',
-                            style: Theme.of(context).textTheme.labelSmall,
+                          Row(
+                            children: [
+                              NegotiatorAvatar(
+                                fullName: candidate.listingOwner.fullName,
+                                avatarUrl: candidate.listingOwner.avatarUrl,
+                                isOnline: candidate.listingOwner.isOnline,
+                                size: 28,
+                              ),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  '${candidate.listingOwner.fullName} (REN: ${candidate.listingOwner.renNumber})',
+                                  style: Theme.of(context).textTheme.labelSmall,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
                           ),
                           const SizedBox(height: 8),
                           BrutalistButton(
