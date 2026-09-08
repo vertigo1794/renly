@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/negotiator_avatar.dart';
 import '../../core/widgets/r_star_badge.dart';
 import '../matching/matching_providers.dart' hide currentNegotiatorIdProvider;
 import '../matching/models/match_candidate.dart';
@@ -681,13 +682,11 @@ class _MarketplaceCard extends StatelessWidget {
                               error: (error, stack) => const SizedBox.shrink(),
                               data: (owner) => Row(
                                 children: [
-                                  CircleAvatar(
-                                    radius: 15,
-                                    backgroundColor: const Color(0xFF1E293B),
-                                    child: Text(
-                                      owner.fullName.isNotEmpty ? owner.fullName[0].toUpperCase() : '?',
-                                      style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
-                                    ),
+                                  NegotiatorAvatar(
+                                    fullName: owner.fullName,
+                                    avatarUrl: owner.avatarUrl,
+                                    isOnline: owner.isOnline,
+                                    size: 30,
                                   ),
                                   const SizedBox(width: 8),
                                   Expanded(

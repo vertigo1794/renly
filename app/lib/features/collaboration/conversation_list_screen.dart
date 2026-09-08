@@ -7,6 +7,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/negotiator_avatar.dart';
 import '../../core/widgets/r_star_badge.dart';
 import '../listing/broadcast_badge.dart';
 import '../listing/listing_formatting.dart';
@@ -513,13 +514,10 @@ class _ConversationRow extends ConsumerWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CircleAvatar(
-                    radius: 22,
-                    backgroundColor: const Color(0xFF0B0F19),
-                    child: Text(
-                      counterparty.fullName.isNotEmpty ? counterparty.fullName[0].toUpperCase() : '?',
-                      style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold),
-                    ),
+                  NegotiatorAvatar(
+                    fullName: counterparty.fullName,
+                    avatarUrl: counterparty.avatarUrl,
+                    isOnline: counterparty.isOnline,
                   ),
                   const SizedBox(width: 10),
                   Expanded(

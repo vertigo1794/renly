@@ -8,9 +8,11 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:renly/core/theme/app_theme.dart';
+import 'package:renly/core/widgets/negotiator_avatar.dart';
 import 'package:renly/features/listing/listing_providers.dart';
 import 'package:renly/features/listing/marketplace_screen.dart';
 import 'package:renly/features/listing/models/listing.dart';
+import 'package:renly/features/listing/models/listing_owner.dart';
 
 final _fixtureListings = [
   Listing(
@@ -47,10 +49,11 @@ final _fixtureListings = [
   ),
 ];
 
-Widget _wrap(GoRouter router, {List<Listing>? listings}) {
+Widget _wrap(GoRouter router, {List<Listing>? listings, List<Override> extraOverrides = const []}) {
   return ProviderScope(
     overrides: [
       marketplaceListingsProvider.overrideWith((ref) async => listings ?? _fixtureListings),
+      ...extraOverrides,
     ],
     child: EasyLocalization(
       supportedLocales: const [Locale('en'), Locale('ms')],
@@ -133,5 +136,29 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('No listings yet'), findsOneWidget);
+  });
+
+  testWidgets('shows a NegotiatorAvatar for the listing owner', (tester) async {
+    tester.view.physicalSize = const Size(800, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const MarketplaceScreen()),
+      GoRoute(path: '/property/:listingId', builder: (context, state) => const Placeholder()),
+    ]);
+
+    await tester.pumpWidget(_wrap(
+      router,
+      extraOverrides: [
+        listingOwnerProvider.overrideWith(
+          (ref, negotiatorId) async => const ListingOwner(fullName: 'Owner', renNumber: '12345', isOnline: true),
+        ),
+      ],
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(NegotiatorAvatar), findsWidgets);
   });
 }
