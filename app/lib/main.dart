@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -14,6 +16,7 @@ import 'core/theme/app_theme.dart';
 import 'features/notifications/deep_link.dart';
 import 'features/notifications/foreground_suppression.dart';
 import 'features/notifications/notification_providers.dart';
+import 'features/profile/profile_providers.dart';
 
 Future<void> main() async {
   final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
@@ -86,12 +89,14 @@ class RenlyApp extends ConsumerStatefulWidget {
   ConsumerState<RenlyApp> createState() => _RenlyAppState();
 }
 
-class _RenlyAppState extends ConsumerState<RenlyApp> {
+class _RenlyAppState extends ConsumerState<RenlyApp> with WidgetsBindingObserver {
   final _scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
+  Timer? _presenceHeartbeat;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     if (!widget.firebaseReady) return;
     _registerToken();
     Supabase.instance.client.auth.onAuthStateChange.listen((_) => _registerToken());
@@ -101,6 +106,37 @@ class _RenlyAppState extends ConsumerState<RenlyApp> {
     FirebaseMessaging.instance.getInitialMessage().then((message) {
       if (message != null) _navigateFromMessage(message.data);
     });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _presenceHeartbeat?.cancel();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _sendHeartbeat();
+      _presenceHeartbeat ??= Timer.periodic(const Duration(seconds: 60), (_) => _sendHeartbeat());
+    } else if (state == AppLifecycleState.paused || state == AppLifecycleState.detached) {
+      _presenceHeartbeat?.cancel();
+      _presenceHeartbeat = null;
+    }
+  }
+
+  /// Best-effort, same reasoning as every other push/notification call site
+  /// in this file -- a heartbeat failing (offline, backend hiccup) must
+  /// never surface an error or block the app. No-ops when logged out.
+  Future<void> _sendHeartbeat() async {
+    final session = Supabase.instance.client.auth.currentSession;
+    if (session == null) return;
+    try {
+      await ref.read(profileRepositoryProvider).updateLastSeen(negotiatorId: session.user.id);
+    } catch (_) {
+      // Swallowed -- see doc comment above.
+    }
   }
 
   Future<void> _registerToken() async {
