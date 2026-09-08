@@ -161,4 +161,56 @@ void main() {
 
     expect(find.byType(NegotiatorAvatar), findsWidgets);
   });
+
+  // Regression for the Marketplace presence-staleness gap: this screen is a
+  // StatefulShellRoute.indexedStack branch that never disposes, so each
+  // row's own .autoDispose listingOwnerProvider instance stays subscribed
+  // for the whole session and never refetches on its own. Confirms
+  // pull-to-refresh (already this screen's real recovery affordance for
+  // the listings themselves) also invalidates listingOwnerProvider, so a
+  // negotiator's real current online status is reachable without an app
+  // restart.
+  testWidgets('pull-to-refresh picks up a fresh online status for the listing owner', (tester) async {
+    tester.view.physicalSize = const Size(800, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    var fetchCount = 0;
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const MarketplaceScreen()),
+      GoRoute(path: '/property/:listingId', builder: (context, state) => const Placeholder()),
+    ]);
+
+    await tester.pumpWidget(_wrap(
+      router,
+      extraOverrides: [
+        listingOwnerProvider.overrideWith((ref, negotiatorId) async {
+          fetchCount++;
+          return ListingOwner(fullName: 'Owner', renNumber: '12345', isOnline: fetchCount > 1);
+        }),
+      ],
+    ));
+    await tester.pumpAndSettle();
+
+    expect(tester.widget<NegotiatorAvatar>(find.byType(NegotiatorAvatar).first).isOnline, isFalse);
+
+    // tester.state(...).show() rather than a drag/fling gesture -- with
+    // only 2 fixture listings the ListView's content may not exceed the
+    // viewport, and RefreshIndicator's default physics don't reliably
+    // register an overscroll-triggered refresh on short content. .show()
+    // is RefreshIndicatorState's own public API for exactly this case:
+    // it invokes the real onRefresh callback directly, independent of
+    // scroll gesture physics. Not directly awaited -- its own Future only
+    // resolves once frames are pumped forward, so awaiting it before any
+    // pump() call deadlocks (nothing ever advances the animation it's
+    // waiting on).
+    final refresh = tester.state<RefreshIndicatorState>(find.byType(RefreshIndicator)).show();
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+    await refresh;
+    await tester.pumpAndSettle();
+
+    expect(tester.widget<NegotiatorAvatar>(find.byType(NegotiatorAvatar).first).isOnline, isTrue);
+  });
 }

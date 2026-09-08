@@ -161,7 +161,21 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
                         );
 
                   return RefreshIndicator(
-                    onRefresh: () async => ref.invalidate(marketplaceListingsProvider),
+                    // Also invalidates the WHOLE listingOwnerProvider family
+                    // (not one instance) -- Marketplace is a
+                    // StatefulShellRoute.indexedStack branch that never
+                    // disposes, so each row's own .autoDispose provider stays
+                    // subscribed for the whole session and its cached
+                    // avatarUrl/isOnline never refreshes on its own. Pull-to-
+                    // refresh is this screen's existing real recovery
+                    // affordance for stale data (already used for the
+                    // listings themselves); extending it here gives the
+                    // negotiator a working way to see a co-broker's real
+                    // current online status without an app restart.
+                    onRefresh: () async {
+                      ref.invalidate(marketplaceListingsProvider);
+                      ref.invalidate(listingOwnerProvider);
+                    },
                     child: ListView(
                       padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
                       children: [
