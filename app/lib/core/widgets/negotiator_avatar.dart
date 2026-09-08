@@ -21,7 +21,15 @@ import '../theme/app_colors.dart';
 /// off it) -- default 44 matches `conversation_list_screen.dart`'s
 /// pre-existing radius-22 visual, so that call site's own replacement is a
 /// drop-in with zero visual change beyond the new photo/dot capability.
-class NegotiatorAvatar extends StatelessWidget {
+///
+/// A `StatefulWidget`, not stateless: a broken/unreachable [avatarUrl] (a
+/// deleted storage object, a transient network failure) must fall back to
+/// the initials -- the same graceful-degradation SignedPhoto's own
+/// `errorBuilder` provides -- rather than silently rendering a blank
+/// colored disc. `CircleAvatar.backgroundImage` has no `errorBuilder`
+/// param (unlike `Image.network`), so this state flip is done by hand via
+/// `onBackgroundImageError`.
+class NegotiatorAvatar extends StatefulWidget {
   const NegotiatorAvatar({
     required this.fullName,
     this.avatarUrl,
@@ -36,28 +44,48 @@ class NegotiatorAvatar extends StatelessWidget {
   final double size;
 
   @override
+  State<NegotiatorAvatar> createState() => _NegotiatorAvatarState();
+}
+
+class _NegotiatorAvatarState extends State<NegotiatorAvatar> {
+  bool _imageFailed = false;
+
+  @override
+  void didUpdateWidget(covariant NegotiatorAvatar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // A new avatarUrl (e.g. after a re-upload) deserves a fresh attempt --
+    // otherwise a negotiator who fixes their broken photo would stay stuck
+    // showing initials until this widget's State is recreated from scratch.
+    if (widget.avatarUrl != oldWidget.avatarUrl) {
+      _imageFailed = false;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final showImage = widget.avatarUrl != null && !_imageFailed;
     final circle = CircleAvatar(
-      radius: size / 2,
+      radius: widget.size / 2,
       backgroundColor: const Color(0xFF0B0F19),
-      backgroundImage: avatarUrl == null ? null : NetworkImage(avatarUrl!),
-      // A broken/unreachable avatarUrl must not crash every one of this
-      // widget's 9+ call sites -- same graceful-degradation intent as
-      // SignedPhoto's own errorBuilder, just via CircleAvatar's own error
-      // callback since backgroundImage (unlike Image.network) has no
-      // errorBuilder param. Swallowed, not logged: a stale/broken photo URL
-      // is an expected, harmless state (e.g. deleted storage object), not
-      // an error worth surfacing.
-      onBackgroundImageError: avatarUrl == null ? null : (exception, stackTrace) {},
-      child: avatarUrl != null
+      backgroundImage: showImage ? NetworkImage(widget.avatarUrl!) : null,
+      onBackgroundImageError: showImage
+          ? (exception, stackTrace) {
+              // Swallowed, not logged: a stale/broken photo URL is an
+              // expected, harmless state (e.g. deleted storage object),
+              // not an error worth surfacing -- falls back to initials
+              // below via setState.
+              if (mounted) setState(() => _imageFailed = true);
+            }
+          : null,
+      child: showImage
           ? null
           : Text(
-              fullName.isNotEmpty ? fullName[0].toUpperCase() : '?',
-              style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: size * 16 / 44),
+              widget.fullName.isNotEmpty ? widget.fullName[0].toUpperCase() : '?',
+              style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: widget.size * 16 / 44),
             ),
     );
 
-    if (!isOnline) return circle;
+    if (!widget.isOnline) return circle;
 
     return Stack(
       clipBehavior: Clip.none,
@@ -67,12 +95,12 @@ class NegotiatorAvatar extends StatelessWidget {
           right: 0,
           bottom: 0,
           child: Container(
-            width: size * 12 / 44,
-            height: size * 12 / 44,
+            width: widget.size * 12 / 44,
+            height: widget.size * 12 / 44,
             decoration: BoxDecoration(
               color: const Color(0xFF22C55E),
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: size * 2 / 44),
+              border: Border.all(color: Colors.white, width: widget.size * 2 / 44),
             ),
           ),
         ),

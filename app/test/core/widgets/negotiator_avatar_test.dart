@@ -38,6 +38,24 @@ void main() {
       expect(find.text('A'), findsNothing);
     });
 
+    testWidgets('falls back to initials if the network image fails to load', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: NegotiatorAvatar(fullName: 'Aiman Yusof', avatarUrl: 'https://example.test/broken.jpg'),
+          ),
+        ),
+      );
+
+      // flutter_test's HttpClient always returns 400 -- let that failure
+      // actually resolve and flow through onBackgroundImageError's setState.
+      await tester.pumpAndSettle();
+
+      expect(find.text('A'), findsOneWidget);
+      final avatar = tester.widget<CircleAvatar>(find.byType(CircleAvatar));
+      expect(avatar.backgroundImage, isNull);
+    });
+
     testWidgets('shows no online dot when isOnline is false', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(home: Scaffold(body: NegotiatorAvatar(fullName: 'Aiman Yusof'))),
