@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:renly/core/theme/app_theme.dart';
 import 'package:renly/core/widgets/negotiator_avatar.dart';
@@ -20,6 +21,39 @@ import 'package:renly/features/ratings/models/rating_candidate.dart';
 import 'package:renly/features/ratings/rating_providers.dart' hide currentNegotiatorIdProvider;
 import 'package:renly/features/settings/models/notification_preferences.dart';
 import 'package:renly/features/settings/settings_providers.dart' hide currentNegotiatorIdProvider;
+import 'package:renly/features/settings/settings_repository.dart';
+
+/// Never actually invoked -- see the identical class in
+/// post_broadcast_screen_test.dart / post_requirement_screen_test.dart,
+/// which this mirrors.
+class _FakeSupabaseClient implements SupabaseClient {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+/// Records the exact arguments of the last updateNotificationPreferences
+/// call so tests can assert only notifyMatch was ever sent, never
+/// notifyMessage/notifyCobrokeRequest, for the Auto-Match Radar toggle.
+class _FakeSettingsRepository extends SettingsRepository {
+  _FakeSettingsRepository() : super(_FakeSupabaseClient());
+
+  Map<String, dynamic>? lastCall;
+
+  @override
+  Future<void> updateNotificationPreferences({
+    required String negotiatorId,
+    bool? notifyMatch,
+    bool? notifyMessage,
+    bool? notifyCobrokeRequest,
+  }) async {
+    lastCall = {
+      'negotiatorId': negotiatorId,
+      'notifyMatch': notifyMatch,
+      'notifyMessage': notifyMessage,
+      'notifyCobrokeRequest': notifyCobrokeRequest,
+    };
+  }
+}
 
 const _fixtureProfile = Profile(
   negotiatorId: 'n-1',
@@ -39,6 +73,7 @@ Widget _wrap(
   NotificationPreferences? notificationPreferences,
   bool biometricAvailable = false,
   bool biometricEnabled = false,
+  SettingsRepository? settingsRepository,
 }) {
   return ProviderScope(
     overrides: [
@@ -54,6 +89,7 @@ Widget _wrap(
       ),
       biometricAvailableProvider.overrideWith((ref) async => biometricAvailable),
       biometricLoginEnabledProvider.overrideWith((ref) async => biometricEnabled),
+      settingsRepositoryProvider.overrideWithValue(settingsRepository ?? _FakeSettingsRepository()),
     ],
     child: EasyLocalization(
       supportedLocales: const [Locale('en'), Locale('ms')],
@@ -235,7 +271,7 @@ void main() {
     expect(find.textContaining('250,000'), findsOneWidget);
   });
 
-  testWidgets('Auto-Match Radar reflects and updates the real notifyMatch preference', (tester) async {
+  testWidgets('Auto-Match Radar reflects the real notifyMatch preference', (tester) async {
     final router = GoRouter(routes: [
       GoRoute(path: '/', builder: (context, state) => const ProfileScreen()),
     ]);
@@ -249,6 +285,31 @@ void main() {
     final switchFinder = find.byType(SwitchListTile).first;
     final switchWidget = tester.widget<SwitchListTile>(switchFinder);
     expect(switchWidget.value, isFalse);
+  });
+
+  testWidgets('tapping Auto-Match Radar calls updateNotificationPreferences with ONLY notifyMatch set', (tester) async {
+    final fakeSettings = _FakeSettingsRepository();
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const ProfileScreen()),
+    ]);
+
+    await tester.pumpWidget(_wrap(
+      router,
+      settingsRepository: fakeSettings,
+      notificationPreferences: const NotificationPreferences(notifyMatch: false, notifyMessage: true, notifyCobrokeRequest: true),
+    ));
+    await tester.pumpAndSettle();
+
+    final switchFinder = find.byType(SwitchListTile).first;
+    await tester.ensureVisible(switchFinder);
+    await tester.tap(switchFinder);
+    await tester.pump();
+    await tester.pumpAndSettle();
+
+    expect(fakeSettings.lastCall, isNotNull);
+    expect(fakeSettings.lastCall!['notifyMatch'], isTrue);
+    expect(fakeSettings.lastCall!['notifyMessage'], isNull);
+    expect(fakeSettings.lastCall!['notifyCobrokeRequest'], isNull);
   });
 
   testWidgets('shows the real Designated Area when territory is set', (tester) async {

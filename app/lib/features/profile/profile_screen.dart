@@ -62,6 +62,35 @@ class ProfileScreen extends ConsumerWidget {
           ],
         ),
         actions: [
+          profileAsync.maybeWhen(
+            data: (profile) => profile.renNumber == null
+                ? const SizedBox.shrink()
+                : Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      border: Border.all(color: AppColors.ink.withValues(alpha: 0.1)),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 6,
+                          height: 6,
+                          decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          'REN ${profile.renNumber}',
+                          style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ),
+            orElse: () => const SizedBox.shrink(),
+          ),
+          const SizedBox(width: 8),
           IconButton(
             icon: Icon(PhosphorIcons.shareNetwork(PhosphorIconsStyle.bold)),
             onPressed: ownProfile == null
@@ -122,7 +151,12 @@ class ProfileScreen extends ConsumerWidget {
                       ),
                       if (profile.verificationStatus == 'approved') ...[
                         const SizedBox(width: 6),
-                        Icon(PhosphorIcons.sealCheck(PhosphorIconsStyle.fill), size: 18, color: const Color(0xFF059669)),
+                        Icon(
+                          PhosphorIcons.sealCheck(PhosphorIconsStyle.fill),
+                          size: 18,
+                          color: const Color(0xFF059669),
+                          semanticLabel: _statusLabel(profile.verificationStatus),
+                        ),
                       ],
                     ],
                   ),
@@ -250,7 +284,6 @@ class ProfileScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 20),
                   _CoBrokingPreferencesCard(negotiatorId: profile.negotiatorId, territory: profile.territory),
-                  const SizedBox(height: 12),
                   const _BiometricStatusRow(),
                   const SizedBox(height: 20),
                   Text('profile_language_label'.tr(), style: Theme.of(context).textTheme.titleMedium),
@@ -302,7 +335,10 @@ class _StatCard extends StatelessWidget {
     return BrutalistCard(
       child: Column(
         children: [
-          Text(value, style: Theme.of(context).textTheme.headlineSmall),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(value, maxLines: 1, style: Theme.of(context).textTheme.headlineSmall),
+          ),
           Text(label),
         ],
       ),
@@ -408,7 +444,13 @@ class _CoBrokingPreferencesCardState extends ConsumerState<_CoBrokingPreferences
             const Divider(height: 1),
             prefsAsync.when(
               loading: () => const SizedBox.shrink(),
-              error: (error, stack) => const SizedBox.shrink(),
+              error: (error, stack) => ListTile(
+                title: Text('listing_error_generic'.tr()),
+                trailing: TextButton(
+                  onPressed: () => ref.invalidate(notificationPreferencesProvider),
+                  child: Text('agreement_retry'.tr()),
+                ),
+              ),
               data: (prefs) => SwitchListTile(
                 title: Text('profile_auto_match_radar_label'.tr()),
                 subtitle: Text('profile_auto_match_radar_subtitle'.tr()),
@@ -446,16 +488,19 @@ class _BiometricStatusRow extends ConsumerWidget {
         return enabledAsync.when(
           loading: () => const SizedBox.shrink(),
           error: (error, stack) => const SizedBox.shrink(),
-          data: (enabled) => BrutalistCard(
-            padding: EdgeInsets.zero,
-            child: Material(
-              color: Colors.transparent,
-              child: ListTile(
-                leading: const Icon(Icons.fingerprint),
-                title: Text('profile_biometric_label'.tr()),
-                subtitle: Text(enabled ? 'account_settings_biometric_enabled'.tr() : 'account_settings_biometric_disabled'.tr()),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => context.push('/settings/account'),
+          data: (enabled) => Padding(
+            padding: const EdgeInsets.only(top: 12),
+            child: BrutalistCard(
+              padding: EdgeInsets.zero,
+              child: Material(
+                color: Colors.transparent,
+                child: ListTile(
+                  leading: const Icon(Icons.fingerprint),
+                  title: Text('profile_biometric_label'.tr()),
+                  subtitle: Text(enabled ? 'account_settings_biometric_enabled'.tr() : 'account_settings_biometric_disabled'.tr()),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.push('/settings/account'),
+                ),
               ),
             ),
           ),
@@ -578,7 +623,10 @@ class _EditFormState extends ConsumerState<_EditForm> {
 
   Future<void> _save() async {
     final negotiatorId = ref.read(currentNegotiatorIdProvider);
-    if (negotiatorId == null) return;
+    if (negotiatorId == null) {
+      setState(() => _submitError = 'listing_error_generic'.tr());
+      return;
+    }
     setState(() {
       _submitting = true;
       _submitError = null;
