@@ -1,12 +1,16 @@
 // app/lib/features/profile/profile_screen.dart
+import 'dart:typed_data';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../core/widgets/brutalist_button.dart';
 import '../../core/widgets/brutalist_card.dart';
+import '../../core/widgets/negotiator_avatar.dart';
 import '../auth/auth_providers.dart';
 import '../ratings/rating_providers.dart' hide currentNegotiatorIdProvider;
 import 'models/profile.dart';
@@ -271,6 +275,7 @@ class _EditFormState extends ConsumerState<_EditForm> {
   late final TextEditingController _territoryController;
   late final TextEditingController _specialisationController;
   bool _submitting = false;
+  bool _uploadingAvatar = false;
   String? _submitError;
 
   @override
@@ -301,6 +306,25 @@ class _EditFormState extends ConsumerState<_EditForm> {
     _territoryController.dispose();
     _specialisationController.dispose();
     super.dispose();
+  }
+
+  Future<void> _uploadAvatar() async {
+    final negotiatorId = ref.read(currentNegotiatorIdProvider);
+    if (negotiatorId == null) return;
+    final picked = await ImagePicker().pickImage(source: ImageSource.gallery, imageQuality: 85);
+    if (picked == null) return;
+    setState(() => _uploadingAvatar = true);
+    try {
+      final Uint8List bytes = await picked.readAsBytes();
+      final repository = ref.read(profileRepositoryProvider);
+      final avatarUrl = await repository.uploadAvatar(negotiatorId: negotiatorId, bytes: bytes);
+      await repository.updateAvatarUrl(negotiatorId: negotiatorId, avatarUrl: avatarUrl);
+      ref.invalidate(myProfileProvider);
+    } catch (_) {
+      if (mounted) setState(() => _submitError = 'listing_error_generic'.tr());
+    } finally {
+      if (mounted) setState(() => _uploadingAvatar = false);
+    }
   }
 
   Future<void> _save() async {
@@ -335,6 +359,25 @@ class _EditFormState extends ConsumerState<_EditForm> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Center(
+          child: GestureDetector(
+            onTap: _uploadingAvatar ? null : _uploadAvatar,
+            child: Column(
+              children: [
+                Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    NegotiatorAvatar(fullName: widget.profile.fullName, avatarUrl: widget.profile.avatarUrl, size: 72),
+                    if (_uploadingAvatar) const CircularProgressIndicator(),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text('profile_avatar_upload_hint'.tr(), style: Theme.of(context).textTheme.labelSmall),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 20),
         TextField(
           controller: _territoryController,
           decoration: InputDecoration(labelText: 'profile_territory_label'.tr()),

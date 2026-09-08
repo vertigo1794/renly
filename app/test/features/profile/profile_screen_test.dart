@@ -9,6 +9,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:renly/core/theme/app_theme.dart';
+import 'package:renly/core/widgets/negotiator_avatar.dart';
 import 'package:renly/features/profile/models/profile.dart';
 import 'package:renly/features/profile/profile_providers.dart';
 import 'package:renly/features/profile/profile_screen.dart';
@@ -157,5 +158,17 @@ void main() {
     await tester.tap(find.text('Subscription'));
     await tester.pumpAndSettle();
     expect(find.text('subscription screen'), findsOneWidget);
+  });
+
+  testWidgets('shows a tappable avatar with the upload hint', (tester) async {
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (context, state) => const ProfileScreen()),
+    ]);
+
+    await tester.pumpWidget(_wrap(router));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(NegotiatorAvatar), findsOneWidget);
+    expect(find.text('profile_avatar_upload_hint'.tr()), findsOneWidget);
   });
 }

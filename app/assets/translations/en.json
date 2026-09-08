@@ -301,6 +301,7 @@
   "agreement_accepted_on": "Accepted on",
   "agreement_retry": "Retry",
   "profile_title": "Profile",
+  "profile_avatar_upload_hint": "Tap to add a photo",
   "profile_ren_number_label": "Registration Number",
   "profile_agency_label": "Agency",
   "profile_territory_label": "Territory",
