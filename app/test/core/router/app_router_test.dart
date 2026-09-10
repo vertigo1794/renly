@@ -129,5 +129,38 @@ void main() {
     test('unauthenticated user on /my-requests is redirected to /', () {
       expect(computeAuthRedirect(hasSession: false, location: '/my-requests'), '/');
     });
+
+    test('password recovery session on /splash is redirected to /reset-password', () {
+      expect(
+        computeAuthRedirect(hasSession: true, location: '/splash', isPasswordRecovery: true),
+        '/reset-password',
+      );
+    });
+
+    test('password recovery session on /home is redirected to /reset-password', () {
+      expect(
+        computeAuthRedirect(hasSession: true, location: '/home', isPasswordRecovery: true),
+        '/reset-password',
+      );
+    });
+
+    test('password recovery session already on /reset-password is allowed', () {
+      expect(
+        computeAuthRedirect(hasSession: true, location: '/reset-password', isPasswordRecovery: true),
+        isNull,
+      );
+    });
+
+    test('password recovery flag overrides even a no-session location', () {
+      // Defensive: hasSession should always be true alongside the recovery
+      // flag in practice (GoTrue signs the user in as part of the recovery
+      // flow), but the flag must win regardless -- there is no scenario
+      // where falling through to the normal unauthenticated redirect (`/`)
+      // is the right call while a recovery is in progress.
+      expect(
+        computeAuthRedirect(hasSession: false, location: '/home', isPasswordRecovery: true),
+        '/reset-password',
+      );
+    });
   });
 }

@@ -24,6 +24,19 @@
 		<string>????</string>
 		<key>CFBundleVersion</key>
 		<string>$(FLUTTER_BUILD_NUMBER)</string>
+		<!-- Custom-scheme deep link the "reset password" email points at
+		     (see AuthRepository.resetPasswordForEmail's redirectTo). -->
+		<key>CFBundleURLTypes</key>
+		<array>
+			<dict>
+				<key>CFBundleURLName</key>
+				<string>com.renly.passwordReset</string>
+				<key>CFBundleURLSchemes</key>
+				<array>
+					<string>renly</string>
+				</array>
+			</dict>
+		</array>
 		<key>LSRequiresIPhoneOS</key>
 		<true/>
 		<key>UIApplicationSceneManifest</key>

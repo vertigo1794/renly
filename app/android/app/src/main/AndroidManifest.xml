@@ -30,6 +30,17 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            <!-- Custom-scheme deep link the "reset password" email points at
+                 (see AuthRepository.resetPasswordForEmail's redirectTo).
+                 android:autoVerify is for https App Links only, not needed
+                 for a bare custom scheme like this; the OS hands any
+                 renly://... URI straight to this activity. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="renly"/>
+            </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->

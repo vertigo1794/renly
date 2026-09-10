@@ -170,8 +170,25 @@ class AuthRepository {
     await _client.auth.signOut();
   }
 
+  /// `redirectTo` must be a custom-scheme URL, not a bare '/reset-password'
+  /// in-app route -- this link is opened by the OS from the user's email
+  /// client, outside the Flutter app entirely, so it needs something the
+  /// OS can route back to this app with (registered in AndroidManifest.xml
+  /// and ios/Runner/Info.plist). It must also be added to this Supabase
+  /// project's Authentication -> URL Configuration -> Redirect URLs
+  /// allowlist in the dashboard, or GoTrue rejects it before ever sending
+  /// the email.
   Future<void> resetPasswordForEmail(String email) {
-    return _client.auth.resetPasswordForEmail(email);
+    return _client.auth.resetPasswordForEmail(
+      email,
+      redirectTo: 'renly://reset-password-callback',
+    );
+  }
+
+  /// Called from ResetPasswordScreen once the recovery-session user (opened
+  /// via the emailed reset link) has chosen a new password.
+  Future<void> updatePassword(String newPassword) {
+    return _client.auth.updateUser(UserAttributes(password: newPassword));
   }
 
   Future<bool> isBiometricAvailable() async {

@@ -10,6 +10,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../features/auth/auth_selection_screen.dart';
 import '../../features/auth/login_screen.dart';
 import '../../features/auth/onboarding_screen.dart';
+import '../../features/auth/password_recovery_state.dart';
+import '../../features/auth/reset_password_screen.dart';
 import '../../features/auth/splash_screen.dart';
 import '../../features/auth/registration_personal_screen.dart';
 import '../../features/auth/registration_professional_screen.dart';
@@ -53,7 +55,20 @@ const _publicRoutes = {
 /// routes; anything else bounces back to '/'. Authenticated sessions are
 /// never redirected by this function -- the pending-vs-approved routing
 /// decision happens inside LoginScreen's submit handler, not here.
-String? computeAuthRedirect({required bool hasSession, required String location}) {
+///
+/// `isPasswordRecovery` overrides everything else: a "reset password" email
+/// link signs the user in with a recovery session (so `hasSession` is also
+/// true), but that session must never fall through to the normal
+/// authenticated app -- it locks every navigation attempt to
+/// '/reset-password' until [PasswordRecoveryState.isRecovering] is cleared.
+String? computeAuthRedirect({
+  required bool hasSession,
+  required String location,
+  bool isPasswordRecovery = false,
+}) {
+  if (isPasswordRecovery) {
+    return location == '/reset-password' ? null : '/reset-password';
+  }
   if (!hasSession && !_publicRoutes.contains(location)) {
     return '/';
   }
@@ -185,13 +200,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     observers: [currentLocationObserver],
     redirect: (context, state) {
       final hasSession = Supabase.instance.client.auth.currentSession != null;
-      return computeAuthRedirect(hasSession: hasSession, location: state.matchedLocation);
+      return computeAuthRedirect(
+        hasSession: hasSession,
+        location: state.matchedLocation,
+        isPasswordRecovery: PasswordRecoveryState.isRecovering,
+      );
     },
     routes: [
       GoRoute(path: '/splash', builder: (context, state) => const SplashScreen()),
       GoRoute(path: '/onboarding', builder: (context, state) => const OnboardingScreen()),
       GoRoute(path: '/', builder: (context, state) => const AuthSelectionScreen()),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
+      GoRoute(path: '/reset-password', builder: (context, state) => const ResetPasswordScreen()),
       GoRoute(
         path: '/register/personal',
         builder: (context, state) => const RegistrationPersonalScreen(),

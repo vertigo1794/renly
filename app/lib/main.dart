@@ -13,6 +13,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/config/supabase_config.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'features/auth/password_recovery_state.dart';
 import 'features/notifications/deep_link.dart';
 import 'features/notifications/foreground_suppression.dart';
 import 'features/notifications/notification_providers.dart';
@@ -38,6 +39,18 @@ Future<void> main() async {
     url: supabaseConfig.url,
     publishableKey: supabaseConfig.anonKey,
   );
+
+  // Subscribed immediately after initialize() -- before runApp(), before any
+  // Riverpod provider exists -- so it is live in time to catch a
+  // passwordRecovery event fired by a cold-start "reset password" deep
+  // link. appRouterProvider's redirect callback reads this flag on every
+  // navigation attempt to lock the app to '/reset-password' until a new
+  // password is saved (see PasswordRecoveryState's doc comment).
+  Supabase.instance.client.auth.onAuthStateChange.listen((state) {
+    if (state.event == AuthChangeEvent.passwordRecovery) {
+      PasswordRecoveryState.isRecovering = true;
+    }
+  });
 
   // Optional: every other screen in this app works with zero Stripe
   // configuration. Only the Subscription screen's upgrade flow needs
