@@ -223,6 +223,16 @@ class ProfileScreen extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 20),
+                  // 4 separate section cards, each with its own label
+                  // OUTSIDE/above it -- matches the reference mockup's own
+                  // grouping instead of one combined settings card.
+                  _SectionLabel('profile_cobroking_preferences_title'.tr()),
+                  _CoBrokingPreferencesCard(negotiatorId: profile.negotiatorId, territory: profile.territory),
+                  const SizedBox(height: 20),
+                  _SectionLabel('profile_account_compliance_title'.tr()),
+                  _AccountComplianceCard(profile: profile, statusLabel: _statusLabel(profile.verificationStatus)),
+                  const SizedBox(height: 20),
+                  _SectionLabel('profile_app_support_title'.tr()),
                   BrutalistCard(
                     padding: EdgeInsets.zero,
                     // BrutalistCard is a plain opaque Container -- ink splashes
@@ -234,14 +244,6 @@ class ProfileScreen extends ConsumerWidget {
                       color: Colors.transparent,
                       child: Column(
                         children: [
-                          Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Align(
-                              alignment: Alignment.centerLeft,
-                              child: Text('settings_section_title'.tr(), style: Theme.of(context).textTheme.titleMedium),
-                            ),
-                          ),
-                          const Divider(height: 1),
                           ListTile(
                             leading: const Icon(Icons.notifications_active),
                             title: Text('settings_notification_row_title'.tr()),
@@ -249,20 +251,7 @@ class ProfileScreen extends ConsumerWidget {
                             trailing: const Icon(Icons.chevron_right),
                             onTap: () => context.push('/settings/notification'),
                           ),
-                          ListTile(
-                            leading: const Icon(Icons.manage_accounts),
-                            title: Text('settings_account_row_title'.tr()),
-                            subtitle: Text('settings_account_row_subtitle'.tr()),
-                            trailing: const Icon(Icons.chevron_right),
-                            onTap: () => context.push('/settings/account'),
-                          ),
-                          ListTile(
-                            leading: const Icon(Icons.privacy_tip),
-                            title: Text('settings_privacy_row_title'.tr()),
-                            subtitle: Text('settings_privacy_row_subtitle'.tr()),
-                            trailing: const Icon(Icons.chevron_right),
-                            onTap: () => context.push('/settings/privacy'),
-                          ),
+                          const Divider(height: 1),
                           ListTile(
                             leading: const Icon(Icons.help_outline),
                             title: Text('settings_help_row_title'.tr()),
@@ -270,6 +259,38 @@ class ProfileScreen extends ConsumerWidget {
                             trailing: const Icon(Icons.chevron_right),
                             onTap: () => context.push('/settings/help'),
                           ),
+                          const Divider(height: 1),
+                          ListTile(
+                            leading: const Icon(Icons.privacy_tip),
+                            title: Text('settings_privacy_row_title'.tr()),
+                            subtitle: Text('settings_privacy_row_subtitle'.tr()),
+                            trailing: const Icon(Icons.chevron_right),
+                            onTap: () => context.push('/settings/privacy'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  // Real, load-bearing navigation this screen already
+                  // provides that the mockup's own sections don't show --
+                  // kept, just grouped under its own leftover card rather
+                  // than removed just because the mockup omits them.
+                  _SectionLabel('settings_section_title'.tr()),
+                  BrutalistCard(
+                    padding: EdgeInsets.zero,
+                    child: Material(
+                      color: Colors.transparent,
+                      child: Column(
+                        children: [
+                          ListTile(
+                            leading: const Icon(Icons.manage_accounts),
+                            title: Text('settings_account_row_title'.tr()),
+                            subtitle: Text('settings_account_row_subtitle'.tr()),
+                            trailing: const Icon(Icons.chevron_right),
+                            onTap: () => context.push('/settings/account'),
+                          ),
+                          const Divider(height: 1),
                           ListTile(
                             leading: const Icon(Icons.workspace_premium),
                             title: Text('settings_subscription_row_title'.tr()),
@@ -277,24 +298,28 @@ class ProfileScreen extends ConsumerWidget {
                             trailing: const Icon(Icons.chevron_right),
                             onTap: () => context.push('/settings/subscription'),
                           ),
+                          const Divider(height: 1),
                           ListTile(
                             leading: const Icon(Icons.assignment_outlined),
                             title: Text('profile_requirement_board_row_title'.tr()),
                             trailing: const Icon(Icons.chevron_right),
                             onTap: () => context.push('/requirement-board'),
                           ),
+                          const Divider(height: 1),
                           ListTile(
                             leading: const Icon(Icons.list_alt_outlined),
                             title: Text('profile_my_requirements_row_title'.tr()),
                             trailing: const Icon(Icons.chevron_right),
                             onTap: () => context.push('/my-requirements'),
                           ),
+                          const Divider(height: 1),
                           ListTile(
                             leading: const Icon(Icons.handshake_outlined),
                             title: Text('profile_my_matches_row_title'.tr()),
                             trailing: const Icon(Icons.chevron_right),
                             onTap: () => context.push('/my-matches'),
                           ),
+                          const Divider(height: 1),
                           ListTile(
                             leading: const Icon(Icons.inbox_outlined),
                             title: Text('profile_my_requests_row_title'.tr()),
@@ -305,9 +330,6 @@ class ProfileScreen extends ConsumerWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  _CoBrokingPreferencesCard(negotiatorId: profile.negotiatorId, territory: profile.territory),
-                  const _BiometricStatusRow(),
                   const SizedBox(height: 20),
                   Text('profile_language_label'.tr(), style: Theme.of(context).textTheme.titleMedium),
                   const SizedBox(height: 8),
@@ -320,22 +342,54 @@ class ProfileScreen extends ConsumerWidget {
                     onSelectionChanged: (selection) => context.setLocale(Locale(selection.first)),
                   ),
                   const SizedBox(height: 32),
-                  BrutalistButton(
-                    label: 'profile_sign_out'.tr(),
-                    variant: BrutalistButtonVariant.secondary,
-                    icon: PhosphorIcons.signOut(PhosphorIconsStyle.bold),
-                    onPressed: () async {
-                      try {
-                        await ref.read(authRepositoryProvider).signOut();
-                      } catch (_) {
-                        // Sign-out already clears the local session before any
-                        // network call and swallows most HTTP errors -- a
-                        // rethrow here would only be a transport failure after
-                        // the local session is already gone, so the redirect
-                        // to '/' still happens regardless. Swallow rather than
-                        // show an error the user can't act on.
-                      }
-                    },
+                  // Matches the reference mockup's own Sign Out treatment --
+                  // a full bordered card, red icon+text, centered -- rather
+                  // than a secondary-variant BrutalistButton.
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(12),
+                      onTap: () async {
+                        try {
+                          await ref.read(authRepositoryProvider).signOut();
+                        } catch (_) {
+                          // Sign-out already clears the local session before any
+                          // network call and swallows most HTTP errors -- a
+                          // rethrow here would only be a transport failure after
+                          // the local session is already gone, so the redirect
+                          // to '/' still happens regardless. Swallow rather than
+                          // show an error the user can't act on.
+                        }
+                      },
+                      child: BrutalistCard(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(PhosphorIcons.signOut(PhosphorIconsStyle.bold), color: Colors.red),
+                            const SizedBox(width: 8),
+                            // Flexible+ellipsis, same proven-safe pattern
+                            // used everywhere else this session (e.g.
+                            // BrutalistButton's own label) -- "Log Out of
+                            // Renly" is real content that must not overflow
+                            // at narrow widths.
+                            Flexible(
+                              child: Text(
+                                'profile_sign_out'.tr(),
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.red, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Center(
+                    child: Text(
+                      'profile_footer_tagline'.tr(),
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(color: const Color(0xFF64748B)),
+                    ),
                   ),
                       ],
                     ),
@@ -345,6 +399,27 @@ class ProfileScreen extends ConsumerWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// An uppercase gray label sitting OUTSIDE/above a card, matching the
+/// reference mockup's own section-header treatment (e.g. "CO-BROKING
+/// PREFERENCES") -- as opposed to a title row living INSIDE the card
+/// itself, divided from its content.
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel(this.label);
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, bottom: 8),
+      child: Text(
+        label.toUpperCase(),
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(color: const Color(0xFF64748B), letterSpacing: 0.5),
       ),
     );
   }
@@ -500,20 +575,16 @@ class _CoBrokingPreferencesCardState extends ConsumerState<_CoBrokingPreferences
   Widget build(BuildContext context) {
     final prefsAsync = ref.watch(notificationPreferencesProvider);
 
+    // No internal title -- the section label now sits OUTSIDE the card
+    // (via _SectionLabel), matching the reference mockup's own treatment
+    // (an uppercase gray label above a plain white bordered card, not a
+    // title row divided from the card's own content).
     return BrutalistCard(
       padding: EdgeInsets.zero,
       child: Material(
         color: Colors.transparent,
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text('profile_cobroking_preferences_title'.tr(), style: Theme.of(context).textTheme.titleMedium),
-              ),
-            ),
-            const Divider(height: 1),
             prefsAsync.when(
               loading: () => const SizedBox.shrink(),
               error: (error, stack) => ListTile(
@@ -544,6 +615,49 @@ class _CoBrokingPreferencesCardState extends ConsumerState<_CoBrokingPreferences
   }
 }
 
+/// Embeddable content only -- no outer BrutalistCard/Material of its own,
+/// Groups the real REN verification status alongside the real biometric
+/// status into one card, matching the reference mockup's own "Account &
+/// Compliance" section -- Bank Account & Payouts (shown in the mockup)
+/// stays dropped per the approved design doc, no backing subsystem exists.
+class _AccountComplianceCard extends StatelessWidget {
+  const _AccountComplianceCard({required this.profile, required this.statusLabel});
+
+  final Profile profile;
+  final String statusLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    return BrutalistCard(
+      padding: EdgeInsets.zero,
+      child: Material(
+        color: Colors.transparent,
+        child: Column(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.badge_outlined),
+              title: Text('profile_ren_verification_title'.tr()),
+              subtitle: Text(statusLabel),
+              trailing: profile.verificationStatus == 'approved'
+                  ? Icon(PhosphorIcons.sealCheck(PhosphorIconsStyle.fill), color: const Color(0xFF059669))
+                  : null,
+            ),
+            const _BiometricStatusRow(),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Embeddable content only -- no outer BrutalistCard/Material of its own,
+/// so `_AccountComplianceCard` can place this alongside the REN
+/// verification row inside ONE shared card (matching the reference
+/// mockup's own "Account & Compliance" grouping) rather than this row
+/// floating as its own separate card. Renders its own leading Divider so
+/// the caller doesn't need to know in advance whether this row will be
+/// visible (never available on most emulators/devices with no biometric
+/// hardware enrolled).
 class _BiometricStatusRow extends ConsumerWidget {
   const _BiometricStatusRow();
 
@@ -560,21 +674,17 @@ class _BiometricStatusRow extends ConsumerWidget {
         return enabledAsync.when(
           loading: () => const SizedBox.shrink(),
           error: (error, stack) => const SizedBox.shrink(),
-          data: (enabled) => Padding(
-            padding: const EdgeInsets.only(top: 12),
-            child: BrutalistCard(
-              padding: EdgeInsets.zero,
-              child: Material(
-                color: Colors.transparent,
-                child: ListTile(
-                  leading: const Icon(Icons.fingerprint),
-                  title: Text('profile_biometric_label'.tr()),
-                  subtitle: Text(enabled ? 'account_settings_biometric_enabled'.tr() : 'account_settings_biometric_disabled'.tr()),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => context.push('/settings/account'),
-                ),
+          data: (enabled) => Column(
+            children: [
+              const Divider(height: 1),
+              ListTile(
+                leading: const Icon(Icons.fingerprint),
+                title: Text('profile_biometric_label'.tr()),
+                subtitle: Text(enabled ? 'account_settings_biometric_enabled'.tr() : 'account_settings_biometric_disabled'.tr()),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push('/settings/account'),
               ),
-            ),
+            ],
           ),
         );
       },
@@ -625,8 +735,10 @@ class _ProfileAvatarState extends ConsumerState<_ProfileAvatar> {
     // No outer Center -- this now sits beside the name/REN column inside
     // the profile-identity BrutalistCard (matching the reference mockup's
     // own avatar-top-left layout), not standalone across the full page
-    // width. SizedBox caps the hint text's width so it wraps onto 2 short
-    // lines instead of forcing the Row wider than the avatar itself.
+    // width. No upload-hint caption (matches the mockup, which has none --
+    // the avatar itself stays real/tappable, only the decorative caption
+    // text is dropped) -- SizedBox still caps width so a shown error
+    // message wraps instead of forcing the Row wider than the avatar.
     return SizedBox(
       width: 72,
       child: GestureDetector(
@@ -636,15 +748,9 @@ class _ProfileAvatarState extends ConsumerState<_ProfileAvatar> {
             Stack(
               alignment: Alignment.center,
               children: [
-                NegotiatorAvatar(fullName: widget.profile.fullName, avatarUrl: widget.profile.avatarUrl, size: 72),
+                NegotiatorAvatar(fullName: widget.profile.fullName, avatarUrl: widget.profile.avatarUrl, size: 72, square: true),
                 if (_uploading) const CircularProgressIndicator(),
               ],
-            ),
-            const SizedBox(height: 6),
-            Text(
-              'profile_avatar_upload_hint'.tr(),
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.labelSmall,
             ),
             if (_error != null) ...[
               const SizedBox(height: 4),

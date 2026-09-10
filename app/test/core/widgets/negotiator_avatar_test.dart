@@ -77,5 +77,54 @@ void main() {
 
       expect(find.descendant(of: find.byType(NegotiatorAvatar), matching: find.byType(Stack)), findsOneWidget);
     });
+
+    group('square: true', () {
+      testWidgets('renders the initials fallback when avatarUrl is null, no CircleAvatar', (tester) async {
+        await tester.pumpWidget(
+          const MaterialApp(home: Scaffold(body: NegotiatorAvatar(fullName: 'Aiman Yusof', square: true))),
+        );
+
+        expect(find.text('A'), findsOneWidget);
+        expect(find.byType(CircleAvatar), findsNothing);
+        expect(find.byType(Image), findsNothing);
+      });
+
+      testWidgets('renders a rounded-square network image when avatarUrl is set', (tester) async {
+        await tester.pumpWidget(
+          const MaterialApp(
+            home: Scaffold(
+              body: NegotiatorAvatar(fullName: 'Aiman Yusof', avatarUrl: 'https://example.test/avatar.jpg', square: true),
+            ),
+          ),
+        );
+
+        expect(find.byType(CircleAvatar), findsNothing);
+        final image = tester.widget<Image>(find.byType(Image));
+        final provider = image.image as NetworkImage;
+        expect(provider.url, 'https://example.test/avatar.jpg');
+        expect(find.text('A'), findsNothing);
+
+        final clip = tester.widget<Container>(find.byType(Container).first);
+        final decoration = clip.decoration! as BoxDecoration;
+        expect(decoration.borderRadius, isNot(null));
+      });
+
+      testWidgets('falls back to initials if the square network image fails to load', (tester) async {
+        await tester.pumpWidget(
+          const MaterialApp(
+            home: Scaffold(
+              body: NegotiatorAvatar(fullName: 'Aiman Yusof', avatarUrl: 'https://example.test/broken.jpg', square: true),
+            ),
+          ),
+        );
+
+        await tester.pumpAndSettle();
+
+        // Image's own errorBuilder swaps what it PAINTS, not the Image
+        // widget instance itself -- it stays in the tree either way, so
+        // the real signal here is that the initials text is now showing.
+        expect(find.text('A'), findsOneWidget);
+      });
+    });
   });
 }

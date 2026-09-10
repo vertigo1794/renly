@@ -129,7 +129,12 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Aiman Yusof'), findsOneWidget);
-    expect(find.text('Verified'), findsOneWidget);
+    // Shown twice, deliberately -- the quick status Chip near the name,
+    // and the detailed REN License & Verification row in the Account &
+    // Compliance card further down. Mirrors the reference mockup's own
+    // structure (its own "BOVAEA/LPPEH VERIFIED" pill near the name PLUS
+    // a separate "REN License & Verification" row).
+    expect(find.text('Verified'), findsNWidgets(2));
     expect(find.text('Registration Number: 12345'), findsOneWidget);
     expect(find.text('Agency: Prestige Property Group'), findsOneWidget);
     expect(find.text('5'), findsOneWidget);
@@ -146,7 +151,7 @@ void main() {
 
     expect(find.text('English'), findsOneWidget);
     expect(find.text('Bahasa Melayu'), findsOneWidget);
-    expect(find.text('Sign Out'), findsOneWidget);
+    expect(find.text('Log Out of Renly'), findsOneWidget);
   });
 
   testWidgets('shows pending status label for a pending profile', (tester) async {
@@ -162,7 +167,9 @@ void main() {
     await tester.pumpWidget(_wrap(router, profile: pendingProfile));
     await tester.pumpAndSettle();
 
-    expect(find.text('Verification Pending'), findsOneWidget);
+    // Shown twice, deliberately -- see the same reasoning on the
+    // "Verified" case above.
+    expect(find.text('Verification Pending'), findsNWidgets(2));
   });
 
   testWidgets('shows "No ratings yet" when the negotiator has no ratings', (tester) async {
@@ -217,7 +224,7 @@ void main() {
     expect(find.text('subscription screen'), findsOneWidget);
   });
 
-  testWidgets('shows a tappable avatar with the upload hint', (tester) async {
+  testWidgets('shows a tappable square avatar', (tester) async {
     final router = GoRouter(routes: [
       GoRoute(path: '/', builder: (context, state) => const ProfileScreen()),
     ]);
@@ -225,8 +232,8 @@ void main() {
     await tester.pumpWidget(_wrap(router));
     await tester.pumpAndSettle();
 
-    expect(find.byType(NegotiatorAvatar), findsOneWidget);
-    expect(find.text('profile_avatar_upload_hint'.tr()), findsOneWidget);
+    final avatar = tester.widget<NegotiatorAvatar>(find.byType(NegotiatorAvatar));
+    expect(avatar.square, isTrue);
   });
 
   testWidgets('shows the renly wordmark and a share/bell header', (tester) async {
