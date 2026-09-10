@@ -135,8 +135,7 @@ void main() {
     // structure (its own "BOVAEA/LPPEH VERIFIED" pill near the name PLUS
     // a separate "REN License & Verification" row).
     expect(find.text('Verified'), findsNWidgets(2));
-    expect(find.text('Registration Number: 12345'), findsOneWidget);
-    expect(find.text('Agency: Prestige Property Group'), findsOneWidget);
+    expect(find.text('REN 12345 • Prestige Property Group'), findsOneWidget);
     expect(find.text('5'), findsOneWidget);
     expect(find.text('3'), findsOneWidget);
   });

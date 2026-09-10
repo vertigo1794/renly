@@ -147,28 +147,30 @@ class ProfileScreen extends ConsumerWidget {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Row(
-                                    children: [
-                                      Flexible(
-                                        child: Text(profile.fullName, style: Theme.of(context).textTheme.headlineMedium, overflow: TextOverflow.ellipsis),
-                                      ),
-                                      if (profile.verificationStatus == 'approved') ...[
-                                        const SizedBox(width: 6),
-                                        Icon(
-                                          PhosphorIcons.sealCheck(PhosphorIconsStyle.fill),
-                                          size: 18,
-                                          color: const Color(0xFF059669),
-                                          semanticLabel: _statusLabel(profile.verificationStatus),
-                                        ),
-                                      ],
-                                    ],
+                                  Text(profile.fullName, style: Theme.of(context).textTheme.headlineMedium, overflow: TextOverflow.ellipsis, maxLines: 1),
+                                  const SizedBox(height: 2),
+                                  // Combined onto one line, no labels -- matches
+                                  // the reference mockup's own "REN 48210 • IQI
+                                  // GLOBAL" treatment, real data either way (a
+                                  // missing agency just drops the "•" segment,
+                                  // never a fabricated placeholder).
+                                  Text(
+                                    [
+                                      if (profile.renNumber != null) 'REN ${profile.renNumber}',
+                                      if (profile.agencyName != null) profile.agencyName!,
+                                    ].join(' • '),
+                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(color: const Color(0xFF64748B)),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                  const SizedBox(height: 4),
-                                  Chip(label: Text(_statusLabel(profile.verificationStatus))),
-                                  const SizedBox(height: 8),
-                                  Text('${'profile_ren_number_label'.tr()}: ${profile.renNumber ?? '-'}'),
-                                  const SizedBox(height: 4),
-                                  Text('${'profile_agency_label'.tr()}: ${profile.agencyName ?? '-'}'),
+                                  const SizedBox(height: 6),
+                                  // The verified checkmark now lives INSIDE
+                                  // this smaller pill (not also duplicated
+                                  // beside the name) -- reuses the exact
+                                  // blue tint already established for
+                                  // Property Detail's own "Keys on Hand"
+                                  // badge, same tinted-pill convention.
+                                  _VerificationBadge(status: profile.verificationStatus, label: _statusLabel(profile.verificationStatus)),
                                 ],
                               ),
                             ),
@@ -420,6 +422,45 @@ class _SectionLabel extends StatelessWidget {
       child: Text(
         label.toUpperCase(),
         style: Theme.of(context).textTheme.labelSmall?.copyWith(color: const Color(0xFF64748B), letterSpacing: 0.5),
+      ),
+    );
+  }
+}
+
+/// A small tinted pill for the profile's verification status -- reuses the
+/// same blue tint (`0xFFDBEAFE`/`0xFFBFDBFE`/`0xFF2563EB`) already
+/// established for Property Detail's own "Keys on Hand" badge, same
+/// tinted-pill convention, so this doesn't invent a new color scheme. Only
+/// `approved` gets the checkmark icon -- pending/rejected show the same
+/// small pill shape with a neutral tint and no icon (not asked to be
+/// recolored, so left as-is beyond the size reduction).
+class _VerificationBadge extends StatelessWidget {
+  const _VerificationBadge({required this.status, required this.label});
+
+  final String status;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final approved = status == 'approved';
+    final background = approved ? const Color(0xFFDBEAFE) : const Color(0xFFF1F5F9);
+    final border = approved ? const Color(0xFFBFDBFE) : const Color(0xFFE2E8F0);
+    final foreground = approved ? const Color(0xFF2563EB) : const Color(0xFF64748B);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(color: background, borderRadius: BorderRadius.circular(6), border: Border.all(color: border)),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (approved) ...[
+            Icon(PhosphorIcons.sealCheck(PhosphorIconsStyle.fill), size: 12, color: foreground),
+            const SizedBox(width: 4),
+          ],
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(color: foreground, fontWeight: FontWeight.bold, fontSize: 10),
+          ),
+        ],
       ),
     );
   }
