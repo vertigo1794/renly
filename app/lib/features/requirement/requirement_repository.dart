@@ -131,6 +131,19 @@ class RequirementRepository {
     return _client.from('requirement').update({'status': status}).eq('requirement_id', requirementId);
   }
 
+  /// Requires migration 0029_requirement_delete_policy.sql (adds the RLS
+  /// DELETE policy -- table-level DELETE grant already exists by default,
+  /// same gap class as listing's own delete, fixed the same way in
+  /// 0022_listing_delete_policy.sql). `match` cascades on delete from
+  /// requirement, and cobroke_request/message/agreement/rating all cascade
+  /// from match, so this cleanly removes every match/request/chat/
+  /// agreement/rating tied to this requirement at the database level. The
+  /// caller (UI) is responsible for blocking this when an ACCEPTED
+  /// co-broke request exists, same convention as ListingRepository.deleteListing.
+  Future<void> deleteRequirement(String requirementId) {
+    return _client.from('requirement').delete().eq('requirement_id', requirementId);
+  }
+
   Future<int> countActiveRequirements(String negotiatorId) async {
     final response = await _client
         .from('requirement')

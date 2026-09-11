@@ -1,0 +1,25 @@
+-- supabase/migrations/0029_requirement_delete_policy.sql
+-- Run this once in the Supabase project's SQL Editor, AFTER 0028.
+--
+-- Adds a real DELETE RLS policy for the requirement table's own
+-- negotiator owner (Delete action, Requirement Detail Premium Restyle
+-- follow-up) -- same shape as 0022_listing_delete_policy.sql's own
+-- listing_delete_own policy. The authenticated/anon roles already carry
+-- table-level DELETE privilege from Supabase's own default per-role
+-- grant on table creation; what's missing is an RLS policy, without
+-- which RLS's default-deny blocks every DELETE regardless of the
+-- underlying grant.
+--
+-- `match` cascades on delete from requirement (0006_matching.sql), and
+-- cobroke_request/message/agreement/rating all cascade from match
+-- (0007/0008/0009/0011) -- the same chain 0022's own comment already
+-- verified for listing, symmetric here since match carries both a
+-- listing_id and a requirement_id. So deleting a requirement row cleanly
+-- removes every match/request/chat/agreement/rating tied to it at the
+-- database level. The app itself is responsible for blocking Delete in
+-- the UI when a requirement has an ACCEPTED co-broke request (a real
+-- deal with chat/agreement history worth preserving) -- this migration
+-- only adds the underlying permission, it does not by itself protect
+-- that history.
+create policy requirement_delete_own on requirement for delete
+  to authenticated using (negotiator_id = auth.uid());

@@ -8,7 +8,9 @@ import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/theme/app_colors.dart';
 import '../../core/widgets/brutalist_button.dart';
+import '../../core/widgets/brutalist_card.dart';
 import 'models/subscription_status.dart';
 import 'subscription_providers.dart';
 
@@ -147,7 +149,12 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
     final statusAsync = ref.watch(subscriptionStatusProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text('subscription_title'.tr())),
+      backgroundColor: const Color(0xFFF9FAF7),
+      appBar: AppBar(
+        title: Text('subscription_title'.tr()),
+        backgroundColor: const Color(0xFFF9FAF7),
+        elevation: 0,
+      ),
       body: statusAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) => Center(
@@ -162,59 +169,298 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
             ],
           ),
         ),
-        data: (status) => Padding(
+        data: (status) => SingleChildScrollView(
           padding: const EdgeInsets.all(20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (_upgradeProcessing) ...[
-                Text('subscription_processing'.tr()),
-                const SizedBox(height: 12),
-                if (!_processingTimedOut)
-                  const Center(child: CircularProgressIndicator())
-                else ...[
-                  Text('subscription_processing_timeout'.tr()),
-                  const SizedBox(height: 12),
-                  BrutalistButton(
-                    label: 'subscription_refresh_button'.tr(),
-                    icon: PhosphorIcons.arrowClockwise(PhosphorIconsStyle.bold),
-                    onPressed: _refresh,
-                  ),
-                ],
-              ] else if (status.tier == 'professional') ...[
-                Text('subscription_professional_tier_label'.tr(), style: Theme.of(context).textTheme.titleLarge),
-                if (status.status == 'past_due') ...[
-                  const SizedBox(height: 8),
-                  Text('subscription_status_past_due'.tr(), style: TextStyle(color: Theme.of(context).colorScheme.error)),
-                ],
-                if (status.currentPeriodEnd != null) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    '${'subscription_renews_on_label'.tr()}: ${status.currentPeriodEnd!.day}/${status.currentPeriodEnd!.month}/${status.currentPeriodEnd!.year}',
-                  ),
-                ],
-                const SizedBox(height: 20),
-                BrutalistButton(
-                  label: 'subscription_manage_button'.tr(),
-                  icon: PhosphorIcons.gear(PhosphorIconsStyle.bold),
-                  onPressed: _submitting ? null : _manageSubscription,
+              if (_upgradeProcessing)
+                _ProcessingCard(
+                  timedOut: _processingTimedOut,
+                  onRefresh: _refresh,
+                )
+              else if (status.tier == 'professional')
+                _ProfessionalTierView(
+                  status: status,
+                  submitting: _submitting,
+                  onManage: _manageSubscription,
+                )
+              else
+                _FreeTierView(
+                  submitting: _submitting,
+                  onUpgrade: _upgrade,
                 ),
-              ] else ...[
-                Text('subscription_free_tier_label'.tr(), style: Theme.of(context).textTheme.titleLarge),
-                const SizedBox(height: 20),
-                BrutalistButton(
-                  label: 'subscription_upgrade_button'.tr(),
-                  icon: PhosphorIcons.crown(PhosphorIconsStyle.bold),
-                  onPressed: _submitting ? null : _upgrade,
-                ),
-              ],
               if (_submitError != null) ...[
-                const SizedBox(height: 8),
-                Text(_submitError!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFDAD6),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: const Color(0xFFBA1A1A).withValues(alpha: 0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(PhosphorIcons.warningCircle(PhosphorIconsStyle.bold), color: Theme.of(context).colorScheme.error, size: 18),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(_submitError!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Dark "ink" plan-status card sitting at the top of both tier states --
+/// the eyebrow + tier-name pattern gives this screen its own premium
+/// identity (distinct from the plain white BrutalistCard used everywhere
+/// else in Profile) while the tier name text itself stays exactly what
+/// subscription_screen_test.dart asserts on ('Free Plan'/'Professional
+/// Plan'), just restyled rather than relocated out of the tree.
+class _PlanHeroCard extends StatelessWidget {
+  const _PlanHeroCard({required this.tierLabel, required this.child});
+
+  final String tierLabel;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.ink,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.ink, width: 2),
+        boxShadow: const [BoxShadow(color: AppColors.primary, offset: Offset(4, 4), blurRadius: 0)],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
+                child: Icon(PhosphorIcons.crownSimple(PhosphorIconsStyle.fill), color: AppColors.ink, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'subscription_hero_eyebrow'.tr().toUpperCase(),
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(color: AppColors.primary, letterSpacing: 1.0, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      tierLabel,
+                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(color: Colors.white),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          child,
+        ],
+      ),
+    );
+  }
+}
+
+class _FreeTierView extends StatelessWidget {
+  const _FreeTierView({required this.submitting, required this.onUpgrade});
+
+  final bool submitting;
+  final VoidCallback onUpgrade;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _PlanHeroCard(
+          tierLabel: 'subscription_free_tier_label'.tr(),
+          child: Text(
+            'subscription_upgrade_headline'.tr(),
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.white70),
+          ),
+        ),
+        const SizedBox(height: 20),
+        Text(
+          'subscription_upgrade_subtitle'.tr(),
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: const Color(0xFF64748B)),
+        ),
+        const SizedBox(height: 20),
+        const _FeatureList(),
+        const SizedBox(height: 24),
+        BrutalistButton(
+          label: 'subscription_upgrade_button'.tr(),
+          icon: PhosphorIcons.crownSimple(PhosphorIconsStyle.bold),
+          onPressed: submitting ? null : onUpgrade,
+        ),
+        const SizedBox(height: 12),
+        _TrustNote(),
+      ],
+    );
+  }
+}
+
+class _ProfessionalTierView extends StatelessWidget {
+  const _ProfessionalTierView({required this.status, required this.submitting, required this.onManage});
+
+  final SubscriptionStatus status;
+  final bool submitting;
+  final VoidCallback onManage;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _PlanHeroCard(
+          tierLabel: 'subscription_professional_tier_label'.tr(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (status.status == 'past_due') ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(color: const Color(0xFFFFDAD6), borderRadius: BorderRadius.circular(8)),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(PhosphorIcons.warningCircle(PhosphorIconsStyle.bold), color: const Color(0xFFBA1A1A), size: 14),
+                      const SizedBox(width: 6),
+                      Text(
+                        'subscription_status_past_due'.tr(),
+                        style: const TextStyle(color: Color(0xFFBA1A1A), fontWeight: FontWeight.bold, fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 10),
+              ],
+              if (status.currentPeriodEnd != null)
+                Row(
+                  children: [
+                    Icon(PhosphorIcons.calendarCheck(PhosphorIconsStyle.bold), color: Colors.white70, size: 16),
+                    const SizedBox(width: 6),
+                    Text(
+                      '${'subscription_renews_on_label'.tr()} ${status.currentPeriodEnd!.day}/${status.currentPeriodEnd!.month}/${status.currentPeriodEnd!.year}',
+                      style: const TextStyle(color: Colors.white70),
+                    ),
+                  ],
+                )
+              else
+                Text('subscription_active_note'.tr(), style: const TextStyle(color: Colors.white70)),
+            ],
+          ),
+        ),
+        const SizedBox(height: 24),
+        Text('subscription_whats_included_label'.tr().toUpperCase(), style: Theme.of(context).textTheme.labelSmall?.copyWith(color: const Color(0xFF64748B), letterSpacing: 0.5)),
+        const SizedBox(height: 12),
+        const _FeatureList(),
+        const SizedBox(height: 24),
+        BrutalistButton(
+          label: 'subscription_manage_button'.tr(),
+          icon: PhosphorIcons.gearSix(PhosphorIconsStyle.bold),
+          variant: BrutalistButtonVariant.dark,
+          onPressed: submitting ? null : onManage,
+        ),
+      ],
+    );
+  }
+}
+
+class _FeatureList extends StatelessWidget {
+  const _FeatureList();
+
+  static const _keys = [
+    'subscription_feature_unlimited_requests',
+    'subscription_feature_priority_match',
+    'subscription_feature_verified_badge',
+    'subscription_feature_priority_support',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return BrutalistCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (var i = 0; i < _keys.length; i++) ...[
+            if (i > 0) const SizedBox(height: 12),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(PhosphorIcons.checkCircle(PhosphorIconsStyle.fill), color: const Color(0xFF16A34A), size: 20),
+                const SizedBox(width: 10),
+                Expanded(child: Text(_keys[i].tr(), style: Theme.of(context).textTheme.bodyMedium)),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _TrustNote extends StatelessWidget {
+  const _TrustNote();
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(PhosphorIcons.shieldCheck(PhosphorIconsStyle.bold), size: 14, color: const Color(0xFF64748B)),
+        const SizedBox(width: 6),
+        Text(
+          'subscription_trust_note'.tr(),
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(color: const Color(0xFF64748B)),
+        ),
+      ],
+    );
+  }
+}
+
+class _ProcessingCard extends StatelessWidget {
+  const _ProcessingCard({required this.timedOut, required this.onRefresh});
+
+  final bool timedOut;
+  final VoidCallback onRefresh;
+
+  @override
+  Widget build(BuildContext context) {
+    return BrutalistCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('subscription_processing'.tr(), style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 16),
+          if (!timedOut)
+            const Center(child: CircularProgressIndicator())
+          else ...[
+            Text('subscription_processing_timeout'.tr(), style: const TextStyle(color: Color(0xFF64748B))),
+            const SizedBox(height: 16),
+            BrutalistButton(
+              label: 'subscription_refresh_button'.tr(),
+              icon: PhosphorIcons.arrowClockwise(PhosphorIconsStyle.bold),
+              onPressed: onRefresh,
+            ),
+          ],
+        ],
       ),
     );
   }
