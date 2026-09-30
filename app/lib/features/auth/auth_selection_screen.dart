@@ -1,5 +1,6 @@
 // app/lib/features/auth/auth_selection_screen.dart
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -29,14 +30,36 @@ import '../../core/widgets/r_star_badge.dart';
 /// black. "Log in" stays secondary (transparent + border), which already
 /// reads correctly against any background.
 ///
-/// The legal footer text is intentionally NOT tappable, unlike Stitch's
-/// (non-functional, href="#") mockup: "Privacy Policy" would need
-/// '/settings/privacy' added to the router's public routes (it's
-/// currently auth-gated) and there is no "Terms of Service" screen at
-/// all yet -- both are real scope beyond this screen's own visual port,
-/// so the copy is rendered as styled (bold) text only.
-class AuthSelectionScreen extends StatelessWidget {
+/// The legal footer text IS now genuinely tappable -- "Terms of Service"
+/// and "Privacy Policy" push to real WebView-rendered documents
+/// (app/lib/core/widgets/asset_webview_screen.dart) via the router's new
+/// public '/legal/terms'/'/legal/privacy' routes, closing the gap this
+/// screen's own comment used to describe (previously styled bold text
+/// only, no screen existed for either document).
+class AuthSelectionScreen extends StatefulWidget {
   const AuthSelectionScreen({super.key});
+
+  @override
+  State<AuthSelectionScreen> createState() => _AuthSelectionScreenState();
+}
+
+class _AuthSelectionScreenState extends State<AuthSelectionScreen> {
+  late final TapGestureRecognizer _termsRecognizer;
+  late final TapGestureRecognizer _privacyRecognizer;
+
+  @override
+  void initState() {
+    super.initState();
+    _termsRecognizer = TapGestureRecognizer()..onTap = () => context.push('/legal/terms');
+    _privacyRecognizer = TapGestureRecognizer()..onTap = () => context.push('/legal/privacy');
+  }
+
+  @override
+  void dispose() {
+    _termsRecognizer.dispose();
+    _privacyRecognizer.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -170,9 +193,12 @@ class AuthSelectionScreen extends StatelessWidget {
                             children: _richBody(
                               'auth_legal_footer'.tr(),
                               Theme.of(context).textTheme.labelSmall?.copyWith(color: bodyTextColor),
-                              Theme.of(
-                                context,
-                              ).textTheme.labelSmall?.copyWith(color: AppColors.ink, fontWeight: FontWeight.w700),
+                              Theme.of(context).textTheme.labelSmall?.copyWith(
+                                    color: AppColors.ink,
+                                    fontWeight: FontWeight.w700,
+                                    decoration: TextDecoration.underline,
+                                  ),
+                              [_termsRecognizer, _privacyRecognizer],
                             ),
                           ),
                           textAlign: TextAlign.center,
@@ -192,11 +218,25 @@ class AuthSelectionScreen extends StatelessWidget {
 }
 
 /// Splits `text` on `**bold**` markers into spans -- same convention
-/// OnboardingScreen's body copy uses for "REN Verified", reused here for
-/// the legal footer's "Terms of Service"/"Privacy Policy" emphasis.
-List<InlineSpan> _richBody(String text, TextStyle? baseStyle, TextStyle? boldStyle) {
+/// OnboardingScreen's body copy uses for "REN Verified", extended here so
+/// each bold span also gets a real tap target: `auth_legal_footer`'s
+/// translation always marks exactly two bold spans, in order ("Terms of
+/// Service" then "Privacy Policy" in both en.json and ms.json), so the
+/// Nth bold span (0-indexed) gets `boldRecognizers[n]`.
+List<InlineSpan> _richBody(
+  String text,
+  TextStyle? baseStyle,
+  TextStyle? boldStyle,
+  List<GestureRecognizer> boldRecognizers,
+) {
   final parts = text.split('**');
+  var boldIndex = 0;
   return [
-    for (var i = 0; i < parts.length; i++) TextSpan(text: parts[i], style: i.isOdd ? boldStyle : baseStyle),
+    for (var i = 0; i < parts.length; i++)
+      TextSpan(
+        text: parts[i],
+        style: i.isOdd ? boldStyle : baseStyle,
+        recognizer: i.isOdd ? boldRecognizers[boldIndex++] : null,
+      ),
   ];
 }

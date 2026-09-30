@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/brutalist_button.dart';
 import '../../core/widgets/negotiator_avatar.dart';
 import '../../core/widgets/r_star_badge.dart';
 import '../matching/matching_providers.dart' hide currentNegotiatorIdProvider;
@@ -129,6 +130,7 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
                     children: [
                       IconButton(
                         icon: Icon(PhosphorIcons.bellSimple(PhosphorIconsStyle.bold)),
+                        tooltip: 'notification_center_title'.tr(),
                         onPressed: () => context.push('/notifications'),
                       ),
                       if (unreadCount > 0)
@@ -204,6 +206,31 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
                           'marketplace_subtitle'.tr(),
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(color: const Color(0xFF5F5E5E)),
                         ),
+                        if (ref.watch(marketplaceIsOfflineCacheProvider)) ...[
+                          const SizedBox(height: 8),
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFFF7ED),
+                              border: Border.all(color: const Color(0xFFEA580C)),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.cloud_off, size: 16, color: Color(0xFFEA580C)),
+                                const SizedBox(width: 6),
+                                Flexible(
+                                  child: Text(
+                                    'marketplace_offline_cache_notice'.tr(),
+                                    style: Theme.of(context).textTheme.labelSmall?.copyWith(color: const Color(0xFF9A3412)),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                         const SizedBox(height: 14),
                         if (listings.isNotEmpty) _LiveTicker(listings: listings),
                         const SizedBox(height: 14),
@@ -262,12 +289,18 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
                                   ),
                                   const SizedBox(height: 16),
                                   Text('marketplace_empty'.tr()),
+                                  const SizedBox(height: 16),
+                                  BrutalistButton(
+                                    label: 'inventory_post_new'.tr(),
+                                    fullWidth: false,
+                                    onPressed: () => context.push('/post-listing'),
+                                  ),
                                 ],
                               ),
                             ),
                           )
                         else
-                          ..._buildCards(context, filtered, myListingMatches),
+                          _buildCardsSection(context, filtered, myListingMatches),
                       ],
                     ),
                   );
@@ -283,28 +316,46 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
   /// One card per listing, with the in-feed Co-Broke CTA banner inserted
   /// after the 2nd card (matching the mockup's placement) when there are
   /// at least 2 cards to insert it between.
-  List<Widget> _buildCards(BuildContext context, List<Listing> filtered, List<MatchCandidate> myListingMatches) {
-    final widgets = <Widget>[];
-    for (var i = 0; i < filtered.length; i++) {
-      final listing = filtered[i];
-      final matchScore = myListingMatches
-          .where((c) => c.listing.listingId == listing.listingId)
-          .map((c) => c.score)
-          .fold<int?>(null, (best, s) => best == null || s > best ? s : best);
-      widgets.add(_MarketplaceCard(
-        listing: listing,
-        matchScore: matchScore,
-        onTap: () => context.push('/property/${listing.listingId}'),
-      ));
-      if (i == 1) {
-        widgets.add(const SizedBox(height: 16));
-        widgets.add(_CoBrokeCtaBanner(onTap: () => context.push('/post-requirement')));
-      }
-      if (i != filtered.length - 1) {
-        widgets.add(const SizedBox(height: 16));
-      }
-    }
-    return widgets;
+  ///
+  /// Responsive: a `Wrap` (not a `Column`) so cards lay out two-per-row on
+  /// a wide viewport (tablet, >=600dp) instead of the phone's single
+  /// column -- a genuinely wider screen was never accounted for anywhere
+  /// in this codebase before (grep for MediaQuery/LayoutBuilder across
+  /// app/lib turned up nothing at all). The CTA banner is always given
+  /// the FULL row width, which forces Wrap to give it its own line
+  /// regardless of column count, preserving its "after the 2nd card"
+  /// placement in both layouts.
+  Widget _buildCardsSection(BuildContext context, List<Listing> filtered, List<MatchCandidate> myListingMatches) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const spacing = 16.0;
+        final isWide = constraints.maxWidth >= 600;
+        final cardWidth = isWide ? (constraints.maxWidth - spacing) / 2 : constraints.maxWidth;
+        final children = <Widget>[];
+        for (var i = 0; i < filtered.length; i++) {
+          final listing = filtered[i];
+          final matchScore = myListingMatches
+              .where((c) => c.listing.listingId == listing.listingId)
+              .map((c) => c.score)
+              .fold<int?>(null, (best, s) => best == null || s > best ? s : best);
+          children.add(SizedBox(
+            width: cardWidth,
+            child: _MarketplaceCard(
+              listing: listing,
+              matchScore: matchScore,
+              onTap: () => context.push('/property/${listing.listingId}'),
+            ),
+          ));
+          if (i == 1) {
+            children.add(SizedBox(
+              width: constraints.maxWidth,
+              child: _CoBrokeCtaBanner(onTap: () => context.push('/post-requirement')),
+            ));
+          }
+        }
+        return Wrap(spacing: spacing, runSpacing: spacing, children: children);
+      },
+    );
   }
 }
 

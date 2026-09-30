@@ -4,9 +4,11 @@ import 'dart:async';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../core/widgets/brutalist_button.dart';
+import '../../core/widgets/signed_photo.dart';
 import '../listing/models/listing_owner.dart';
 import 'message_providers.dart';
 
@@ -27,6 +29,7 @@ class ChatScreen extends ConsumerStatefulWidget {
 class _ChatScreenState extends ConsumerState<ChatScreen> {
   final _controller = TextEditingController();
   bool _sending = false;
+  bool _uploadingAttachment = false;
 
   @override
   void initState() {
@@ -89,6 +92,31 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     }
   }
 
+  Future<void> _pickAndSendAttachment(String senderId) async {
+    // imageQuality: 85, same convention as post_listing_screen.dart's
+    // pickMultiImage call.
+    final picked = await ImagePicker().pickImage(source: ImageSource.gallery, imageQuality: 85);
+    if (picked == null) return;
+    setState(() => _uploadingAttachment = true);
+    try {
+      final bytes = await picked.readAsBytes();
+      final path = await ref
+          .read(messageRepositoryProvider)
+          .uploadChatAttachment(requestId: widget.requestId, bytes: bytes);
+      await ref
+          .read(messageRepositoryProvider)
+          .sendMessage(requestId: widget.requestId, senderId: senderId, attachmentUrl: path);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('listing_error_generic'.tr())));
+      }
+    } finally {
+      if (mounted) setState(() => _uploadingAttachment = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentNegotiatorId = ref.watch(currentNegotiatorIdProvider);
@@ -134,20 +162,38 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                             children: [
                               if (!isOwn)
                                 _SenderLabel(negotiatorId: message.senderId),
-                              Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: isOwn
-                                      ? Theme.of(
-                                          context,
-                                        ).colorScheme.primaryContainer
-                                      : Theme.of(
-                                          context,
-                                        ).colorScheme.surfaceContainerHighest,
+                              if (message.attachmentUrl != null)
+                                ClipRRect(
                                   borderRadius: BorderRadius.circular(12),
+                                  child: SizedBox(
+                                    width: 200,
+                                    height: 200,
+                                    child: SignedPhoto(
+                                      path: message.attachmentUrl!,
+                                      signedUrlFetcher: (path) => ref
+                                          .read(messageRepositoryProvider)
+                                          .createAttachmentSignedUrl(path),
+                                    ),
+                                  ),
                                 ),
-                                child: Text(message.body),
-                              ),
+                              if (message.body != null && message.body!.isNotEmpty)
+                                Container(
+                                  margin: EdgeInsets.only(
+                                    top: message.attachmentUrl != null ? 4 : 0,
+                                  ),
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: isOwn
+                                        ? Theme.of(
+                                            context,
+                                          ).colorScheme.primaryContainer
+                                        : Theme.of(
+                                            context,
+                                          ).colorScheme.surfaceContainerHighest,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(message.body!),
+                                ),
                             ],
                           ),
                         ),
@@ -162,6 +208,19 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 padding: const EdgeInsets.all(12),
                 child: Row(
                   children: [
+                    IconButton(
+                      icon: _uploadingAttachment
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : Icon(PhosphorIcons.image(PhosphorIconsStyle.bold)),
+                      tooltip: 'message_attach_photo'.tr(),
+                      onPressed: _uploadingAttachment
+                          ? null
+                          : () => _pickAndSendAttachment(currentNegotiatorId),
+                    ),
                     Expanded(
                       child: TextField(
                         controller: _controller,

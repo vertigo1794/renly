@@ -10,6 +10,7 @@ String deepLinkRouteFor(String category, Map<String, String> data) {
       }
       return '/requirement-board/${data['requirement_id']}/matches';
     case 'cobroke_request':
+    case 'agreement':
       return '/my-requests';
     case 'message':
       return '/messages/${data['request_id']}';

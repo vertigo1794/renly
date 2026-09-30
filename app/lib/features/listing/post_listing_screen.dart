@@ -10,6 +10,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../core/constants/malaysian_states.dart';
+import '../../core/location/location_capture.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/brutalist_button.dart';
 import '../matching/live_match_preview.dart';
@@ -39,6 +40,13 @@ class PostListingFormBody extends ConsumerStatefulWidget {
   @override
   ConsumerState<PostListingFormBody> createState() => _PostListingFormBodyState();
 }
+
+// Mirrors the DropdownButtonFormField `items` values below -- kept in sync
+// with them so a stale ListingDraft's dropdown values can be validated
+// against the CURRENT allowed set before prefilling (see initState).
+const _kPropertyTypes = ['apartment', 'house', 'commercial', 'land'];
+const _kTenures = ['freehold', 'leasehold'];
+const _kTransactionTypes = ['sale', 'rent'];
 
 class _PostListingFormBodyState extends ConsumerState<PostListingFormBody> {
   final _formKey = GlobalKey<FormState>();
@@ -82,6 +90,9 @@ class _PostListingFormBodyState extends ConsumerState<PostListingFormBody> {
   String _propertyType = 'apartment';
   String _transactionType = 'sale';
   String _state = malaysianStates.first;
+  double? _latitude;
+  double? _longitude;
+  bool _capturingLocation = false;
   bool _titleVerified = false;
   bool _exclusiveMandate = false;
   final List<XFile> _photos = [];
@@ -112,9 +123,17 @@ class _PostListingFormBodyState extends ConsumerState<PostListingFormBody> {
     if (draft != null) {
       _titleController.text = draft.title;
       _descriptionController.text = draft.description;
-      _propertyType = draft.propertyType;
-      _transactionType = draft.transactionType;
-      _state = draft.state;
+      // ListingDraft is persisted indefinitely in SharedPreferences with no
+      // schema versioning -- a draft saved before one of these dropdowns'
+      // allowed values changed can carry a value that's no longer in
+      // `items`, which would either crash DropdownButtonFormField's
+      // initialValue-must-be-in-items assert (debug) or silently reach the
+      // DB's CHECK constraint (release). Fall back to the same safe
+      // default a fresh form would use whenever the stored value isn't one
+      // of the field's current options.
+      _propertyType = _kPropertyTypes.contains(draft.propertyType) ? draft.propertyType : _propertyType;
+      _transactionType = _kTransactionTypes.contains(draft.transactionType) ? draft.transactionType : _transactionType;
+      _state = malaysianStates.contains(draft.state) ? draft.state : _state;
       _areaController.text = draft.area;
       _priceController.text = draft.price ?? '';
       _bedroomsController.text = draft.bedrooms ?? '';
@@ -125,7 +144,7 @@ class _PostListingFormBodyState extends ConsumerState<PostListingFormBody> {
       _titleVerified = draft.titleVerified;
       _exclusiveMandate = draft.exclusiveMandate;
       _maintenanceFeeController.text = draft.maintenanceFeeMyr ?? '';
-      _tenure = draft.tenure;
+      _tenure = _kTenures.contains(draft.tenure) ? draft.tenure : null;
       _parkingBaysController.text = draft.parkingBays ?? '';
       _floorLevelController.text = draft.floorLevel ?? '';
       _furnishingStatus = draft.furnishingStatus;
@@ -227,6 +246,17 @@ class _PostListingFormBodyState extends ConsumerState<PostListingFormBody> {
     _photoBytesCache.remove(removed.path);
   }
 
+  /// Drag-to-reorder the photo strip before submit -- ReorderableListView's
+  /// own contract: newIndex is the position BEFORE removal, so it must be
+  /// decremented by one when the dragged item was originally above it.
+  void _reorderPhotos(int oldIndex, int newIndex) {
+    setState(() {
+      if (newIndex > oldIndex) newIndex -= 1;
+      final photo = _photos.removeAt(oldIndex);
+      _photos.insert(newIndex, photo);
+    });
+  }
+
   /// Keyed on XFile.path rather than the list index so that removing a
   /// photo doesn't shift every later thumbnail onto the wrong bytes. Cached
   /// because a FutureBuilder re-runs its future on every rebuild otherwise,
@@ -272,6 +302,25 @@ class _PostListingFormBodyState extends ConsumerState<PostListingFormBody> {
     final text = _totalCommissionController.text.trim();
     if (text.isEmpty) return null;
     return double.tryParse(text);
+  }
+
+  Future<void> _useCurrentLocation() async {
+    setState(() => _capturingLocation = true);
+    final result = await captureCurrentLocation();
+    if (!mounted) return;
+    setState(() {
+      _capturingLocation = false;
+      if (result != null) {
+        _latitude = result.latitude;
+        _longitude = result.longitude;
+        if (result.matchedState != null) _state = result.matchedState!;
+        if (result.area != null && result.area!.isNotEmpty) _areaController.text = result.area!;
+        _recomputePreview();
+      }
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(result != null ? 'location_capture_success'.tr() : 'location_capture_failed'.tr())),
+    );
   }
 
   Future<void> _saveAsDraft() async {
@@ -420,6 +469,8 @@ class _PostListingFormBodyState extends ConsumerState<PostListingFormBody> {
           keysOnHand: _keysOnHand,
           protectedCoBrokeReg: _protectedCoBrokeReg,
           totalAgencyCommissionPercent: _totalCommissionValue,
+          latitude: _latitude,
+          longitude: _longitude,
         );
         _createdListingId = listing.listingId;
       }
@@ -462,7 +513,7 @@ class _PostListingFormBodyState extends ConsumerState<PostListingFormBody> {
         ref.invalidate(myMatchesProvider);
         ref.invalidate(matchesForListingProvider);
         ref.invalidate(matchesForRequirementProvider);
-      } catch (_) {
+      } catch (e) {
         // Best-effort: matching is an enhancement, not a requirement for
         // the listing itself to have been created successfully. A failure
         // here must not trap the user on a form whose real submission
@@ -470,6 +521,7 @@ class _PostListingFormBodyState extends ConsumerState<PostListingFormBody> {
         // `listing` local from the retry-safety branch above) because that
         // variable only exists inside `if (_createdListingId == null)` --
         // a retried submit that skips re-creating the row wouldn't have it.
+        debugPrint('computeAndStoreMatchesForListing failed: $e');
       }
 
       if (!mounted) return;
@@ -483,6 +535,16 @@ class _PostListingFormBodyState extends ConsumerState<PostListingFormBody> {
 
   String? _requiredValidator(String? value) {
     if (value == null || value.trim().isEmpty) return 'validation_required'.tr();
+    return null;
+  }
+
+  // Matches the DB CHECK constraints on parking_bays (0025) -- optional,
+  // but if present must not be negative.
+  String? _nonNegativeValidator(String? value) {
+    if (value == null || value.trim().isEmpty) return null;
+    final parsed = num.tryParse(value.trim());
+    if (parsed == null) return 'validation_required'.tr();
+    if (parsed < 0) return 'validation_must_be_non_negative'.tr();
     return null;
   }
 
@@ -600,7 +662,20 @@ class _PostListingFormBodyState extends ConsumerState<PostListingFormBody> {
                   decoration: InputDecoration(labelText: 'listing_field_area'.tr()),
                   validator: _requiredValidator,
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton.icon(
+                    onPressed: _capturingLocation ? null : _useCurrentLocation,
+                    icon: _capturingLocation
+                        ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                        : Icon(PhosphorIcons.mapPinLine(PhosphorIconsStyle.bold), size: 18),
+                    label: Text(
+                      _latitude != null ? 'location_captured_label'.tr() : 'location_use_current_label'.tr(),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 4),
                 TextFormField(
                   key: const Key('listing_price_field'),
                   controller: _priceController,
@@ -609,7 +684,10 @@ class _PostListingFormBodyState extends ConsumerState<PostListingFormBody> {
                   validator: (value) {
                     final requiredError = _requiredValidator(value);
                     if (requiredError != null) return requiredError;
-                    if (double.tryParse(value!.trim()) == null) return 'validation_required'.tr();
+                    final parsed = double.tryParse(value!.trim());
+                    if (parsed == null) return 'validation_required'.tr();
+                    // Matches the DB's `check (price > 0)` (0003_listing.sql).
+                    if (parsed <= 0) return 'validation_must_be_positive'.tr();
                     return null;
                   },
                 ),
@@ -621,7 +699,10 @@ class _PostListingFormBodyState extends ConsumerState<PostListingFormBody> {
                   decoration: InputDecoration(labelText: 'listing_field_maintenance_fee'.tr()),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) return null;
-                    if (double.tryParse(value.trim()) == null) return 'validation_required'.tr();
+                    final parsed = double.tryParse(value.trim());
+                    if (parsed == null) return 'validation_required'.tr();
+                    // Matches the DB's `check (maintenance_fee_myr >= 0)` (0025).
+                    if (parsed < 0) return 'validation_must_be_non_negative'.tr();
                     return null;
                   },
                 ),
@@ -667,6 +748,7 @@ class _PostListingFormBodyState extends ConsumerState<PostListingFormBody> {
                         icon: PhosphorIcons.car(PhosphorIconsStyle.bold),
                         controller: _parkingBaysController,
                         label: 'listing_stat_parking'.tr(),
+                        validator: _nonNegativeValidator,
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -827,55 +909,77 @@ class _PostListingFormBodyState extends ConsumerState<PostListingFormBody> {
                       Text('listing_photos_max'.tr()),
                     ],
                   ),
+                  const SizedBox(height: 4),
+                  if (_photos.isNotEmpty)
+                    Text('listing_photos_reorder_hint'.tr(), style: Theme.of(context).textTheme.labelSmall),
                   const SizedBox(height: 8),
-                  GridView.count(
-                    crossAxisCount: 3,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    mainAxisSpacing: 8,
-                    crossAxisSpacing: 8,
-                    children: [
-                      ...List.generate(_photos.length, (index) {
-                        return Stack(
-                          children: [
-                            // XFile.readAsBytes() works on every platform
-                            // including web; going through dart:io's
-                            // File(path) would break the web build. Same
-                            // reason as registration_professional_screen.
-                            Positioned.fill(
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(8),
-                                child: FutureBuilder<Uint8List>(
-                                  future: _photoBytes(index),
-                                  builder: (context, snapshot) {
-                                    final bytes = snapshot.data;
-                                    if (bytes == null) {
-                                      return Container(
-                                        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                                      );
-                                    }
-                                    return Image.memory(bytes, fit: BoxFit.cover);
-                                  },
-                                ),
+                  SizedBox(
+                    height: 104,
+                    child: ReorderableListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      buildDefaultDragHandles: false,
+                      onReorder: _reorderPhotos,
+                      itemCount: _photos.length,
+                      itemBuilder: (context, index) {
+                        final photo = _photos[index];
+                        return ReorderableDragStartListener(
+                          key: ValueKey(photo.path),
+                          index: index,
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: SizedBox(
+                              width: 96,
+                              height: 96,
+                              child: Stack(
+                                children: [
+                                  // XFile.readAsBytes() works on every platform
+                                  // including web; going through dart:io's
+                                  // File(path) would break the web build. Same
+                                  // reason as registration_professional_screen.
+                                  Positioned.fill(
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: FutureBuilder<Uint8List>(
+                                        future: _photoBytes(index),
+                                        builder: (context, snapshot) {
+                                          final bytes = snapshot.data;
+                                          if (bytes == null) {
+                                            return Container(
+                                              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                                            );
+                                          }
+                                          return Image.memory(bytes, fit: BoxFit.cover);
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                                  Positioned(
+                                    top: 4,
+                                    right: 4,
+                                    child: GestureDetector(
+                                      onTap: () => _removePhoto(index),
+                                      child: const CircleAvatar(
+                                        radius: 12,
+                                        child: Icon(Icons.close, size: 16),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                            Positioned(
-                              top: 4,
-                              right: 4,
-                              child: GestureDetector(
-                                onTap: () => _removePhoto(index),
-                                child: const CircleAvatar(
-                                  radius: 12,
-                                  child: Icon(Icons.close, size: 16),
-                                ),
-                              ),
-                            ),
-                          ],
+                          ),
                         );
-                      }),
-                      if (_photos.length < 10) AddPhotoTile(label: 'listing_add_photo'.tr(), onTap: _pickPhotos),
-                    ],
+                      },
+                    ),
                   ),
+                  if (_photos.length < 10) ...[
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: 96,
+                      height: 96,
+                      child: AddPhotoTile(label: 'listing_add_photo'.tr(), onTap: _pickPhotos),
+                    ),
+                  ],
                 ],
                 if (!_isEditMode && tierAsync.valueOrNull?.tier == 'free') ...[
                   const SizedBox(height: 12),
@@ -886,6 +990,10 @@ class _PostListingFormBodyState extends ConsumerState<PostListingFormBody> {
                   Text(
                     'listing_cap_reached_message'.tr(),
                     style: TextStyle(color: Theme.of(context).colorScheme.error),
+                  ),
+                  TextButton(
+                    onPressed: () => context.push('/settings/subscription'),
+                    child: Text('subscription_upgrade_button'.tr()),
                   ),
                 ],
                 if (_submitError != null) ...[

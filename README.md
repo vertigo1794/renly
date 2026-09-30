@@ -96,3 +96,18 @@ Requires a `.env` with Supabase project credentials (see `flutter_dotenv` config
 ## Status
 
 Actively developed. Design and feature set are expected to evolve — this README reflects the current state, not a frozen spec.
+
+## What's new in v1.0.1
+
+- **Geolocation** — "Use my current location" on Post Listing/Post Requirement captures real GPS coordinates, reverse-geocodes to Area/State, and powers an accurate "View Map" link on Property Detail.
+- **Offline-first Marketplace** — listings are cached locally after every successful fetch; going offline shows the last-saved listings with a clear banner instead of an empty error screen.
+- **Background match scoring** — listing/requirement matching now runs on a background isolate (`compute()`), keeping the UI thread free as the network of listings/requirements grows.
+- **Drag-to-reorder photos** — reorder a listing's photo strip before submitting, via a native reorderable list.
+- **Responsive layouts** — Marketplace and Requirement Board switch to a multi-column grid on tablet-width screens.
+- **Real HTML5/CSS3/JavaScript/jQuery module** — an in-app Commission Split Calculator is a genuine HTML5 document (semantic markup, CSS3 flexbox/custom properties, jQuery-driven live validation) rendered in an embedded WebView, with a real AJAX call pulling live active-listing counts from the backend.
+- **Literal MySQL integration** — a small, fully separate MySQL database tracks property view counts, connected to directly over the MySQL wire protocol (independent of the app's Supabase/Postgres core).
+- **Clickable legal pages** — Terms of Service and Privacy Policy are now real, cross-linked HTML documents (with working hyperlinks and a support email link) instead of static text.
+
+## Install the v1.0.1 APK
+
+Same steps as above — grab `app-release.apk` from the [v1.0.1 release](https://github.com/vertigo1794/renly/releases/tag/v1.0.1).

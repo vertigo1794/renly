@@ -82,6 +82,7 @@ class _MyInventoryScreenState extends ConsumerState<MyInventoryScreen> {
                   // silently drop the only way back.
                   IconButton(
                     icon: Icon(PhosphorIcons.arrowLeft(PhosphorIconsStyle.bold)),
+                    tooltip: 'a11y_back'.tr(),
                     onPressed: () {
                       if (context.canPop()) {
                         context.pop();
@@ -136,6 +137,7 @@ class _MyInventoryScreenState extends ConsumerState<MyInventoryScreen> {
                     children: [
                       IconButton(
                         icon: Icon(PhosphorIcons.bellSimple(PhosphorIconsStyle.bold)),
+                        tooltip: 'notification_center_title'.tr(),
                         onPressed: () => context.push('/notifications'),
                       ),
                       if (unreadCount > 0)
@@ -167,6 +169,7 @@ class _MyInventoryScreenState extends ConsumerState<MyInventoryScreen> {
                               data: (r) => r,
                               orElse: () => const <CobrokeRequestCandidate>[],
                             );
+                            final receivedLoaded = receivedAsync.hasValue;
                             final partition = ListingStatusFilter.partition(listings, received);
                             final pendingOnMyListings = received.where((c) => c.request.status == 'pending').length;
 
@@ -348,7 +351,11 @@ class _MyInventoryScreenState extends ConsumerState<MyInventoryScreen> {
                                     )
                                   else
                                     for (final listing in visible) ...[
-                                      _InventoryCard(listing: listing, received: received),
+                                      _InventoryCard(
+                                        listing: listing,
+                                        received: received,
+                                        receivedLoaded: receivedLoaded,
+                                      ),
                                       const SizedBox(height: 12),
                                     ],
                                 ],
@@ -432,6 +439,7 @@ class _DraftRow extends ConsumerWidget {
           ),
           IconButton(
             icon: Icon(PhosphorIcons.trash(PhosphorIconsStyle.bold), size: 18),
+            tooltip: 'a11y_delete'.tr(),
             onPressed: () => ref.read(listingDraftsProvider.notifier).remove(draft.draftId),
           ),
           InkWell(
@@ -482,10 +490,15 @@ class _StatPillItem extends StatelessWidget {
 }
 
 class _InventoryCard extends ConsumerWidget {
-  const _InventoryCard({required this.listing, required this.received});
+  const _InventoryCard({required this.listing, required this.received, required this.receivedLoaded});
 
   final Listing listing;
   final List<CobrokeRequestCandidate> received;
+  // True only once receivedRequestsProvider has actually loaded data (not
+  // loading, not errored) -- see PopupMenuItem 'delete' below, which must
+  // never treat "not loaded yet" the same as "genuinely no accepted
+  // requests".
+  final bool receivedLoaded;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -923,11 +936,13 @@ class _InventoryCard extends ConsumerWidget {
                             const PopupMenuDivider(),
                             PopupMenuItem(
                               value: 'delete',
-                              enabled: myAcceptedRequests.isEmpty,
+                              enabled: receivedLoaded && myAcceptedRequests.isEmpty,
                               child: Text(
-                                myAcceptedRequests.isEmpty
-                                    ? 'inventory_action_delete'.tr()
-                                    : '${'inventory_action_delete'.tr()} (${'inventory_delete_blocked_message'.tr()})',
+                                !receivedLoaded
+                                    ? '${'inventory_action_delete'.tr()} (${'inventory_action_delete_checking'.tr()})'
+                                    : myAcceptedRequests.isEmpty
+                                        ? 'inventory_action_delete'.tr()
+                                        : '${'inventory_action_delete'.tr()} (${'inventory_delete_blocked_message'.tr()})',
                                 style: TextStyle(color: Theme.of(context).colorScheme.error),
                               ),
                             ),

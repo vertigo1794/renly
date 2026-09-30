@@ -6,7 +6,8 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/r_star_badge.dart';
-import '../collaboration/cobroke_request_providers.dart' hide currentNegotiatorIdProvider;
+import '../collaboration/cobroke_request_providers.dart'
+    hide currentNegotiatorIdProvider;
 import '../collaboration/send_cobroke_request_action.dart';
 import '../listing/listing_formatting.dart';
 import '../listing/listing_photo.dart';
@@ -64,379 +65,484 @@ class MainDashboardScreen extends ConsumerWidget {
         : ref.watch(myListingsProvider(negotiatorId));
     final receivedRequestsAsync = ref.watch(receivedRequestsProvider);
     final myMatchesAsync = ref.watch(myMatchesProvider);
-    final marketPulseAsync =
-        negotiatorId == null ? const AsyncValue.data(null) : ref.watch(marketPulseProvider(negotiatorId));
+    final marketPulseAsync = negotiatorId == null
+        ? const AsyncValue.data(null)
+        : ref.watch(marketPulseProvider(negotiatorId));
 
     return Scaffold(
       backgroundColor: _MockColors.surfaceMain,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Brand header row: wordmark + REN verification pill + bell.
-              // Untouched by this pass -- do not restyle.
-              Row(
+          // Centered max-width column on wide screens (tablet) -- this app
+          // never accounted for anything wider than a phone before (no
+          // MediaQuery/LayoutBuilder anywhere), so unconstrained content
+          // would otherwise stretch into unreadably long lines on a tablet.
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 640),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const RStarBadge(size: 28),
-                  const SizedBox(width: 8),
-                  Text(
-                    'app_name'.tr(),
-                    style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                          color: AppColors.ink,
-                          fontSize: 20,
-                          letterSpacing: -1.0,
-                          height: 1,
-                        ),
-                  ),
-                  const Spacer(),
-                  profileAsync.maybeWhen(
-                    data: (profile) => profile.renNumber == null
-                        ? const SizedBox.shrink()
-                        : Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              border: Border.all(color: AppColors.ink.withValues(alpha: 0.1)),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Container(
-                                  width: 6,
-                                  height: 6,
-                                  decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle),
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  'REN ${profile.renNumber}',
-                                  style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold),
-                                ),
-                              ],
-                            ),
-                          ),
-                    orElse: () => const SizedBox.shrink(),
-                  ),
-                  const SizedBox(width: 8),
-                  Stack(
+                  // Brand header row: wordmark + REN verification pill + bell.
+                  // Untouched by this pass -- do not restyle.
+                  Row(
                     children: [
-                      IconButton(
-                        icon: Icon(PhosphorIcons.bellSimple(PhosphorIconsStyle.bold)),
-                        onPressed: () => context.push('/notifications'),
-                      ),
-                      if (unreadCount > 0)
-                        Positioned(
-                          right: 8,
-                          top: 8,
-                          child: Container(
-                            width: 8,
-                            height: 8,
-                            decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
-                          ),
-                        ),
-                    ],
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              // Daily briefing: welcome text with the name underlined in
-              // brand lime, per the mockup.
-              profileAsync.when(
-                loading: () => const SizedBox.shrink(),
-                error: (error, stack) => const SizedBox.shrink(),
-                data: (profile) => RichText(
-                  text: TextSpan(
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          color: Colors.black,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: -1.0,
-                        ),
-                    children: [
-                      TextSpan(text: '${'dashboard_welcome_back'.tr()} '),
-                      TextSpan(
-                        text: '${profile.fullName}.',
-                        style: TextStyle(
-                          decoration: TextDecoration.underline,
-                          decorationColor: AppColors.primary,
-                          decorationThickness: 3,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'dashboard_subtitle'.tr(),
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(color: _MockColors.slate600),
-              ),
-              // Market Pulse strip.
-              marketPulseAsync.maybeWhen(
-                data: (pulse) {
-                  if (pulse == null) return const SizedBox.shrink();
-                  return Padding(
-                    padding: const EdgeInsets.only(top: 12),
-                    child: InkWell(
-                      onTap: () => context.push('/my-matches'),
-                      borderRadius: BorderRadius.circular(12),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                        decoration: BoxDecoration(
-                          color: _MockColors.surfaceDark,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.black),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: AppColors.primary,
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                'dashboard_market_pulse_live'.tr(),
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .labelSmall
-                                    ?.copyWith(color: AppColors.ink, fontWeight: FontWeight.w800),
-                              ),
+                      const RStarBadge(size: 28),
+                      const SizedBox(width: 8),
+                      Text(
+                        'app_name'.tr(),
+                        style: Theme.of(context).textTheme.headlineLarge
+                            ?.copyWith(
+                              color: AppColors.ink,
+                              fontSize: 20,
+                              letterSpacing: -1.0,
+                              height: 1,
                             ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                '${pulse.count} ${'dashboard_market_pulse_new_matches'.tr()} ${pulse.area}',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .labelMedium
-                                    ?.copyWith(color: Colors.white, fontWeight: FontWeight.w600),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            Text(
-                              'dashboard_market_pulse_view'.tr(),
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .labelSmall
-                                  ?.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold),
-                            ),
-                            Icon(PhosphorIcons.caretRight(PhosphorIconsStyle.bold), color: AppColors.primary, size: 14),
-                          ],
-                        ),
                       ),
-                    ),
-                  );
-                },
-                orElse: () => const SizedBox.shrink(),
-              ),
-              const SizedBox(height: 24),
-              // Quick Actions grid.
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'dashboard_quick_actions_title'.tr().toUpperCase(),
-                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          color: Colors.black54,
-                          letterSpacing: 0.5,
-                        ),
-                  ),
-                  Text(
-                    'dashboard_quick_actions_hub'.tr(),
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(color: _MockColors.slate400),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              IntrinsicHeight(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Expanded(
-                      child: _QuickActionCard(
-                        background: AppColors.primary,
-                        onTap: () => context.push('/post-listing'),
-                        iconCircleColor: Colors.black,
-                        icon: PhosphorIcons.plus(PhosphorIconsStyle.bold),
-                        iconColor: AppColors.primary,
-                        tag: 'dashboard_quick_action_instant'.tr(),
-                        tagBackground: Colors.black.withValues(alpha: 0.1),
-                        tagColor: Colors.black,
-                        title: 'dashboard_quick_action_post_listing'.tr(),
-                        subtitle: 'dashboard_quick_action_post_listing_subtitle'.tr(),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: _QuickActionCard(
-                        background: Colors.white,
-                        onTap: () => context.go('/marketplace'),
-                        iconCircleColor: _MockColors.surfaceMuted,
-                        icon: PhosphorIcons.storefront(PhosphorIconsStyle.bold),
-                        iconColor: Colors.black,
-                        tag: listingsAsync.maybeWhen(
-                          data: (listings) => listings.isEmpty
-                              ? null
-                              : '${listings.length} ${'dashboard_quick_action_market_active'.tr()}',
-                          orElse: () => null,
-                        ),
-                        tagBackground: _MockColors.emerald100,
-                        tagColor: _MockColors.emerald700,
-                        title: 'dashboard_quick_action_market'.tr(),
-                        subtitle: 'dashboard_quick_action_market_subtitle'.tr(),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 10),
-              _MyInventoryCard(
-                onTap: () => context.push('/my-inventory'),
-                listingCount: myListingsAsync.maybeWhen(data: (listings) => listings.length, orElse: () => null),
-                pendingCount: receivedRequestsAsync.maybeWhen(
-                  data: (requests) => requests.where((c) => c.request.status == 'pending').length,
-                  orElse: () => null,
-                ),
-              ),
-              // Co-Broking Radar.
-              myMatchesAsync.maybeWhen(
-                data: (matches) {
-                  final myListingMatches = negotiatorId == null
-                      ? const <MatchCandidate>[]
-                      : matches.where((c) => c.listing.negotiatorId == negotiatorId).toList();
-                  if (myListingMatches.isEmpty) return const SizedBox.shrink();
-                  final primary = myListingMatches.first;
-                  final secondary = myListingMatches.skip(1).take(2).toList();
-                  return Padding(
-                    padding: const EdgeInsets.only(top: 24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
+                      const Spacer(),
+                      profileAsync.maybeWhen(
+                        data: (profile) => profile.renNumber == null
+                            ? const SizedBox.shrink()
+                            : Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  border: Border.all(
+                                    color: AppColors.ink.withValues(alpha: 0.1),
+                                  ),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Text(
-                                      'dashboard_radar_title'.tr(),
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleMedium
-                                          ?.copyWith(fontWeight: FontWeight.w800),
+                                    Container(
+                                      width: 6,
+                                      height: 6,
+                                      decoration: const BoxDecoration(
+                                        color: Colors.green,
+                                        shape: BoxShape.circle,
+                                      ),
                                     ),
                                     const SizedBox(width: 6),
-                                    Container(
-                                      width: 8,
-                                      height: 8,
-                                      decoration: BoxDecoration(
-                                        color: AppColors.primary,
-                                        shape: BoxShape.circle,
-                                        border: Border.all(color: Colors.black),
-                                      ),
+                                    Text(
+                                      'REN ${profile.renNumber}',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .labelSmall
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                     ),
                                   ],
                                 ),
-                                Text(
-                                  'dashboard_radar_subtitle'.tr(),
-                                  style: Theme.of(context).textTheme.labelSmall?.copyWith(color: _MockColors.slate500),
-                                ),
-                              ],
+                              ),
+                        orElse: () => const SizedBox.shrink(),
+                      ),
+                      const SizedBox(width: 8),
+                      Stack(
+                        children: [
+                          IconButton(
+                            icon: Icon(
+                              PhosphorIcons.bellSimple(PhosphorIconsStyle.bold),
                             ),
-                            InkWell(
-                              onTap: () => context.push('/my-matches'),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    '${'dashboard_view_all'.tr()} (${myListingMatches.length})',
+                            tooltip: 'notification_center_title'.tr(),
+                            onPressed: () => context.push('/notifications'),
+                          ),
+                          if (unreadCount > 0)
+                            Positioned(
+                              right: 8,
+                              top: 8,
+                              child: Container(
+                                width: 8,
+                                height: 8,
+                                decoration: const BoxDecoration(
+                                  color: Colors.red,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  // Daily briefing: welcome text with the name underlined in
+                  // brand lime, per the mockup.
+                  profileAsync.when(
+                    loading: () => const SizedBox.shrink(),
+                    error: (error, stack) => const SizedBox.shrink(),
+                    data: (profile) => RichText(
+                      text: TextSpan(
+                        style: Theme.of(context).textTheme.headlineMedium
+                            ?.copyWith(
+                              color: Colors.black,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: -1.0,
+                            ),
+                        children: [
+                          TextSpan(text: '${'dashboard_welcome_back'.tr()} '),
+                          TextSpan(
+                            text: '${profile.fullName}.',
+                            style: TextStyle(
+                              decoration: TextDecoration.underline,
+                              decorationColor: AppColors.primary,
+                              decorationThickness: 3,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'dashboard_subtitle'.tr(),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: _MockColors.slate600,
+                    ),
+                  ),
+                  // Market Pulse strip.
+                  marketPulseAsync.maybeWhen(
+                    data: (pulse) {
+                      if (pulse == null) return const SizedBox.shrink();
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 12),
+                        child: InkWell(
+                          onTap: () => context.push('/my-matches'),
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 10,
+                            ),
+                            decoration: BoxDecoration(
+                              color: _MockColors.surfaceDark,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.black),
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary,
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    'dashboard_market_pulse_live'.tr(),
                                     style: Theme.of(context)
                                         .textTheme
                                         .labelSmall
-                                        ?.copyWith(fontWeight: FontWeight.bold, color: Colors.black),
+                                        ?.copyWith(
+                                          color: AppColors.ink,
+                                          fontWeight: FontWeight.w800,
+                                        ),
                                   ),
-                                  const SizedBox(width: 2),
-                                  Icon(PhosphorIcons.caretRight(PhosphorIconsStyle.bold), size: 12),
-                                ],
-                              ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    '${pulse.count} ${'dashboard_market_pulse_new_matches'.tr()} ${pulse.area}',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .labelMedium
+                                        ?.copyWith(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                Text(
+                                  'dashboard_market_pulse_view'.tr(),
+                                  style: Theme.of(context).textTheme.labelSmall
+                                      ?.copyWith(
+                                        color: AppColors.primary,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                ),
+                                Icon(
+                                  PhosphorIcons.caretRight(
+                                    PhosphorIconsStyle.bold,
+                                  ),
+                                  color: AppColors.primary,
+                                  size: 14,
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-                        _RadarPrimaryCard(
-                          candidate: primary,
-                          onCoBroke: () => sendCobrokeRequest(context, ref, primary.matchId),
-                        ),
-                        for (final candidate in secondary) ...[
-                          const SizedBox(height: 10),
-                          _RadarSecondaryRow(
-                            candidate: candidate,
-                            onTap: () => sendCobrokeRequest(context, ref, candidate.matchId),
                           ),
-                        ],
+                        ),
+                      );
+                    },
+                    orElse: () => const SizedBox.shrink(),
+                  ),
+                  const SizedBox(height: 24),
+                  // Quick Actions grid.
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'dashboard_quick_actions_title'.tr().toUpperCase(),
+                        style: Theme.of(context).textTheme.labelMedium
+                            ?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              color: Colors.black54,
+                              letterSpacing: 0.5,
+                            ),
+                      ),
+                      Text(
+                        'dashboard_quick_actions_hub'.tr(),
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: _MockColors.slate400,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Expanded(
+                          child: _QuickActionCard(
+                            background: AppColors.primary,
+                            onTap: () => context.push('/post-listing'),
+                            iconCircleColor: Colors.black,
+                            icon: PhosphorIcons.plus(PhosphorIconsStyle.bold),
+                            iconColor: AppColors.primary,
+                            tag: 'dashboard_quick_action_instant'.tr(),
+                            tagBackground: Colors.black.withValues(alpha: 0.1),
+                            tagColor: Colors.black,
+                            title: 'dashboard_quick_action_post_listing'.tr(),
+                            subtitle:
+                                'dashboard_quick_action_post_listing_subtitle'
+                                    .tr(),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: _QuickActionCard(
+                            background: Colors.white,
+                            onTap: () => context.go('/marketplace'),
+                            iconCircleColor: _MockColors.surfaceMuted,
+                            icon: PhosphorIcons.storefront(
+                              PhosphorIconsStyle.bold,
+                            ),
+                            iconColor: Colors.black,
+                            tag: listingsAsync.maybeWhen(
+                              data: (listings) => listings.isEmpty
+                                  ? null
+                                  : '${listings.length} ${'dashboard_quick_action_market_active'.tr()}',
+                              orElse: () => null,
+                            ),
+                            tagBackground: _MockColors.emerald100,
+                            tagColor: _MockColors.emerald700,
+                            title: 'dashboard_quick_action_market'.tr(),
+                            subtitle: 'dashboard_quick_action_market_subtitle'
+                                .tr(),
+                          ),
+                        ),
                       ],
                     ),
-                  );
-                },
-                orElse: () => const SizedBox.shrink(),
-              ),
-              const SizedBox(height: 24),
-              // Recent Listings.
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'dashboard_recent_listings_title'.tr(),
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
                   ),
-                  InkWell(
-                    onTap: () => context.go('/marketplace'),
-                    child: Text(
-                      'dashboard_view_all'.tr(),
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold),
+                  const SizedBox(height: 10),
+                  _MyInventoryCard(
+                    onTap: () => context.push('/my-inventory'),
+                    listingCount: myListingsAsync.maybeWhen(
+                      data: (listings) => listings.length,
+                      orElse: () => null,
                     ),
+                    pendingCount: receivedRequestsAsync.maybeWhen(
+                      data: (requests) => requests
+                          .where((c) => c.request.status == 'pending')
+                          .length,
+                      orElse: () => null,
+                    ),
+                  ),
+                  // Co-Broking Radar.
+                  myMatchesAsync.maybeWhen(
+                    data: (matches) {
+                      final myListingMatches = negotiatorId == null
+                          ? const <MatchCandidate>[]
+                          : matches
+                                .where(
+                                  (c) => c.listing.negotiatorId == negotiatorId,
+                                )
+                                .toList();
+                      if (myListingMatches.isEmpty)
+                        return const SizedBox.shrink();
+                      final primary = myListingMatches.first;
+                      final secondary = myListingMatches
+                          .skip(1)
+                          .take(2)
+                          .toList();
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 24),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Text(
+                                          'dashboard_radar_title'.tr(),
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .titleMedium
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.w800,
+                                              ),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Container(
+                                          width: 8,
+                                          height: 8,
+                                          decoration: BoxDecoration(
+                                            color: AppColors.primary,
+                                            shape: BoxShape.circle,
+                                            border: Border.all(
+                                              color: Colors.black,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    Text(
+                                      'dashboard_radar_subtitle'.tr(),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .labelSmall
+                                          ?.copyWith(
+                                            color: _MockColors.slate500,
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                                InkWell(
+                                  onTap: () => context.push('/my-matches'),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        '${'dashboard_view_all'.tr()} (${myListingMatches.length})',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .labelSmall
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.black,
+                                            ),
+                                      ),
+                                      const SizedBox(width: 2),
+                                      Icon(
+                                        PhosphorIcons.caretRight(
+                                          PhosphorIconsStyle.bold,
+                                        ),
+                                        size: 12,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 10),
+                            _RadarPrimaryCard(
+                              candidate: primary,
+                              onCoBroke: () => sendCobrokeRequest(
+                                context,
+                                ref,
+                                primary.matchId,
+                              ),
+                            ),
+                            for (final candidate in secondary) ...[
+                              const SizedBox(height: 10),
+                              _RadarSecondaryRow(
+                                candidate: candidate,
+                                onTap: () => sendCobrokeRequest(
+                                  context,
+                                  ref,
+                                  candidate.matchId,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      );
+                    },
+                    orElse: () => const SizedBox.shrink(),
+                  ),
+                  const SizedBox(height: 24),
+                  // Recent Listings.
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'dashboard_recent_listings_title'.tr(),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w800),
+                      ),
+                      InkWell(
+                        onTap: () => context.go('/marketplace'),
+                        child: Text(
+                          'dashboard_view_all'.tr(),
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  listingsAsync.when(
+                    loading: () => const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 40),
+                      child: Center(child: CircularProgressIndicator()),
+                    ),
+                    error: (error, stack) => Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 40),
+                      child: Center(child: Text('listing_error_generic'.tr())),
+                    ),
+                    data: (listings) {
+                      if (listings.isEmpty) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 40),
+                          child: Center(
+                            child: Text('dashboard_recent_listings_empty'.tr()),
+                          ),
+                        );
+                      }
+                      final recent = listings.take(10).toList();
+                      return Column(
+                        children: [
+                          for (final listing in recent) ...[
+                            _RecentListingRow(
+                              listing: listing,
+                              onTap: () => context.push(
+                                '/property/${listing.listingId}',
+                              ),
+                            ),
+                            if (listing != recent.last)
+                              const SizedBox(height: 10),
+                          ],
+                        ],
+                      );
+                    },
                   ),
                 ],
               ),
-              const SizedBox(height: 10),
-              listingsAsync.when(
-                loading: () => const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 40),
-                  child: Center(child: CircularProgressIndicator()),
-                ),
-                error: (error, stack) => Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 40),
-                  child: Center(child: Text('listing_error_generic'.tr())),
-                ),
-                data: (listings) {
-                  if (listings.isEmpty) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 40),
-                      child: Center(child: Text('dashboard_recent_listings_empty'.tr())),
-                    );
-                  }
-                  final recent = listings.take(10).toList();
-                  return Column(
-                    children: [
-                      for (final listing in recent) ...[
-                        _RecentListingRow(
-                          listing: listing,
-                          onTap: () => context.push('/property/${listing.listingId}'),
-                        ),
-                        if (listing != recent.last) const SizedBox(height: 10),
-                      ],
-                    ],
-                  );
-                },
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -486,7 +592,9 @@ class _QuickActionCard extends StatelessWidget {
           color: background,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: Colors.black, width: 2),
-          boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(3, 3))],
+          boxShadow: const [
+            BoxShadow(color: Colors.black, offset: Offset(3, 3)),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -498,19 +606,29 @@ class _QuickActionCard extends StatelessWidget {
                 Container(
                   width: 32,
                   height: 32,
-                  decoration: BoxDecoration(color: iconCircleColor, shape: BoxShape.circle),
+                  decoration: BoxDecoration(
+                    color: iconCircleColor,
+                    shape: BoxShape.circle,
+                  ),
                   child: Icon(icon, color: iconColor, size: 18),
                 ),
                 if (tag != null)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                    decoration: BoxDecoration(color: tagBackground, borderRadius: BorderRadius.circular(20)),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: tagBackground,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
                     child: Text(
                       tag!,
-                      style: Theme.of(context)
-                          .textTheme
-                          .labelSmall
-                          ?.copyWith(color: tagColor, fontWeight: FontWeight.bold, fontSize: 10),
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: tagColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 10,
+                      ),
                     ),
                   ),
               ],
@@ -520,13 +638,17 @@ class _QuickActionCard extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w800),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w800),
                 ),
                 Text(
                   subtitle,
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: background == Colors.white ? _MockColors.slate500 : Colors.black.withValues(alpha: 0.75),
-                      ),
+                    color: background == Colors.white
+                        ? _MockColors.slate500
+                        : Colors.black.withValues(alpha: 0.75),
+                  ),
                 ),
               ],
             ),
@@ -542,7 +664,11 @@ class _QuickActionCard extends StatelessWidget {
 /// providers are loading/erroring, or when the real count is genuinely
 /// zero -- this screen never shows a fabricated or placeholder count.
 class _MyInventoryCard extends StatelessWidget {
-  const _MyInventoryCard({required this.onTap, required this.listingCount, required this.pendingCount});
+  const _MyInventoryCard({
+    required this.onTap,
+    required this.listingCount,
+    required this.pendingCount,
+  });
 
   final VoidCallback onTap;
   final int? listingCount;
@@ -559,15 +685,24 @@ class _MyInventoryCard extends StatelessWidget {
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: Colors.black, width: 2),
-          boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(3, 3))],
+          boxShadow: const [
+            BoxShadow(color: Colors.black, offset: Offset(3, 3)),
+          ],
         ),
         child: Row(
           children: [
             Container(
               width: 36,
               height: 36,
-              decoration: BoxDecoration(color: _MockColors.surfaceDark, borderRadius: BorderRadius.circular(10)),
-              child: Icon(PhosphorIcons.listBullets(PhosphorIconsStyle.bold), color: AppColors.primary, size: 18),
+              decoration: BoxDecoration(
+                color: _MockColors.surfaceDark,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                PhosphorIcons.listBullets(PhosphorIconsStyle.bold),
+                color: AppColors.primary,
+                size: 18,
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -578,12 +713,17 @@ class _MyInventoryCard extends StatelessWidget {
                     children: [
                       Text(
                         'dashboard_quick_action_my_inventory'.tr(),
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w800),
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                       if (listingCount != null) ...[
                         const SizedBox(width: 6),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: _MockColors.slate100,
                             borderRadius: BorderRadius.circular(20),
@@ -591,10 +731,12 @@ class _MyInventoryCard extends StatelessWidget {
                           ),
                           child: Text(
                             '$listingCount ${'dashboard_quick_action_my_inventory_count'.tr()}',
-                            style: Theme.of(context)
-                                .textTheme
-                                .labelSmall
-                                ?.copyWith(color: _MockColors.slate700, fontWeight: FontWeight.bold, fontSize: 10),
+                            style: Theme.of(context).textTheme.labelSmall
+                                ?.copyWith(
+                                  color: _MockColors.slate700,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 10,
+                                ),
                           ),
                         ),
                       ],
@@ -603,7 +745,9 @@ class _MyInventoryCard extends StatelessWidget {
                   if (pendingCount != null && pendingCount! > 0)
                     Text(
                       '$pendingCount ${'dashboard_quick_action_pending_requests'.tr()}',
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(color: _MockColors.slate500),
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: _MockColors.slate500,
+                      ),
                     ),
                 ],
               ),
@@ -611,8 +755,14 @@ class _MyInventoryCard extends StatelessWidget {
             Container(
               width: 28,
               height: 28,
-              decoration: const BoxDecoration(color: _MockColors.surfaceMuted, shape: BoxShape.circle),
-              child: Icon(PhosphorIcons.caretRight(PhosphorIconsStyle.bold), size: 14),
+              decoration: const BoxDecoration(
+                color: _MockColors.surfaceMuted,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                PhosphorIcons.caretRight(PhosphorIconsStyle.bold),
+                size: 14,
+              ),
             ),
           ],
         ),
@@ -657,7 +807,10 @@ class _RadarPrimaryCard extends StatelessWidget {
                 fit: StackFit.expand,
                 children: [
                   if (listing.photoUrls.isNotEmpty)
-                    ListingPhoto(path: listing.photoUrls.first, fit: BoxFit.cover)
+                    ListingPhoto(
+                      path: listing.photoUrls.first,
+                      fit: BoxFit.cover,
+                    )
                   else
                     Container(color: _MockColors.slate200),
                   DecoratedBox(
@@ -665,7 +818,10 @@ class _RadarPrimaryCard extends StatelessWidget {
                       gradient: LinearGradient(
                         begin: Alignment.bottomCenter,
                         end: Alignment.topCenter,
-                        colors: [Colors.black.withValues(alpha: 0.7), Colors.black.withValues(alpha: 0.05)],
+                        colors: [
+                          Colors.black.withValues(alpha: 0.7),
+                          Colors.black.withValues(alpha: 0.05),
+                        ],
                       ),
                     ),
                   ),
@@ -675,7 +831,10 @@ class _RadarPrimaryCard extends StatelessWidget {
                     child: Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
                           decoration: BoxDecoration(
                             color: AppColors.primary,
                             border: Border.all(color: Colors.black),
@@ -683,22 +842,31 @@ class _RadarPrimaryCard extends StatelessWidget {
                           ),
                           child: Text(
                             '${candidate.score}% ${'dashboard_radar_match_percent'.tr()}',
-                            style: Theme.of(context)
-                                .textTheme
-                                .labelSmall
-                                ?.copyWith(fontWeight: FontWeight.w800, fontSize: 10),
+                            style: Theme.of(context).textTheme.labelSmall
+                                ?.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 10,
+                                ),
                           ),
                         ),
                         const SizedBox(width: 6),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(6)),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.black,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
                           child: Text(
                             'dashboard_radar_exclusive'.tr(),
-                            style: Theme.of(context)
-                                .textTheme
-                                .labelSmall
-                                ?.copyWith(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10),
+                            style: Theme.of(context).textTheme.labelSmall
+                                ?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 10,
+                                ),
                           ),
                         ),
                       ],
@@ -717,15 +885,22 @@ class _RadarPrimaryCard extends StatelessWidget {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                'dashboard_radar_asking_price'.tr().toUpperCase(),
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .labelSmall
-                                    ?.copyWith(color: Colors.white70, fontSize: 9),
+                                'dashboard_radar_asking_price'
+                                    .tr()
+                                    .toUpperCase(),
+                                style: Theme.of(context).textTheme.labelSmall
+                                    ?.copyWith(
+                                      color: Colors.white70,
+                                      fontSize: 9,
+                                    ),
                               ),
                               Text(
-                                ListingFormatting.formatPrice(listing.price, listing.transactionType),
-                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                ListingFormatting.formatPrice(
+                                  listing.price,
+                                  listing.transactionType,
+                                ),
+                                style: Theme.of(context).textTheme.titleMedium
+                                    ?.copyWith(
                                       color: Colors.white,
                                       fontWeight: FontWeight.w900,
                                     ),
@@ -734,29 +909,38 @@ class _RadarPrimaryCard extends StatelessWidget {
                           ),
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 6,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.white.withValues(alpha: 0.95),
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Colors.black.withValues(alpha: 0.15)),
+                            border: Border.all(
+                              color: Colors.black.withValues(alpha: 0.15),
+                            ),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.end,
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                'dashboard_radar_split_label'.tr().toUpperCase(),
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .labelSmall
-                                    ?.copyWith(color: _MockColors.slate600, fontSize: 8),
+                                'dashboard_radar_split_label'
+                                    .tr()
+                                    .toUpperCase(),
+                                style: Theme.of(context).textTheme.labelSmall
+                                    ?.copyWith(
+                                      color: _MockColors.slate600,
+                                      fontSize: 8,
+                                    ),
                               ),
                               Text(
                                 'dashboard_radar_split_value'.tr(),
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .labelSmall
-                                    ?.copyWith(fontWeight: FontWeight.w900, fontSize: 11),
+                                style: Theme.of(context).textTheme.labelSmall
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.w900,
+                                      fontSize: 11,
+                                    ),
                               ),
                             ],
                           ),
@@ -776,16 +960,24 @@ class _RadarPrimaryCard extends StatelessWidget {
                     listing.bedrooms != null
                         ? '${listing.title} • ${listing.bedrooms} ${'dashboard_radar_beds'.tr()}'
                         : listing.title,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w800),
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                   const SizedBox(height: 2),
                   Row(
                     children: [
-                      Icon(PhosphorIcons.mapPin(PhosphorIconsStyle.bold), size: 13, color: _MockColors.slate400),
+                      Icon(
+                        PhosphorIcons.mapPin(PhosphorIconsStyle.bold),
+                        size: 13,
+                        color: _MockColors.slate400,
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         listing.area,
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(color: _MockColors.slate500),
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: _MockColors.slate500,
+                        ),
                       ),
                     ],
                   ),
@@ -803,8 +995,14 @@ class _RadarPrimaryCard extends StatelessWidget {
                               radius: 14,
                               backgroundColor: _MockColors.slate800,
                               child: Text(
-                                owner.fullName.isNotEmpty ? owner.fullName[0].toUpperCase() : '?',
-                                style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                                owner.fullName.isNotEmpty
+                                    ? owner.fullName[0].toUpperCase()
+                                    : '?',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                             const SizedBox(width: 8),
@@ -823,13 +1021,17 @@ class _RadarPrimaryCard extends StatelessWidget {
                                   ),
                                   Text(
                                     [
-                                      if (owner.agencyName != null) owner.agencyName!,
+                                      if (owner.agencyName != null)
+                                        owner.agencyName!,
                                       'REN ${owner.renNumber}',
                                     ].join(' • '),
                                     style: Theme.of(context)
                                         .textTheme
                                         .labelSmall
-                                        ?.copyWith(color: _MockColors.slate500, fontSize: 10),
+                                        ?.copyWith(
+                                          color: _MockColors.slate500,
+                                          fontSize: 10,
+                                        ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
@@ -840,27 +1042,57 @@ class _RadarPrimaryCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      InkWell(
-                        onTap: onCoBroke,
-                        borderRadius: BorderRadius.circular(8),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(8)),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                'cobroke_request_send'.tr(),
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .labelSmall
-                                    ?.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold),
+                      Consumer(
+                        builder: (context, ref, _) {
+                          final alreadyRequested = hasOpenCobrokeRequest(
+                            ref,
+                            candidate.matchId,
+                          );
+                          return Tooltip(
+                            message: alreadyRequested
+                                ? 'cobroke_request_already_pending'.tr()
+                                : '',
+                            child: InkWell(
+                              onTap: alreadyRequested ? null : onCoBroke,
+                              borderRadius: BorderRadius.circular(8),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: alreadyRequested
+                                      ? Colors.black.withValues(alpha: 0.3)
+                                      : Colors.black,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      'cobroke_request_send'.tr(),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .labelSmall
+                                          ?.copyWith(
+                                            color: AppColors.primary,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Icon(
+                                      PhosphorIcons.arrowRight(
+                                        PhosphorIconsStyle.bold,
+                                      ),
+                                      color: AppColors.primary,
+                                      size: 14,
+                                    ),
+                                  ],
+                                ),
                               ),
-                              const SizedBox(width: 4),
-                              Icon(PhosphorIcons.arrowRight(PhosphorIconsStyle.bold), color: AppColors.primary, size: 14),
-                            ],
-                          ),
-                        ),
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),
@@ -900,7 +1132,10 @@ class _RadarSecondaryRow extends StatelessWidget {
               width: 56,
               height: 56,
               child: listing.photoUrls.isNotEmpty
-                  ? ListingPhoto(path: listing.photoUrls.first, fit: BoxFit.cover)
+                  ? ListingPhoto(
+                      path: listing.photoUrls.first,
+                      fit: BoxFit.cover,
+                    )
                   : Container(color: _MockColors.slate200),
             ),
           ),
@@ -912,24 +1147,30 @@ class _RadarSecondaryRow extends StatelessWidget {
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 4,
+                        vertical: 1,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.primary.withValues(alpha: 0.6),
                         borderRadius: BorderRadius.circular(3),
                       ),
                       child: Text(
                         'dashboard_radar_new_demand'.tr().toUpperCase(),
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w800, fontSize: 8),
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 8,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
                         listing.area,
-                        style: Theme.of(context)
-                            .textTheme
-                            .labelSmall
-                            ?.copyWith(fontWeight: FontWeight.bold, fontSize: 11),
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 11,
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -938,31 +1179,60 @@ class _RadarSecondaryRow extends StatelessWidget {
                 ),
                 Text(
                   listing.title,
-                  style: Theme.of(context).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w800),
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
-                  ListingFormatting.formatPrice(listing.price, listing.transactionType),
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(color: _MockColors.slate700, fontSize: 11),
+                  ListingFormatting.formatPrice(
+                    listing.price,
+                    listing.transactionType,
+                  ),
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: _MockColors.slate700,
+                    fontSize: 11,
+                  ),
                 ),
               ],
             ),
           ),
           const SizedBox(width: 8),
-          InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(8),
-            child: Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: _MockColors.surfaceMuted,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.black.withValues(alpha: 0.15)),
-              ),
-              child: Icon(PhosphorIcons.chatCircle(PhosphorIconsStyle.bold), size: 16),
-            ),
+          Consumer(
+            builder: (context, ref, _) {
+              final alreadyRequested = hasOpenCobrokeRequest(
+                ref,
+                candidate.matchId,
+              );
+              return Tooltip(
+                message: alreadyRequested
+                    ? 'cobroke_request_already_pending'.tr()
+                    : 'cobroke_request_send'.tr(),
+                child: InkWell(
+                  onTap: alreadyRequested ? null : onTap,
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: _MockColors.surfaceMuted,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: Colors.black.withValues(alpha: 0.15),
+                      ),
+                    ),
+                    child: Icon(
+                      PhosphorIcons.handshake(PhosphorIconsStyle.bold),
+                      size: 16,
+                      color: alreadyRequested
+                          ? Colors.black.withValues(alpha: 0.3)
+                          : null,
+                    ),
+                  ),
+                ),
+              );
+            },
           ),
         ],
       ),
@@ -990,7 +1260,10 @@ class _RecentListingRow extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.black.withValues(alpha: 0.1), width: 2),
+          border: Border.all(
+            color: Colors.black.withValues(alpha: 0.1),
+            width: 2,
+          ),
         ),
         child: Row(
           children: [
@@ -1002,7 +1275,10 @@ class _RecentListingRow extends StatelessWidget {
                     width: 64,
                     height: 64,
                     child: listing.photoUrls.isNotEmpty
-                        ? ListingPhoto(path: listing.photoUrls.first, fit: BoxFit.cover)
+                        ? ListingPhoto(
+                            path: listing.photoUrls.first,
+                            fit: BoxFit.cover,
+                          )
                         : Container(color: _MockColors.slate100),
                   ),
                 ),
@@ -1011,11 +1287,21 @@ class _RecentListingRow extends StatelessWidget {
                     bottom: 4,
                     right: 4,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                      decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(4)),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 4,
+                        vertical: 1,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.black,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
                       child: Text(
                         'listing_status_available'.tr(),
-                        style: const TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 8,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
@@ -1031,38 +1317,54 @@ class _RecentListingRow extends StatelessWidget {
                     children: [
                       if (listing.status == 'active')
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: _MockColors.emerald50,
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
                             'listing_status_available'.tr(),
-                            style: Theme.of(context)
-                                .textTheme
-                                .labelSmall
-                                ?.copyWith(color: _MockColors.emerald600, fontWeight: FontWeight.bold, fontSize: 10),
+                            style: Theme.of(context).textTheme.labelSmall
+                                ?.copyWith(
+                                  color: _MockColors.emerald600,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 10,
+                                ),
                           ),
                         ),
                       Text(
-                        DashboardFormatting.formatRelativeTime(listing.createdAt, DateTime.now()),
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(color: _MockColors.slate400, fontSize: 10),
+                        DashboardFormatting.formatRelativeTime(
+                          listing.createdAt,
+                          DateTime.now(),
+                        ),
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: _MockColors.slate400,
+                          fontSize: 10,
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 2),
                   Text(
                     listing.title,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w800),
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   Text(
-                    ListingFormatting.formatPrice(listing.price, listing.transactionType),
+                    ListingFormatting.formatPrice(
+                      listing.price,
+                      listing.transactionType,
+                    ),
                     style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: _MockColors.slate900,
-                        ),
+                      fontWeight: FontWeight.bold,
+                      color: _MockColors.slate900,
+                    ),
                   ),
                 ],
               ),

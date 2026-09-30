@@ -157,6 +157,7 @@ class _ConversationListScreenState extends ConsumerState<ConversationListScreen>
                     children: [
                       IconButton(
                         icon: Icon(PhosphorIcons.bellSimple(PhosphorIconsStyle.bold)),
+                        tooltip: 'notification_center_title'.tr(),
                         onPressed: () => context.push('/notifications'),
                       ),
                       if (unreadNotifCount > 0)
@@ -504,6 +505,7 @@ class _ConversationRow extends ConsumerWidget {
                           : PhosphorIcons.archive(PhosphorIconsStyle.bold),
                       size: 16,
                     ),
+                    tooltip: isArchived ? 'a11y_unarchive_conversation'.tr() : 'a11y_archive_conversation'.tr(),
                     onPressed: onArchiveToggle,
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(minWidth: 28, minHeight: 28),

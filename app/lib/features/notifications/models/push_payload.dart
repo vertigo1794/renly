@@ -1,5 +1,5 @@
 /// Body sent to the send-push-notification Edge Function. category is one
-/// of 'match' | 'message' | 'cobroke_request' -- kept as a plain String
+/// of 'match' | 'message' | 'cobroke_request' | 'agreement' -- kept as a plain String
 /// (not an enum) since it round-trips through JSON to Deno either way and
 /// an enum would just add a mapping step with no real type safety gained.
 class PushPayload {

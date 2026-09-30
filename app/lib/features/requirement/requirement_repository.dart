@@ -96,6 +96,8 @@ class RequirementRepository {
     int? parkingBaysMin,
     int? floorLevelMin,
     String? furnishingPreference,
+    double? latitude,
+    double? longitude,
   }) async {
     final row = await _client
         .from('requirement')
@@ -117,6 +119,8 @@ class RequirementRepository {
           'parking_bays_min': parkingBaysMin,
           'floor_level_min': floorLevelMin,
           'furnishing_preference': furnishingPreference,
+          'latitude': latitude,
+          'longitude': longitude,
         })
         .select()
         .single();

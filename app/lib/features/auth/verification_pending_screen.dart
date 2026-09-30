@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
@@ -9,6 +10,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/widgets/brutalist_button.dart';
 import '../../core/widgets/r_star_badge.dart';
 import '../../core/widgets/status_badge.dart';
+import 'auth_providers.dart';
 
 /// Ports Stitch's "Verification Pending" screens (project "Renly Property
 /// Agent Network") to the Urby neo-brutalist system -- this screen was a
@@ -55,16 +57,17 @@ import '../../core/widgets/status_badge.dart';
 /// "In Progress" reuses the existing `StatusBadge` widget (already this
 /// app's own pill-status convention for listing/requirement statuses)
 /// rather than inventing a new pill style just for this screen.
-class VerificationPendingScreen extends StatefulWidget {
+class VerificationPendingScreen extends ConsumerStatefulWidget {
   const VerificationPendingScreen({super.key});
 
   @override
-  State<VerificationPendingScreen> createState() => _VerificationPendingScreenState();
+  ConsumerState<VerificationPendingScreen> createState() => _VerificationPendingScreenState();
 }
 
-class _VerificationPendingScreenState extends State<VerificationPendingScreen>
+class _VerificationPendingScreenState extends ConsumerState<VerificationPendingScreen>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
+  bool _checkingStatus = false;
 
   @override
   void initState() {
@@ -76,6 +79,51 @@ class _VerificationPendingScreenState extends State<VerificationPendingScreen>
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  /// Re-checks the negotiator's CURRENT verification_status before letting
+  /// this dead-end screen's only button go anywhere -- without this, a
+  /// still-pending or rejected negotiator could tap through to the full
+  /// app (this screen has no router-level guard; see app_router.dart's
+  /// `computeAuthRedirect` doc comment for why).
+  Future<void> _handleBackHome() async {
+    setState(() => _checkingStatus = true);
+    final repository = ref.read(authRepositoryProvider);
+    // Riverpod-mediated (authStateProvider), not a direct Supabase.instance
+    // touch -- same convention as every currentNegotiatorIdProvider copy
+    // elsewhere in this codebase, and what makes this method overridable/
+    // testable via ProviderScope without a live Supabase instance.
+    final userId = ref.read(authStateProvider).valueOrNull?.session?.user.id;
+    try {
+      final negotiator = userId == null ? null : await repository.fetchOwnNegotiator(userId);
+      if (!mounted) return;
+      if (negotiator == null) {
+        context.go('/');
+        return;
+      }
+      if (negotiator.verificationStatus == 'approved') {
+        context.go('/home');
+      } else if (negotiator.verificationStatus == 'pending') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('verification_still_pending'.tr())),
+        );
+      } else {
+        await repository.signOut();
+        if (!mounted) return;
+        context.go('/');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('auth_login_error_rejected'.tr())),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('listing_error_generic'.tr())),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _checkingStatus = false);
+    }
   }
 
   @override
@@ -217,7 +265,7 @@ class _VerificationPendingScreenState extends State<VerificationPendingScreen>
                 const SizedBox(height: 32),
                 BrutalistButton(
                   label: 'verification_back_home'.tr(),
-                  onPressed: () => context.go('/home'),
+                  onPressed: _checkingStatus ? null : _handleBackHome,
                 ),
               ],
             ),

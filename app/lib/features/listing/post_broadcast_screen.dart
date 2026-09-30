@@ -107,6 +107,7 @@ class _PostBroadcastScreenState extends ConsumerState<PostBroadcastScreen> {
                 children: [
                   IconButton(
                     icon: Icon(PhosphorIcons.bellSimple(PhosphorIconsStyle.bold)),
+                    tooltip: 'notification_center_title'.tr(),
                     onPressed: () => context.push('/notifications'),
                   ),
                   if (unreadCount > 0)

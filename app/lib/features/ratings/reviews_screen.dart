@@ -73,7 +73,10 @@ class _ReviewRow extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(candidate.rater.fullName, style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              candidate.rater?.fullName ?? 'rating_rater_deleted'.tr(),
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
             const SizedBox(height: 4),
             Text('${rating.stars} / 5'),
             if (rating.reviewText != null && rating.reviewText!.trim().isNotEmpty) ...[

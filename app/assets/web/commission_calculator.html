@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Commission Split Calculator</title>
+  <style>
+    :root {
+      --brand-lime: #d2ff00;
+      --brand-ink: #0a0a0a;
+      --brand-surface: #f9faf7;
+      --brand-border: #0a0a0a;
+      --error: #dc2626;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--brand-surface);
+      color: var(--brand-ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 20px;
+    }
+
+    header {
+      margin-bottom: 20px;
+    }
+
+    header h1 {
+      font-size: 22px;
+      font-weight: 900;
+      margin: 0 0 4px 0;
+      letter-spacing: -0.5px;
+    }
+
+    header p {
+      margin: 0;
+      color: #64748b;
+      font-size: 13px;
+    }
+
+    main {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    form {
+      display: grid;
+      gap: 14px;
+      background: #fff;
+      border: 2px solid var(--brand-border);
+      border-radius: 16px;
+      padding: 16px;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    input[type="number"] {
+      width: 100%;
+      padding: 10px 12px;
+      border: 2px solid var(--brand-border);
+      border-radius: 10px;
+      font-size: 16px;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    input[type="number"]:focus {
+      outline: none;
+      border-color: var(--brand-lime);
+      box-shadow: 0 0 0 3px rgba(210, 255, 0, 0.35);
+    }
+
+    .error-text {
+      color: var(--error);
+      font-size: 12px;
+      font-weight: 600;
+      min-height: 16px;
+      margin-top: 4px;
+    }
+
+    section.result {
+      background: var(--brand-ink);
+      color: #fff;
+      border-radius: 16px;
+      padding: 16px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .result-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+
+    .result-row .label {
+      font-size: 12px;
+      color: #a3a3a3;
+    }
+
+    .result-row .value {
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .result-row.total .value {
+      color: var(--brand-lime);
+      font-size: 24px;
+    }
+
+    #liveStats {
+      font-size: 11px;
+      color: #64748b;
+      margin: 0 0 14px 0;
+    }
+
+    footer {
+      margin-top: 18px;
+      font-size: 11px;
+      color: #94a3b8;
+      text-align: center;
+    }
+
+    footer a {
+      color: #64748b;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Commission Split Calculator</h1>
+    <p>Enter the sale price and each party's split percentage.</p>
+    <p id="liveStats">Loading live network stats&hellip;</p>
+  </header>
+
+  <main>
+    <form id="calc-form" onsubmit="return false;">
+      <div>
+        <label for="price">Sale price (RM)</label>
+        <input type="number" id="price" name="price" min="0" step="1" inputmode="decimal" />
+      </div>
+      <div>
+        <label for="commissionPercent">Total agency commission (%)</label>
+        <input type="number" id="commissionPercent" name="commissionPercent" min="0" max="100" step="0.1" value="3" />
+      </div>
+      <div>
+        <label for="mySplit">Your split of the commission (%)</label>
+        <input type="number" id="mySplit" name="mySplit" min="0" max="100" step="1" value="50" />
+      </div>
+      <div id="error" class="error-text" role="alert"></div>
+    </form>
+
+    <section class="result" aria-live="polite">
+      <div class="result-row">
+        <span class="label">Total commission</span>
+        <span class="value" id="totalCommission">RM 0</span>
+      </div>
+      <div class="result-row total">
+        <span class="label">Your share</span>
+        <span class="value" id="myShare">RM 0</span>
+      </div>
+      <div class="result-row">
+        <span class="label">Co-broker's share</span>
+        <span class="value" id="otherShare">RM 0</span>
+      </div>
+    </section>
+  </main>
+
+  <footer>Renly &middot; estimate only, not a binding agreement. See our <a href="privacy_policy.html">Privacy Policy</a>.</footer>
+
+  <script src="jquery-3.7.1.min.js"></script>
+  <script>
+    // jQuery & AJAX Integration: on load, pull a real live figure (count of
+    // active co-broke listings) from the app's own Supabase backend via a
+    // genuine AJAX GET -- not a canned/local number. `public_listing_stats`
+    // is a dedicated view granted to the anon role so this unauthenticated
+    // WebView can read a single non-sensitive aggregate (see migration
+    // 0036_public_listing_stats.sql); no listing/user data is exposed.
+    var SUPABASE_URL = "https://mxqzecoafpolqpssbgvz.supabase.co";
+    var SUPABASE_ANON_KEY = "sb_publishable_ucrULhTsvjIbLxWhhGGdpw_5u3btRJF";
+
+    function formatMyr(value) {
+      return "RM " + value.toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function resetResults() {
+      $("#totalCommission, #myShare, #otherShare").text("RM 0");
+    }
+
+    function calculateSplit() {
+      var price = parseFloat($("#price").val());
+      var commissionPercent = parseFloat($("#commissionPercent").val());
+      var mySplit = parseFloat($("#mySplit").val());
+      var $error = $("#error").text("");
+
+      if (isNaN(price) || price < 0) {
+        $error.text("Enter a valid sale price.");
+        resetResults();
+        return;
+      }
+      if (isNaN(commissionPercent) || commissionPercent < 0 || commissionPercent > 100) {
+        $error.text("Commission % must be between 0 and 100.");
+        resetResults();
+        return;
+      }
+      if (isNaN(mySplit) || mySplit < 0 || mySplit > 100) {
+        $error.text("Your split % must be between 0 and 100.");
+        resetResults();
+        return;
+      }
+
+      var totalCommission = price * (commissionPercent / 100);
+      var myShare = totalCommission * (mySplit / 100);
+      var otherShare = totalCommission - myShare;
+
+      $("#totalCommission").text(formatMyr(totalCommission));
+      $("#myShare").text(formatMyr(myShare));
+      $("#otherShare").text(formatMyr(otherShare));
+    }
+
+    $(function () {
+      $("#price, #commissionPercent, #mySplit").on("input", calculateSplit);
+      calculateSplit();
+
+      $.ajax({
+        url: SUPABASE_URL + "/rest/v1/public_listing_stats?select=active_listing_count",
+        method: "GET",
+        headers: { apikey: SUPABASE_ANON_KEY, Authorization: "Bearer " + SUPABASE_ANON_KEY }
+      }).done(function (rows) {
+        var count = rows && rows[0] ? rows[0].active_listing_count : 0;
+        $("#liveStats").text(count + " active co-broke listing" + (count === 1 ? "" : "s") + " on Renly right now.");
+      }).fail(function () {
+        $("#liveStats").text("Live network stats unavailable offline.");
+      });
+    });
+  </script>
+</body>
+</html>

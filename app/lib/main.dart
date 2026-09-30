@@ -2,7 +2,9 @@ import 'dart:async';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
@@ -13,6 +15,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/config/supabase_config.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'core/widgets/offline_banner.dart';
 import 'features/auth/password_recovery_state.dart';
 import 'features/notifications/deep_link.dart';
 import 'features/notifications/foreground_suppression.dart';
@@ -21,6 +24,13 @@ import 'features/profile/profile_providers.dart';
 
 Future<void> main() async {
   final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  // Safety net for uncaught errors anywhere else in the app (Crashlytics is
+  // additionally wired onto these same handlers below, once Firebase is up).
+  FlutterError.onError = FlutterError.presentError;
+  PlatformDispatcher.instance.onError = (error, stack) {
+    debugPrint('Uncaught error: $error\n$stack');
+    return true;
+  };
   // Keeps the native splash (white bg + square logo tile, see
   // pubspec.yaml's flutter_native_splash config) on screen through
   // Flutter's engine boot and this async init, so there is no unbranded
@@ -31,14 +41,26 @@ Future<void> main() async {
   // (native splash, then the Flutter-side lime splash) rather than one
   // combined handoff.
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
-  await EasyLocalization.ensureInitialized();
-  await dotenv.load(fileName: '.env');
 
-  final supabaseConfig = SupabaseConfig.fromEnvironment(dotenv.env);
-  await Supabase.initialize(
-    url: supabaseConfig.url,
-    publishableKey: supabaseConfig.anonKey,
-  );
+  // Unlike Stripe/Firebase below, these three are core to the app actually
+  // working (locale, .env, Supabase) -- a failure here must show a real
+  // error screen instead of a crash/blank screen, since
+  // SupabaseConfig.fromEnvironment already throws a helpful descriptive
+  // message for the most common cause (missing .env keys).
+  try {
+    await EasyLocalization.ensureInitialized();
+    await dotenv.load(fileName: '.env');
+
+    final supabaseConfig = SupabaseConfig.fromEnvironment(dotenv.env);
+    await Supabase.initialize(
+      url: supabaseConfig.url,
+      publishableKey: supabaseConfig.anonKey,
+    );
+  } catch (e) {
+    FlutterNativeSplash.remove();
+    runApp(_BootstrapErrorApp(message: e.toString()));
+    return;
+  }
 
   // Subscribed immediately after initialize() -- before runApp(), before any
   // Riverpod provider exists -- so it is live in time to catch a
@@ -70,6 +92,16 @@ Future<void> main() async {
   try {
     await Firebase.initializeApp();
     firebaseReady = true;
+    // Crashlytics needs Crashlytics enabled for this Firebase project in the
+    // Firebase console (one-time toggle) for reports to actually appear
+    // there -- wiring it here only prepares the app to send them. Wrapped
+    // inside this same try so a Crashlytics setup failure never crashes the
+    // app either, consistent with Firebase itself being best-effort above.
+    FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+    PlatformDispatcher.instance.onError = (error, stack) {
+      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+      return true;
+    };
   } catch (e) {
     // No google-services.json yet, or Firebase project not configured --
     // push notifications are simply unavailable this run.
@@ -91,6 +123,44 @@ Future<void> main() async {
   // away and SplashScreen's own Scaffold appearing underneath it.
   await Future.delayed(const Duration(milliseconds: 600));
   FlutterNativeSplash.remove();
+}
+
+/// Shown instead of the real app when a required bootstrap step (locale,
+/// .env, Supabase) throws -- a plain error screen rather than a crash or an
+/// unexplained blank screen. See the try/catch around these calls in main().
+class _BootstrapErrorApp extends StatelessWidget {
+  const _BootstrapErrorApp({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: Scaffold(
+        backgroundColor: Colors.white,
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.error_outline, color: Colors.red, size: 48),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Renly failed to start',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(message, textAlign: TextAlign.center),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class RenlyApp extends ConsumerStatefulWidget {
@@ -234,6 +304,7 @@ class _RenlyAppState extends ConsumerState<RenlyApp> with WidgetsBindingObserver
       supportedLocales: context.supportedLocales,
       locale: context.locale,
       routerConfig: router,
+      builder: (context, child) => OfflineBanner(child: child ?? const SizedBox.shrink()),
     );
   }
 }

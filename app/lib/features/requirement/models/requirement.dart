@@ -59,6 +59,12 @@ class Requirement {
   /// exact-match semantics as [tenurePreference].
   final String? furnishingPreference;
 
+  /// Real GPS coordinates captured via the device's Geolocator on Post
+  /// Requirement ("Use my current location"). Nullable -- absent means
+  /// the buyer's agent typed area/state manually instead of using GPS.
+  final double? latitude;
+  final double? longitude;
+
   const Requirement({
     required this.requirementId,
     required this.negotiatorId,
@@ -80,6 +86,8 @@ class Requirement {
     this.parkingBaysMin,
     this.floorLevelMin,
     this.furnishingPreference,
+    this.latitude,
+    this.longitude,
   });
 
   factory Requirement.fromJson(Map<String, dynamic> json) {
@@ -104,6 +112,8 @@ class Requirement {
       parkingBaysMin: json['parking_bays_min'] as int?,
       floorLevelMin: json['floor_level_min'] as int?,
       furnishingPreference: json['furnishing_preference'] as String?,
+      latitude: (json['latitude'] as num?)?.toDouble(),
+      longitude: (json['longitude'] as num?)?.toDouble(),
     );
   }
 }

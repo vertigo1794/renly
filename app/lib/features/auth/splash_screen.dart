@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/r_star_badge.dart';
@@ -70,7 +71,27 @@ class _SplashScreenState extends State<SplashScreen> {
       if (mounted) setState(() => _revealed = true);
     });
     Future.delayed(const Duration(milliseconds: 3500), () {
-      if (mounted) context.go('/onboarding');
+      if (!mounted) return;
+      // A live session (e.g. cold-restart after a previous login) skips
+      // onboarding entirely -- the router's own redirect logic (and Fix 1's
+      // verification-status check, where implemented) takes it from there,
+      // routing a non-approved session to the right screen instead of
+      // making a returning user sit through onboarding + login again
+      // before biometric login is even reachable.
+      //
+      // Guarded: Supabase.instance throws if Supabase.initialize() hasn't
+      // run yet (e.g. a widget test that mounts this screen directly,
+      // without main.dart's real bootstrap) -- that's never true in the
+      // real app (main.dart always initializes Supabase before runApp),
+      // but this screen has no business crashing over it either way, so
+      // it just falls back to the no-session path.
+      var hasSession = false;
+      try {
+        hasSession = Supabase.instance.client.auth.currentSession != null;
+      } catch (_) {
+        hasSession = false;
+      }
+      context.go(hasSession ? '/home' : '/onboarding');
     });
   }
 

@@ -1,4 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Geolocator's "Use my current location" capture on Post Listing/Post
+         Requirement: coarse is enough for area/state reverse-geocoding,
+         fine is requested too since Geolocator's high-accuracy Position
+         calls expect it. -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <!-- allowBackup="false": flutter_secure_storage's blob is encrypted with
          an Android Keystore key that is NOT itself backupable. Letting
          auto-backup ship the encrypted blob to the user's Drive would

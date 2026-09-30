@@ -39,7 +39,9 @@ import '../../features/settings/account_settings_screen.dart';
 import '../../features/settings/help_screen.dart';
 import '../../features/settings/notification_settings_screen.dart';
 import '../../features/settings/privacy_screen.dart';
+import '../../features/settings/terms_of_service_screen.dart';
 import '../../features/subscription/subscription_screen.dart';
+import '../../features/tools/commission_calculator_screen.dart';
 
 const _publicRoutes = {
   '/splash',
@@ -48,6 +50,8 @@ const _publicRoutes = {
   '/login',
   '/register/personal',
   '/register/professional',
+  '/legal/privacy',
+  '/legal/terms',
 };
 
 /// Pure redirect decision, unit-tested independently of GoRouter/Riverpod:
@@ -219,10 +223,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/register/professional',
         // The design doc requires a bounce back to Step 1 when the
-        // negotiatorId extra is missing (deep link, hot restart, or reached
-        // without completing Step 1) instead of throwing on the cast.
-        redirect: (context, state) => state.extra == null ? '/register/personal' : null,
-        builder: (context, state) => RegistrationProfessionalScreen(negotiatorId: state.extra as String),
+        // negotiatorId extra is missing or of the wrong type (deep link,
+        // hot restart, or reached without completing Step 1) instead of
+        // throwing on the cast.
+        redirect: (context, state) => state.extra is String ? null : '/register/personal',
+        builder: (context, state) =>
+            RegistrationProfessionalScreen(negotiatorId: state.extra as String),
       ),
       GoRoute(
         path: '/verification-pending',
@@ -293,6 +299,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/settings/privacy', builder: (context, state) => const PrivacyScreen()),
       GoRoute(path: '/settings/help', builder: (context, state) => const HelpScreen()),
       GoRoute(path: '/settings/subscription', builder: (context, state) => const SubscriptionScreen()),
+      // Public aliases of the same legal documents -- reachable from
+      // AuthSelectionScreen's footer before the user has an account at
+      // all, unlike '/settings/privacy' above which is authenticated-only.
+      GoRoute(path: '/legal/privacy', builder: (context, state) => const PrivacyScreen()),
+      GoRoute(path: '/legal/terms', builder: (context, state) => const TermsOfServiceScreen()),
+      GoRoute(path: '/tools/commission-calculator', builder: (context, state) => const CommissionCalculatorScreen()),
     ],
   );
 });

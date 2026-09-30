@@ -31,6 +31,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
   final _confirmPasswordController = TextEditingController();
   bool _submitting = false;
   String? _submitError;
+  bool _cancelling = false;
 
   @override
   void dispose() {
@@ -66,6 +67,28 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
+  }
+
+  /// Manual escape hatch for a recovery session that's genuinely expired
+  /// server-side: every retry through `_submit` fails forever otherwise,
+  /// since `PasswordRecoveryState.isRecovering` only clears on success and
+  /// this screen has no back button by design (see class doc comment).
+  Future<void> _cancel() async {
+    setState(() => _cancelling = true);
+    final repository = ref.read(authRepositoryProvider);
+    // Cleared before signOut()/navigation, same ordering as the success
+    // path above -- otherwise computeAuthRedirect bounces '/login' back here.
+    PasswordRecoveryState.isRecovering = false;
+    try {
+      await repository.signOut();
+    } catch (_) {
+      // Best-effort -- the recovery session is being abandoned either way.
+    }
+    if (!mounted) return;
+    context.go('/login');
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('reset_password_cancel_message'.tr())),
+    );
   }
 
   @override
@@ -136,7 +159,12 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                 BrutalistButton(
                   label: 'reset_password_submit'.tr(),
                   icon: PhosphorIcons.check(PhosphorIconsStyle.bold),
-                  onPressed: _submitting ? null : _submit,
+                  onPressed: _submitting || _cancelling ? null : _submit,
+                ),
+                const SizedBox(height: 12),
+                TextButton(
+                  onPressed: _submitting || _cancelling ? null : _cancel,
+                  child: Text('reset_password_cancel'.tr()),
                 ),
               ],
             ),

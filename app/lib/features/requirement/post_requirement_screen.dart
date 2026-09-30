@@ -10,6 +10,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../core/constants/malaysian_states.dart';
+import '../../core/location/location_capture.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/brutalist_button.dart';
 import '../listing/broadcast_badge.dart';
@@ -49,6 +50,9 @@ class _PostRequirementFormBodyState extends ConsumerState<PostRequirementFormBod
   String _propertyType = 'apartment';
   String _transactionType = 'sale';
   String _state = malaysianStates.first;
+  double? _latitude;
+  double? _longitude;
+  bool _capturingLocation = false;
   String? _tenurePreference;
   String? _furnishingPreference;
   bool _loanReady = false;
@@ -174,6 +178,16 @@ class _PostRequirementFormBodyState extends ConsumerState<PostRequirementFormBod
     _photoBytesCache.remove(removed.path);
   }
 
+  /// Same drag-to-reorder contract as PostListingFormBody's own
+  /// _reorderPhotos -- newIndex is the position BEFORE removal.
+  void _reorderPhotos(int oldIndex, int newIndex) {
+    setState(() {
+      if (newIndex > oldIndex) newIndex -= 1;
+      final photo = _photos.removeAt(oldIndex);
+      _photos.insert(newIndex, photo);
+    });
+  }
+
   /// Keyed on XFile.path rather than the list index -- same reasoning as
   /// PostListingFormBody's cache: removing a photo shouldn't shift every
   /// later thumbnail onto the wrong cached bytes.
@@ -188,6 +202,25 @@ class _PostRequirementFormBodyState extends ConsumerState<PostRequirementFormBod
     final text = _commissionSplitController.text.trim();
     if (text.isEmpty) return null;
     return double.tryParse(text);
+  }
+
+  Future<void> _useCurrentLocation() async {
+    setState(() => _capturingLocation = true);
+    final result = await captureCurrentLocation();
+    if (!mounted) return;
+    setState(() {
+      _capturingLocation = false;
+      if (result != null) {
+        _latitude = result.latitude;
+        _longitude = result.longitude;
+        if (result.matchedState != null) _state = result.matchedState!;
+        if (result.area != null && result.area!.isNotEmpty) _areaController.text = result.area!;
+        _recomputePreview();
+      }
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(result != null ? 'location_capture_success'.tr() : 'location_capture_failed'.tr())),
+    );
   }
 
   Future<void> _submit() async {
@@ -221,6 +254,8 @@ class _PostRequirementFormBodyState extends ConsumerState<PostRequirementFormBod
           parkingBaysMin: _parkingBaysMinController.text.trim().isEmpty ? null : int.parse(_parkingBaysMinController.text.trim()),
           floorLevelMin: _floorLevelMinController.text.trim().isEmpty ? null : int.parse(_floorLevelMinController.text.trim()),
           furnishingPreference: _furnishingPreference,
+          latitude: _latitude,
+          longitude: _longitude,
         );
         _createdRequirementId = requirement.requirementId;
       }
@@ -251,8 +286,9 @@ class _PostRequirementFormBodyState extends ConsumerState<PostRequirementFormBod
         ref.invalidate(myMatchesProvider);
         ref.invalidate(matchesForListingProvider);
         ref.invalidate(matchesForRequirementProvider);
-      } catch (_) {
+      } catch (e) {
         // Best-effort, same reasoning as PostListingFormBody.
+        debugPrint('computeAndStoreMatchesForRequirement failed: $e');
       }
 
       if (!mounted) return;
@@ -391,6 +427,19 @@ class _PostRequirementFormBodyState extends ConsumerState<PostRequirementFormBod
                 decoration: InputDecoration(labelText: 'listing_field_area'.tr()),
                 validator: _requiredValidator,
               ),
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                  onPressed: _capturingLocation ? null : _useCurrentLocation,
+                  icon: _capturingLocation
+                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                      : Icon(PhosphorIcons.mapPinLine(PhosphorIconsStyle.bold), size: 18),
+                  label: Text(
+                    _latitude != null ? 'location_captured_label'.tr() : 'location_use_current_label'.tr(),
+                  ),
+                ),
+              ),
               const SizedBox(height: 12),
               TextFormField(
                 key: const Key('requirement_budget_min_field'),
@@ -403,7 +452,9 @@ class _PostRequirementFormBodyState extends ConsumerState<PostRequirementFormBod
                 validator: (value) {
                   final requiredError = _requiredValidator(value);
                   if (requiredError != null) return requiredError;
-                  if (double.tryParse(value!.trim()) == null) return 'validation_required'.tr();
+                  final parsed = double.tryParse(value!.trim());
+                  if (parsed == null) return 'validation_required'.tr();
+                  if (parsed <= 0) return 'requirement_budget_min_invalid'.tr();
                   return null;
                 },
               ),
@@ -601,52 +652,73 @@ class _PostRequirementFormBodyState extends ConsumerState<PostRequirementFormBod
                   Text('requirement_photos_max'.tr()),
                 ],
               ),
+              const SizedBox(height: 4),
+              if (_photos.isNotEmpty)
+                Text('listing_photos_reorder_hint'.tr(), style: Theme.of(context).textTheme.labelSmall),
               const SizedBox(height: 8),
-              GridView.count(
-                crossAxisCount: 3,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                mainAxisSpacing: 8,
-                crossAxisSpacing: 8,
-                children: [
-                  ...List.generate(_photos.length, (index) {
-                    return Stack(
-                      children: [
-                        Positioned.fill(
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: FutureBuilder<Uint8List>(
-                              future: _photoBytes(index),
-                              builder: (context, snapshot) {
-                                final bytes = snapshot.data;
-                                if (bytes == null) {
-                                  return Container(
-                                    color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                                  );
-                                }
-                                return Image.memory(bytes, fit: BoxFit.cover);
-                              },
-                            ),
+              SizedBox(
+                height: 104,
+                child: ReorderableListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  buildDefaultDragHandles: false,
+                  onReorder: _reorderPhotos,
+                  itemCount: _photos.length,
+                  itemBuilder: (context, index) {
+                    final photo = _photos[index];
+                    return ReorderableDragStartListener(
+                      key: ValueKey(photo.path),
+                      index: index,
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: SizedBox(
+                          width: 96,
+                          height: 96,
+                          child: Stack(
+                            children: [
+                              Positioned.fill(
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: FutureBuilder<Uint8List>(
+                                    future: _photoBytes(index),
+                                    builder: (context, snapshot) {
+                                      final bytes = snapshot.data;
+                                      if (bytes == null) {
+                                        return Container(
+                                          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                                        );
+                                      }
+                                      return Image.memory(bytes, fit: BoxFit.cover);
+                                    },
+                                  ),
+                                ),
+                              ),
+                              Positioned(
+                                top: 4,
+                                right: 4,
+                                child: GestureDetector(
+                                  onTap: () => _removePhoto(index),
+                                  child: const CircleAvatar(
+                                    radius: 12,
+                                    child: Icon(Icons.close, size: 16),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        Positioned(
-                          top: 4,
-                          right: 4,
-                          child: GestureDetector(
-                            onTap: () => _removePhoto(index),
-                            child: const CircleAvatar(
-                              radius: 12,
-                              child: Icon(Icons.close, size: 16),
-                            ),
-                          ),
-                        ),
-                      ],
+                      ),
                     );
-                  }),
-                  if (_photos.length < _maxPhotos)
-                    AddPhotoTile(label: 'listing_add_photo'.tr(), onTap: _pickPhotos),
-                ],
+                  },
+                ),
               ),
+              if (_photos.length < _maxPhotos) ...[
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: 96,
+                  height: 96,
+                  child: AddPhotoTile(label: 'listing_add_photo'.tr(), onTap: _pickPhotos),
+                ),
+              ],
               if (tierAsync.valueOrNull?.tier == 'free') ...[
                 const SizedBox(height: 12),
                 Text('$activeCount/3 ${'requirement_active_count_label'.tr()}'),
@@ -656,6 +728,10 @@ class _PostRequirementFormBodyState extends ConsumerState<PostRequirementFormBod
                 Text(
                   'requirement_cap_reached_message'.tr(),
                   style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+                TextButton(
+                  onPressed: () => context.push('/settings/subscription'),
+                  child: Text('subscription_upgrade_button'.tr()),
                 ),
               ],
               if (_submitError != null) ...[

@@ -62,6 +62,7 @@ class _MyRequestsScreenState extends ConsumerState<MyRequestsScreen> {
                 children: [
                   IconButton(
                     icon: Icon(PhosphorIcons.arrowLeft(PhosphorIconsStyle.bold)),
+                    tooltip: 'a11y_back'.tr(),
                     onPressed: () {
                       if (context.canPop()) {
                         context.pop();
@@ -116,6 +117,7 @@ class _MyRequestsScreenState extends ConsumerState<MyRequestsScreen> {
                     children: [
                       IconButton(
                         icon: Icon(PhosphorIcons.bellSimple(PhosphorIconsStyle.bold)),
+                        tooltip: 'notification_center_title'.tr(),
                         onPressed: () => context.push('/notifications'),
                       ),
                       if (unreadCount > 0)
@@ -599,6 +601,27 @@ class _AgreementSection extends ConsumerWidget {
                         }
                       }
                     },
+                  ),
+                  BrutalistButton(
+                    label: 'agreement_propose_new_terms'.tr(),
+                    variant: BrutalistButtonVariant.secondary,
+                    fullWidth: false,
+                    icon: PhosphorIcons.arrowsCounterClockwise(PhosphorIconsStyle.bold),
+                    onPressed: () => showDialog<void>(
+                      context: context,
+                      barrierDismissible: false,
+                      // Recipient becomes the new proposal's initiator, so
+                      // the swapped split is their sensible starting
+                      // counter-offer (see ProposeAgreementDialog's doc).
+                      builder: (_) => ProposeAgreementDialog(
+                        requestId: requestId,
+                        initiatorId: currentNegotiatorId!,
+                        initialSplitInitiator: agreement.splitCounterparty,
+                        initialSplitCounterparty: agreement.splitInitiator,
+                        initialTerms: agreement.terms,
+                        supersedeAgreementId: agreement.agreementId,
+                      ),
+                    ),
                   ),
                 ],
               ),

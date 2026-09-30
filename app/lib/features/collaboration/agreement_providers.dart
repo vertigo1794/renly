@@ -3,11 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../auth/auth_providers.dart';
+import '../notifications/notification_providers.dart';
 import 'agreement_repository.dart';
 import 'models/agreement.dart';
 
 final agreementRepositoryProvider = Provider<AgreementRepository>((ref) {
-  return AgreementRepository(Supabase.instance.client);
+  return AgreementRepository(Supabase.instance.client, ref.watch(pushNotificationRepositoryProvider));
 });
 
 /// Same session-state read as the copies in listing_providers.dart,

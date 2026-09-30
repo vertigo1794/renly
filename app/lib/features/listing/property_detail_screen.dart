@@ -15,7 +15,8 @@ import '../../core/theme/app_colors.dart';
 import '../../core/widgets/brutalist_button.dart';
 import '../../core/widgets/negotiator_avatar.dart';
 import '../../core/widgets/r_star_badge.dart';
-import '../collaboration/cobroke_request_providers.dart' hide currentNegotiatorIdProvider;
+import '../collaboration/cobroke_request_providers.dart'
+    hide currentNegotiatorIdProvider;
 import '../collaboration/models/cobroke_request_candidate.dart';
 import '../collaboration/send_cobroke_request_action.dart';
 import '../matching/live_match_preview.dart';
@@ -23,8 +24,10 @@ import '../matching/matching_providers.dart' hide currentNegotiatorIdProvider;
 import '../matching/models/match_candidate.dart';
 import '../profile/profile_providers.dart' hide currentNegotiatorIdProvider;
 import '../ratings/rating_providers.dart' hide currentNegotiatorIdProvider;
-import '../requirement/requirement_providers.dart' hide currentNegotiatorIdProvider;
-import '../subscription/subscription_providers.dart' hide currentNegotiatorIdProvider;
+import '../requirement/requirement_providers.dart'
+    hide currentNegotiatorIdProvider;
+import '../subscription/subscription_providers.dart'
+    hide currentNegotiatorIdProvider;
 
 /// Ports stitch_renly_property_agent_network/property_detail.
 class PropertyDetailScreen extends ConsumerStatefulWidget {
@@ -33,16 +36,30 @@ class PropertyDetailScreen extends ConsumerStatefulWidget {
   final String listingId;
 
   @override
-  ConsumerState<PropertyDetailScreen> createState() => _PropertyDetailScreenState();
+  ConsumerState<PropertyDetailScreen> createState() =>
+      _PropertyDetailScreenState();
 }
 
 class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
   int? _bestMatchScore;
+  int? _viewCount;
 
   @override
   void initState() {
     super.initState();
     _loadBestMatchScore();
+    _recordView();
+  }
+
+  /// Literal MySQL Database Integration (separate from Supabase) -- see
+  /// MysqlViewCounterService. Best-effort: a missing config or a network
+  /// hiccup just means the badge stays hidden, never blocks the screen.
+  Future<void> _recordView() async {
+    final service = ref.read(mysqlViewCounterServiceProvider);
+    await service.incrementView(widget.listingId);
+    final count = await service.fetchViewCount(widget.listingId);
+    if (!mounted || count == null) return;
+    setState(() => _viewCount = count);
   }
 
   /// Best-effort, same reasoning as every other live-preview fetch this
@@ -55,10 +72,18 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
     final viewerId = ref.read(currentNegotiatorIdProvider);
     if (viewerId == null) return;
     try {
-      final listing = await ref.read(listingRepositoryProvider).fetchListingById(widget.listingId);
-      if (listing.negotiatorId == viewerId) return; // never score your own listing
-      final ownRequirements = await ref.read(requirementRepositoryProvider).fetchOwnRequirements(viewerId);
-      final score = LiveMatchPreview.bestScoreForListing(listing, ownRequirements);
+      final listing = await ref
+          .read(listingRepositoryProvider)
+          .fetchListingById(widget.listingId);
+      if (listing.negotiatorId == viewerId)
+        return; // never score your own listing
+      final ownRequirements = await ref
+          .read(requirementRepositoryProvider)
+          .fetchOwnRequirements(viewerId);
+      final score = LiveMatchPreview.bestScoreForListing(
+        listing,
+        ownRequirements,
+      );
       if (!mounted) return;
       setState(() => _bestMatchScore = score);
     } catch (e) {
@@ -72,7 +97,10 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
   Future<void> _changeStatus(Listing listing, String status) async {
     final repository = ref.read(listingRepositoryProvider);
     try {
-      await repository.updateListingStatus(listingId: widget.listingId, status: status);
+      await repository.updateListingStatus(
+        listingId: widget.listingId,
+        status: status,
+      );
       ref.invalidate(listingDetailProvider(widget.listingId));
       ref.invalidate(marketplaceListingsProvider);
       ref.invalidate(myListingsProvider(listing.negotiatorId));
@@ -84,9 +112,9 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
       ref.invalidate(activeListingCountProvider(listing.negotiatorId));
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('listing_error_generic'.tr())),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('listing_error_generic'.tr())));
       }
     }
   }
@@ -119,11 +147,11 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
             Text(
               'app_name'.tr(),
               style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                    color: AppColors.ink,
-                    fontSize: 20,
-                    letterSpacing: -1.0,
-                    height: 1,
-                  ),
+                color: AppColors.ink,
+                fontSize: 20,
+                letterSpacing: -1.0,
+                height: 1,
+              ),
             ),
           ],
         ),
@@ -132,10 +160,15 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
             data: (profile) => profile.renNumber == null
                 ? const SizedBox.shrink()
                 : Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      border: Border.all(color: AppColors.ink.withValues(alpha: 0.1)),
+                      border: Border.all(
+                        color: AppColors.ink.withValues(alpha: 0.1),
+                      ),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
@@ -144,12 +177,16 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
                         Container(
                           width: 6,
                           height: 6,
-                          decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle),
+                          decoration: const BoxDecoration(
+                            color: Colors.green,
+                            shape: BoxShape.circle,
+                          ),
                         ),
                         const SizedBox(width: 6),
                         Text(
                           'REN ${profile.renNumber}',
-                          style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold),
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                       ],
                     ),
@@ -159,22 +196,27 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
           const SizedBox(width: 8),
           IconButton(
             icon: Icon(PhosphorIcons.shareNetwork(PhosphorIconsStyle.bold)),
+            tooltip: 'a11y_share'.tr(),
             onPressed: ownListing == null
                 ? null
                 : () => SharePlus.instance.share(
-                      ShareParams(
-                        text: '${ownListing.title} - ${ListingFormatting.formatPrice(ownListing.price, ownListing.transactionType)} - ${ownListing.area}, ${ownListing.state}',
-                      ),
+                    ShareParams(
+                      text:
+                          '${ownListing.title} - ${ListingFormatting.formatPrice(ownListing.price, ownListing.transactionType)} - ${ownListing.area}, ${ownListing.state}',
                     ),
+                  ),
           ),
           const SizedBox(width: 8),
         ],
       ),
       body: listingAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(child: Text('listing_error_generic'.tr())),
+        error: (error, stack) =>
+            Center(child: Text('listing_error_generic'.tr())),
         data: (listing) {
-          final isOwner = currentNegotiatorId != null && currentNegotiatorId == listing.negotiatorId;
+          final isOwner =
+              currentNegotiatorId != null &&
+              currentNegotiatorId == listing.negotiatorId;
           // Only watched for the owner: the cap-gated reactivate button below
           // renders inside `if (isOwner)`, and subscriptionStatusProvider is a
           // live Realtime subscription. Watching it unconditionally would open
@@ -183,38 +225,56 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
           var atCap = false;
           if (isOwner) {
             final tierAsync = ref.watch(subscriptionStatusProvider);
-            final countAsync = ref.watch(activeListingCountProvider(currentNegotiatorId));
-            atCap = tierAsync.valueOrNull?.tier == 'free' && (countAsync.valueOrNull ?? 0) >= 3;
+            final countAsync = ref.watch(
+              activeListingCountProvider(currentNegotiatorId),
+            );
+            atCap =
+                tierAsync.valueOrNull?.tier == 'free' &&
+                (countAsync.valueOrNull ?? 0) >= 3;
           }
 
           return SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _HeroHeader(
-                    listing: listing,
-                    bestMatchScore: _bestMatchScore,
+              // Centered max-width column on wide screens (tablet) -- see
+              // MainDashboardScreen's own identical wrapper for why.
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 640),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _HeroHeader(
+                        listing: listing,
+                        bestMatchScore: _bestMatchScore,
+                        viewCount: _viewCount,
+                      ),
+                      const SizedBox(height: 16),
+                      _DealTermsBanner(listing: listing),
+                      const SizedBox(height: 16),
+                      _OverviewCard(
+                        listing: listing,
+                        statusLabel: _statusLabel(listing.status),
+                      ),
+                      const SizedBox(height: 16),
+                      _CoBrokingTermsCard(listing: listing),
+                      const SizedBox(height: 16),
+                      _AgentCard(
+                        listingId: listing.listingId,
+                        negotiatorId: listing.negotiatorId,
+                      ),
+                      const SizedBox(height: 16),
+                      _ActionBar(
+                        listing: listing,
+                        isOwner: isOwner,
+                        atCap: atCap,
+                        onMarkSold: () => _changeStatus(listing, 'sold'),
+                        onWithdraw: () => _changeStatus(listing, 'withdrawn'),
+                        onReactivate: () => _changeStatus(listing, 'active'),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 16),
-                  _DealTermsBanner(listing: listing),
-                  const SizedBox(height: 16),
-                  _OverviewCard(listing: listing, statusLabel: _statusLabel(listing.status)),
-                  const SizedBox(height: 16),
-                  _CoBrokingTermsCard(listing: listing),
-                  const SizedBox(height: 16),
-                  _AgentCard(listingId: listing.listingId, negotiatorId: listing.negotiatorId),
-                  const SizedBox(height: 16),
-                  _ActionBar(
-                    listing: listing,
-                    isOwner: isOwner,
-                    atCap: atCap,
-                    onMarkSold: () => _changeStatus(listing, 'sold'),
-                    onWithdraw: () => _changeStatus(listing, 'withdrawn'),
-                    onReactivate: () => _changeStatus(listing, 'active'),
-                  ),
-                ],
+                ),
               ),
             ),
           );
@@ -225,10 +285,15 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
 }
 
 class _HeroHeader extends StatefulWidget {
-  const _HeroHeader({required this.listing, required this.bestMatchScore});
+  const _HeroHeader({
+    required this.listing,
+    required this.bestMatchScore,
+    required this.viewCount,
+  });
 
   final Listing listing;
   final int? bestMatchScore;
+  final int? viewCount;
 
   @override
   State<_HeroHeader> createState() => _HeroHeaderState();
@@ -250,6 +315,7 @@ class _HeroHeaderState extends State<_HeroHeader> {
   Widget build(BuildContext context) {
     final listing = widget.listing;
     final bestMatchScore = widget.bestMatchScore;
+    final viewCount = widget.viewCount;
     final hasPhotos = listing.photoUrls.isNotEmpty;
     final hasBadges = bestMatchScore != null || listing.exclusiveMandate;
     // Bug fix vs. the original draft: an unconditional `if (photoUrls.isEmpty)
@@ -302,24 +368,43 @@ class _HeroHeaderState extends State<_HeroHeader> {
               children: [
                 if (bestMatchScore != null)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.primary,
                       borderRadius: BorderRadius.circular(6),
                       border: Border.all(color: Colors.black),
                     ),
                     child: Text(
-                      'property_match_badge'.tr(namedArgs: {'score': '$bestMatchScore'}),
-                      style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w900, fontSize: 11),
+                      'property_match_badge'.tr(
+                        namedArgs: {'score': '$bestMatchScore'},
+                      ),
+                      style: const TextStyle(
+                        color: Colors.black,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 11,
+                      ),
                     ),
                   ),
                 if (listing.exclusiveMandate)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(6)),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.black,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
                     child: Text(
                       'inventory_badge_exclusive_mandate'.tr(),
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 11),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 11,
+                      ),
                     ),
                   ),
               ],
@@ -330,7 +415,10 @@ class _HeroHeaderState extends State<_HeroHeader> {
               bottom: 12,
               right: 12,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.black.withValues(alpha: 0.7),
                   borderRadius: BorderRadius.circular(20),
@@ -342,11 +430,41 @@ class _HeroHeaderState extends State<_HeroHeader> {
                   // or a stale _currentPage surviving a photoUrls change.
                   'property_photo_counter'.tr(
                     namedArgs: {
-                      'current': '${(_currentPage + 1).clamp(1, listing.photoUrls.length)}',
+                      'current':
+                          '${(_currentPage + 1).clamp(1, listing.photoUrls.length)}',
                       'total': '${listing.photoUrls.length}',
                     },
                   ),
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 11,
+                  ),
+                ),
+              ),
+            ),
+          if (viewCount != null)
+            Positioned(
+              bottom: 12,
+              left: 12,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.7),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  viewCount == 1
+                      ? 'property_view_count_one'.tr()
+                      : 'property_view_count'.tr(namedArgs: {'count': '$viewCount'}),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 11,
+                  ),
                 ),
               ),
             ),
@@ -386,11 +504,22 @@ class _DealTermsBanner extends StatelessWidget {
           if (listing.commissionSplitPercent != null) ...[
             Row(
               children: [
-                Container(width: 6, height: 6, decoration: BoxDecoration(color: AppColors.primary, shape: BoxShape.circle)),
+                Container(
+                  width: 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    shape: BoxShape.circle,
+                  ),
+                ),
                 const SizedBox(width: 6),
                 Text(
                   'property_co_broke_ready'.tr(),
-                  style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w900, fontSize: 11),
+                  style: TextStyle(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 11,
+                  ),
                 ),
               ],
             ),
@@ -405,22 +534,46 @@ class _DealTermsBanner extends StatelessWidget {
                   children: [
                     Text(
                       'property_asking_price_label'.tr(),
-                      style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.bold, fontSize: 10, letterSpacing: 0.5),
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 10,
+                        letterSpacing: 0.5,
+                      ),
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      ListingFormatting.formatPrice(listing.price, listing.transactionType),
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 24),
+                      ListingFormatting.formatPrice(
+                        listing.price,
+                        listing.transactionType,
+                      ),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 24,
+                      ),
                     ),
-                    if (pricePerSqft != null || listing.maintenanceFeeMyr != null) ...[
+                    if (pricePerSqft != null ||
+                        listing.maintenanceFeeMyr != null) ...[
                       const SizedBox(height: 4),
                       Text(
                         [
-                          if (pricePerSqft != null) 'property_price_per_sqft'.tr(namedArgs: {'value': '$pricePerSqft'}),
+                          if (pricePerSqft != null)
+                            'property_price_per_sqft'.tr(
+                              namedArgs: {'value': '$pricePerSqft'},
+                            ),
                           if (listing.maintenanceFeeMyr != null)
-                            'property_maintenance_suffix'.tr(namedArgs: {'value': '${listing.maintenanceFeeMyr!.round()}'}),
+                            'property_maintenance_suffix'.tr(
+                              namedArgs: {
+                                'value':
+                                    '${listing.maintenanceFeeMyr!.round()}',
+                              },
+                            ),
                         ].join(' • '),
-                        style: const TextStyle(color: Colors.white70, fontSize: 11),
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 11,
+                        ),
                       ),
                     ],
                   ],
@@ -429,7 +582,10 @@ class _DealTermsBanner extends StatelessWidget {
               if (splitRounded != null)
                 Container(
                   key: const Key('deal_terms_split_badge'),
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.primary,
                     borderRadius: BorderRadius.circular(10),
@@ -440,15 +596,25 @@ class _DealTermsBanner extends StatelessWidget {
                     children: [
                       Text(
                         'property_co_broke_split_label'.tr(),
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 9, letterSpacing: 0.3),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 9,
+                          letterSpacing: 0.3,
+                        ),
                       ),
                       Text(
                         '$splitRounded/${100 - splitRounded}',
-                        style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w900,
+                          fontSize: 14,
+                        ),
                       ),
                       Text(
                         'RM ${(listing.price * splitRounded / 100).round()}',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 10),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 10,
+                        ),
                       ),
                     ],
                   ),
@@ -468,18 +634,32 @@ class _OverviewCard extends StatelessWidget {
   final String statusLabel;
 
   Future<void> _openMap(BuildContext context) async {
-    final query = Uri.encodeComponent('${listing.area}, ${listing.state}');
-    final uri = Uri.parse('https://www.google.com/maps/search/?api=1&query=$query');
+    // Real GPS coordinates (captured via "Use my current location" on Post
+    // Listing) point at the exact pin; falling back to a text search of
+    // area/state is the pre-Geolocation behavior for listings that don't
+    // have one.
+    final hasCoordinates =
+        listing.latitude != null && listing.longitude != null;
+    final query = hasCoordinates
+        ? '${listing.latitude},${listing.longitude}'
+        : Uri.encodeComponent('${listing.area}, ${listing.state}');
+    final uri = Uri.parse(
+      'https://www.google.com/maps/search/?api=1&query=$query',
+    );
     if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('listing_error_generic'.tr())));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('listing_error_generic'.tr())));
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final shortId = listing.listingId.length >= 8 ? listing.listingId.substring(0, 8).toUpperCase() : listing.listingId.toUpperCase();
+    final shortId = listing.listingId.length >= 8
+        ? listing.listingId.substring(0, 8).toUpperCase()
+        : listing.listingId.toUpperCase();
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -495,15 +675,24 @@ class _OverviewCard extends StatelessWidget {
             children: [
               Flexible(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFECFDF5),
                     borderRadius: BorderRadius.circular(6),
                     border: Border.all(color: const Color(0xFFA7F3D0)),
                   ),
                   child: Text(
-                    listing.tenure == null ? listing.propertyType.toUpperCase() : '${listing.propertyType.toUpperCase()} • ${listing.tenure!.toUpperCase()}',
-                    style: const TextStyle(color: Color(0xFF047857), fontWeight: FontWeight.bold, fontSize: 10),
+                    listing.tenure == null
+                        ? listing.propertyType.toUpperCase()
+                        : '${listing.propertyType.toUpperCase()} • ${listing.tenure!.toUpperCase()}',
+                    style: const TextStyle(
+                      color: Color(0xFF047857),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 10,
+                    ),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -511,12 +700,19 @@ class _OverviewCard extends StatelessWidget {
               const SizedBox(width: 8),
               Text(
                 'property_id_prefix'.tr(namedArgs: {'id': shortId}),
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold),
+                style: Theme.of(
+                  context,
+                ).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold),
               ),
             ],
           ),
           const SizedBox(height: 8),
-          Text(listing.title, style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900)),
+          Text(
+            listing.title,
+            style: Theme.of(
+              context,
+            ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900),
+          ),
           const SizedBox(height: 6),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -524,10 +720,17 @@ class _OverviewCard extends StatelessWidget {
               Expanded(
                 child: Row(
                   children: [
-                    Icon(PhosphorIcons.mapPin(PhosphorIconsStyle.bold), size: 14, color: const Color(0xFF94A3B8)),
+                    Icon(
+                      PhosphorIcons.mapPin(PhosphorIconsStyle.bold),
+                      size: 14,
+                      color: const Color(0xFF94A3B8),
+                    ),
                     const SizedBox(width: 4),
                     Flexible(
-                      child: Text('${listing.area}, ${listing.state}', style: Theme.of(context).textTheme.bodyMedium),
+                      child: Text(
+                        '${listing.area}, ${listing.state}',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
                     ),
                   ],
                 ),
@@ -540,16 +743,27 @@ class _OverviewCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(6),
                   onTap: () => _openMap(context),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
                           'property_map_button'.tr(),
-                          style: Theme.of(context).textTheme.labelSmall?.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold),
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.bold,
+                              ),
                         ),
                         const SizedBox(width: 4),
-                        Icon(PhosphorIcons.arrowSquareOut(PhosphorIconsStyle.bold), size: 12, color: AppColors.primary),
+                        Icon(
+                          PhosphorIcons.arrowSquareOut(PhosphorIconsStyle.bold),
+                          size: 12,
+                          color: AppColors.primary,
+                        ),
                       ],
                     ),
                   ),
@@ -560,9 +774,15 @@ class _OverviewCard extends StatelessWidget {
           const SizedBox(height: 12),
           _SpecGrid(listing: listing),
           const SizedBox(height: 16),
-          Text('property_overview'.tr(), style: Theme.of(context).textTheme.titleMedium),
+          Text(
+            'property_overview'.tr(),
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
           const SizedBox(height: 4),
-          Text(listing.description, style: Theme.of(context).textTheme.bodyMedium),
+          Text(
+            listing.description,
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
           const SizedBox(height: 12),
           Wrap(
             spacing: 6,
@@ -574,7 +794,10 @@ class _OverviewCard extends StatelessWidget {
               // card's own lime treatment (matching deal_terms_split_badge)
               // is specific to this screen's restyle, not a global change.
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.primary,
                   border: Border.all(color: Colors.black, width: 2),
@@ -582,53 +805,98 @@ class _OverviewCard extends StatelessWidget {
                 ),
                 child: Text(
                   statusLabel,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Colors.black, fontWeight: FontWeight.bold),
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
               if (listing.titleVerified)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(color: const Color(0xFF2563EB), borderRadius: BorderRadius.circular(6)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2563EB),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(PhosphorIcons.sealCheck(PhosphorIconsStyle.bold), size: 12, color: Colors.white),
+                      Icon(
+                        PhosphorIcons.sealCheck(PhosphorIconsStyle.bold),
+                        size: 12,
+                        color: Colors.white,
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         'inventory_badge_title_verified'.tr(),
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10),
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 10,
+                        ),
                       ),
                     ],
                   ),
                 ),
               if (listing.keysOnHand)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(6)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.black,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(PhosphorIcons.key(PhosphorIconsStyle.bold), size: 12, color: AppColors.primary),
+                      Icon(
+                        PhosphorIcons.key(PhosphorIconsStyle.bold),
+                        size: 12,
+                        color: AppColors.primary,
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         'property_badge_keys_on_hand'.tr(),
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 10),
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 10,
+                        ),
                       ),
                     ],
                   ),
                 ),
               if (listing.protectedCoBrokeReg)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(6)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.black,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(PhosphorIcons.lockKey(PhosphorIconsStyle.bold), size: 12, color: AppColors.primary),
+                      Icon(
+                        PhosphorIcons.lockKey(PhosphorIconsStyle.bold),
+                        size: 12,
+                        color: AppColors.primary,
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         'property_badge_protected_co_broke_reg'.tr(),
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 10),
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 10,
+                        ),
                       ),
                     ],
                   ),
@@ -657,20 +925,44 @@ class _SpecGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cards = <_SpecCardData>[
-      if (listing.bedrooms != null) _SpecCardData(Icons.bed, '${listing.bedrooms}', 'inventory_stat_beds'.tr()),
-      if (listing.bathrooms != null) _SpecCardData(Icons.bathtub, '${listing.bathrooms}', 'inventory_stat_baths'.tr()),
+      if (listing.bedrooms != null)
+        _SpecCardData(
+          Icons.bed,
+          '${listing.bedrooms}',
+          'inventory_stat_beds'.tr(),
+        ),
+      if (listing.bathrooms != null)
+        _SpecCardData(
+          Icons.bathtub,
+          '${listing.bathrooms}',
+          'inventory_stat_baths'.tr(),
+        ),
       if (listing.builtUpSqft != null)
-        _SpecCardData(PhosphorIcons.ruler(PhosphorIconsStyle.bold), ListingFormatting.formatSqft(listing.builtUpSqft!), 'inventory_stat_sqft'.tr()),
-      if (listing.parkingBays != null) _SpecCardData(PhosphorIcons.car(PhosphorIconsStyle.bold), '${listing.parkingBays}', 'listing_stat_parking'.tr()),
-      if (listing.floorLevel != null) _SpecCardData(PhosphorIcons.stackSimple(PhosphorIconsStyle.bold), '${listing.floorLevel}', 'listing_stat_floor'.tr()),
+        _SpecCardData(
+          PhosphorIcons.ruler(PhosphorIconsStyle.bold),
+          ListingFormatting.formatSqft(listing.builtUpSqft!),
+          'inventory_stat_sqft'.tr(),
+        ),
+      if (listing.parkingBays != null)
+        _SpecCardData(
+          PhosphorIcons.car(PhosphorIconsStyle.bold),
+          '${listing.parkingBays}',
+          'listing_stat_parking'.tr(),
+        ),
+      if (listing.floorLevel != null)
+        _SpecCardData(
+          PhosphorIcons.stackSimple(PhosphorIconsStyle.bold),
+          '${listing.floorLevel}',
+          'listing_stat_floor'.tr(),
+        ),
       if (listing.furnishingStatus != null)
         _SpecCardData(
           PhosphorIcons.armchair(PhosphorIconsStyle.bold),
           listing.furnishingStatus == 'furnished'
               ? 'listing_furnishing_furnished'.tr()
               : listing.furnishingStatus == 'partially_furnished'
-                  ? 'listing_furnishing_partially_furnished'.tr()
-                  : 'listing_furnishing_unfurnished'.tr(),
+              ? 'listing_furnishing_partially_furnished'.tr()
+              : 'listing_furnishing_unfurnished'.tr(),
           'listing_stat_furnishing'.tr(),
         ),
     ];
@@ -721,14 +1013,19 @@ class _SpecCard extends StatelessWidget {
             textAlign: TextAlign.center,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w900),
+            style: Theme.of(
+              context,
+            ).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w900),
           ),
           Text(
             data.caption,
             textAlign: TextAlign.center,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(color: const Color(0xFF64748B), fontSize: 10),
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: const Color(0xFF64748B),
+              fontSize: 10,
+            ),
           ),
         ],
       ),
@@ -743,7 +1040,8 @@ class _CoBrokingTermsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (listing.commissionSplitPercent == null && listing.totalAgencyCommissionPercent == null) {
+    if (listing.commissionSplitPercent == null &&
+        listing.totalAgencyCommissionPercent == null) {
       return const SizedBox.shrink();
     }
     final split = listing.commissionSplitPercent?.round();
@@ -763,7 +1061,10 @@ class _CoBrokingTermsCard extends StatelessWidget {
               Flexible(
                 child: Row(
                   children: [
-                    Icon(PhosphorIcons.handshake(PhosphorIconsStyle.bold), size: 18),
+                    Icon(
+                      PhosphorIcons.handshake(PhosphorIconsStyle.bold),
+                      size: 18,
+                    ),
                     const SizedBox(width: 6),
                     Flexible(
                       child: Text(
@@ -778,11 +1079,23 @@ class _CoBrokingTermsCard extends StatelessWidget {
               if (split != null) ...[
                 const SizedBox(width: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(6), border: Border.all(color: Colors.black)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: Colors.black),
+                  ),
                   child: Text(
-                    'property_split_badge'.tr(namedArgs: {'split': '$split/${100 - split}'}),
-                    style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 10),
+                    'property_split_badge'.tr(
+                      namedArgs: {'split': '$split/${100 - split}'},
+                    ),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 10,
+                    ),
                   ),
                 ),
               ],
@@ -791,7 +1104,10 @@ class _CoBrokingTermsCard extends StatelessWidget {
           const SizedBox(height: 10),
           Container(
             padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(color: const Color(0xFFF7F8F5), borderRadius: BorderRadius.circular(10)),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF7F8F5),
+              borderRadius: BorderRadius.circular(10),
+            ),
             child: Column(
               children: [
                 if (listing.totalAgencyCommissionPercent != null)
@@ -802,7 +1118,12 @@ class _CoBrokingTermsCard extends StatelessWidget {
                       children: [
                         Expanded(
                           child: Text(
-                            'property_total_commission_row'.tr(namedArgs: {'percent': '${listing.totalAgencyCommissionPercent!.round()}'}),
+                            'property_total_commission_row'.tr(
+                              namedArgs: {
+                                'percent':
+                                    '${listing.totalAgencyCommissionPercent!.round()}',
+                              },
+                            ),
                             style: Theme.of(context).textTheme.labelSmall,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -810,7 +1131,8 @@ class _CoBrokingTermsCard extends StatelessWidget {
                         const SizedBox(width: 8),
                         Text(
                           'RM ${(listing.price * listing.totalAgencyCommissionPercent! / 100).round()}',
-                          style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold),
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                       ],
                     ),
@@ -821,7 +1143,9 @@ class _CoBrokingTermsCard extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          'property_your_share_row'.tr(namedArgs: {'percent': '$split'}),
+                          'property_your_share_row'.tr(
+                            namedArgs: {'percent': '$split'},
+                          ),
                           style: Theme.of(context).textTheme.labelSmall,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -829,7 +1153,10 @@ class _CoBrokingTermsCard extends StatelessWidget {
                       const SizedBox(width: 8),
                       Text(
                         'RM ${(listing.price * split / 100).round()}',
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold, color: const Color(0xFF047857)),
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF047857),
+                        ),
                       ),
                     ],
                   ),
@@ -839,15 +1166,30 @@ class _CoBrokingTermsCard extends StatelessWidget {
           const SizedBox(height: 8),
           Row(
             children: [
-              Icon(PhosphorIcons.shieldCheck(PhosphorIconsStyle.bold), size: 13, color: const Color(0xFF047857)),
+              Icon(
+                PhosphorIcons.shieldCheck(PhosphorIconsStyle.bold),
+                size: 13,
+                color: const Color(0xFF047857),
+              ),
               const SizedBox(width: 4),
               Expanded(
                 child: Text(
                   'property_registration_guarantee'.tr(),
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(color: const Color(0xFF64748B)),
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: const Color(0xFF64748B),
+                  ),
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              onPressed: () => context.push('/tools/commission-calculator'),
+              icon: Icon(PhosphorIcons.calculator(PhosphorIconsStyle.bold), size: 16),
+              label: Text('commission_calculator_action'.tr()),
+            ),
           ),
         ],
       ),
@@ -864,9 +1206,13 @@ class _AgentCard extends ConsumerWidget {
   /// Plain-loop equivalent of `.firstWhereOrNull` -- avoids adding the
   /// `collection` package as a new direct dependency for one call site
   /// (it's currently only a transitive dependency via pubspec.lock).
-  static CobrokeRequestCandidate? _acceptedRequestForThisListing(List<CobrokeRequestCandidate> candidates, String listingId) {
+  static CobrokeRequestCandidate? _acceptedRequestForThisListing(
+    List<CobrokeRequestCandidate> candidates,
+    String listingId,
+  ) {
     for (final candidate in candidates) {
-      if (candidate.match.listing.listingId == listingId && candidate.request.status == 'accepted') {
+      if (candidate.match.listing.listingId == listingId &&
+          candidate.request.status == 'accepted') {
         return candidate;
       }
     }
@@ -879,10 +1225,10 @@ class _AgentCard extends ConsumerWidget {
     final ratingsAsync = ref.watch(ratingsForNegotiatorProvider(negotiatorId));
     final sentAsync = ref.watch(sentRequestsProvider);
     final receivedAsync = ref.watch(receivedRequestsProvider);
-    final acceptedCandidate = _acceptedRequestForThisListing(
-      [...?sentAsync.valueOrNull, ...?receivedAsync.valueOrNull],
-      listingId,
-    );
+    final acceptedCandidate = _acceptedRequestForThisListing([
+      ...?sentAsync.valueOrNull,
+      ...?receivedAsync.valueOrNull,
+    ], listingId);
 
     return ownerAsync.when(
       loading: () => const SizedBox.shrink(),
@@ -919,15 +1265,27 @@ class _AgentCard extends ConsumerWidget {
                   children: [
                     Row(
                       children: [
-                        Flexible(child: Text(owner.fullName, style: Theme.of(context).textTheme.titleMedium, overflow: TextOverflow.ellipsis)),
+                        Flexible(
+                          child: Text(
+                            owner.fullName,
+                            style: Theme.of(context).textTheme.titleMedium,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
                         if (owner.verificationStatus == 'approved') ...[
                           const SizedBox(width: 4),
-                          Icon(PhosphorIcons.sealCheck(PhosphorIconsStyle.fill), size: 15, color: const Color(0xFF059669)),
+                          Icon(
+                            PhosphorIcons.sealCheck(PhosphorIconsStyle.fill),
+                            size: 15,
+                            color: const Color(0xFF059669),
+                          ),
                         ],
                       ],
                     ),
                     Text(
-                      owner.agencyName == null ? 'REN: ${owner.renNumber}' : 'REN: ${owner.renNumber} • ${owner.agencyName}',
+                      owner.agencyName == null
+                          ? 'REN: ${owner.renNumber}'
+                          : 'REN: ${owner.renNumber} • ${owner.agencyName}',
                       style: Theme.of(context).textTheme.labelSmall,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -936,12 +1294,17 @@ class _AgentCard extends ConsumerWidget {
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          Icon(PhosphorIcons.star(PhosphorIconsStyle.fill), size: 13, color: const Color(0xFFF59E0B)),
+                          Icon(
+                            PhosphorIcons.star(PhosphorIconsStyle.fill),
+                            size: 13,
+                            color: const Color(0xFFF59E0B),
+                          ),
                           const SizedBox(width: 4),
                           Flexible(
                             child: Text(
                               ratingText!,
-                              style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold),
+                              style: Theme.of(context).textTheme.labelSmall
+                                  ?.copyWith(fontWeight: FontWeight.bold),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
@@ -954,8 +1317,13 @@ class _AgentCard extends ConsumerWidget {
               OutlinedButton.icon(
                 onPressed: acceptedCandidate == null
                     ? null
-                    : () => context.push('/messages/${acceptedCandidate.request.requestId}'),
-                icon: Icon(PhosphorIcons.chatCircle(PhosphorIconsStyle.bold), size: 16),
+                    : () => context.push(
+                        '/messages/${acceptedCandidate.request.requestId}',
+                      ),
+                icon: Icon(
+                  PhosphorIcons.chatCircle(PhosphorIconsStyle.bold),
+                  size: 16,
+                ),
                 label: Text('property_message_button'.tr()),
               ),
             ],
@@ -991,7 +1359,8 @@ class _ActionBar extends ConsumerWidget {
         children: [
           BrutalistButton(
             label: 'matching_view_matches'.tr(),
-            onPressed: () => context.push('/property/${listing.listingId}/matches'),
+            onPressed: () =>
+                context.push('/property/${listing.listingId}/matches'),
           ),
           const SizedBox(height: 8),
           if (listing.status != 'sold') ...[
@@ -1030,7 +1399,8 @@ class _ActionBar extends ConsumerWidget {
         ? const AsyncValue<List<MatchCandidate>>.data([])
         : ref.watch(matchesForListingProvider(listing.listingId));
     MatchCandidate? ownMatch;
-    for (final candidate in matchesAsync.valueOrNull ?? const <MatchCandidate>[]) {
+    for (final candidate
+        in matchesAsync.valueOrNull ?? const <MatchCandidate>[]) {
       if (candidate.requirement.negotiatorId == viewerId) {
         ownMatch = candidate;
         break;
@@ -1050,20 +1420,31 @@ class _ActionBar extends ConsumerWidget {
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
           onPressed: () => SharePlus.instance.share(
-            ShareParams(text: '${listing.title} - ${ListingFormatting.formatPrice(listing.price, listing.transactionType)} - ${listing.area}, ${listing.state}'),
+            ShareParams(
+              text:
+                  '${listing.title} - ${ListingFormatting.formatPrice(listing.price, listing.transactionType)} - ${listing.area}, ${listing.state}',
+            ),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(PhosphorIcons.paperPlaneTilt(PhosphorIconsStyle.bold), size: 20),
-              Text('property_client_share_label'.tr(), style: Theme.of(context).textTheme.labelSmall),
+              Icon(
+                PhosphorIcons.paperPlaneTilt(PhosphorIconsStyle.bold),
+                size: 20,
+              ),
+              Text(
+                'property_client_share_label'.tr(),
+                style: Theme.of(context).textTheme.labelSmall,
+              ),
             ],
           ),
         ),
         const SizedBox(width: 10),
         Expanded(
           child: Tooltip(
-            message: ownMatch == null ? 'property_request_co_broke_disabled_reason'.tr() : '',
+            message: ownMatch == null
+                ? 'property_request_co_broke_disabled_reason'.tr()
+                : '',
             // A smaller labelLarge for this specific placement, on top of
             // the width freed up from the Client button above -- this slot
             // next to a second button is tighter than every other
@@ -1085,12 +1466,16 @@ class _ActionBar extends ConsumerWidget {
             child: Theme(
               data: Theme.of(context).copyWith(
                 textTheme: Theme.of(context).textTheme.copyWith(
-                      labelLarge: Theme.of(context).textTheme.labelLarge?.copyWith(fontSize: 12.5),
-                    ),
+                  labelLarge: Theme.of(
+                    context,
+                  ).textTheme.labelLarge?.copyWith(fontSize: 12.5),
+                ),
               ),
               child: BrutalistButton(
                 label: 'cobroke_request_send'.tr(),
-                onPressed: ownMatch == null ? null : () => sendCobrokeRequest(context, ref, ownMatch!.matchId),
+                onPressed: ownMatch == null
+                    ? null
+                    : () => sendCobrokeRequest(context, ref, ownMatch!.matchId),
               ),
             ),
           ),

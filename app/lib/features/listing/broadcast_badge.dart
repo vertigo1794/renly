@@ -42,6 +42,7 @@ class SpecStatField extends StatelessWidget {
     this.dropdownItems,
     this.dropdownValue,
     this.onDropdownChanged,
+    this.validator,
   });
 
   final IconData icon;
@@ -51,6 +52,7 @@ class SpecStatField extends StatelessWidget {
   final List<DropdownMenuItem<String>>? dropdownItems;
   final String? dropdownValue;
   final ValueChanged<String?>? onDropdownChanged;
+  final FormFieldValidator<String>? validator;
 
   @override
   Widget build(BuildContext context) {
@@ -89,6 +91,7 @@ class SpecStatField extends StatelessWidget {
                 contentPadding: EdgeInsets.zero,
                 hintText: '-',
               ),
+              validator: validator,
             ),
           Text(label, style: Theme.of(context).textTheme.labelSmall?.copyWith(color: const Color(0xFF6B7280))),
         ],

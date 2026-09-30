@@ -76,6 +76,12 @@ class Listing {
   /// OF this total to a co-broker). Nullable -- absent if unset.
   final double? totalAgencyCommissionPercent;
 
+  /// Real GPS coordinates captured via the device's Geolocator on Post
+  /// Listing ("Use my current location"). Nullable -- absent means the
+  /// owner typed area/state manually instead of using GPS capture.
+  final double? latitude;
+  final double? longitude;
+
   Listing({
     required this.listingId,
     required this.negotiatorId,
@@ -104,6 +110,8 @@ class Listing {
     this.keysOnHand = false,
     this.protectedCoBrokeReg = false,
     this.totalAgencyCommissionPercent,
+    this.latitude,
+    this.longitude,
   });
 
   factory Listing.fromJson(Map<String, dynamic> json) {
@@ -135,6 +143,47 @@ class Listing {
       keysOnHand: json['keys_on_hand'] as bool? ?? false,
       protectedCoBrokeReg: json['protected_co_broke_reg'] as bool? ?? false,
       totalAgencyCommissionPercent: (json['total_agency_commission_percent'] as num?)?.toDouble(),
+      latitude: (json['latitude'] as num?)?.toDouble(),
+      longitude: (json['longitude'] as num?)?.toDouble(),
     );
+  }
+
+  /// Round-trips through the same key names as [fromJson] -- used only by
+  /// the Marketplace offline cache (listing_providers.dart), which needs to
+  /// persist a snapshot of real listings to SharedPreferences and restore
+  /// it later. Never sent to Supabase (repositories build their own
+  /// insert/update maps directly).
+  Map<String, dynamic> toJson() {
+    return {
+      'listing_id': listingId,
+      'negotiator_id': negotiatorId,
+      'title': title,
+      'description': description,
+      'property_type': propertyType,
+      'transaction_type': transactionType,
+      'state': state,
+      'area': area,
+      'price': price,
+      'bedrooms': bedrooms,
+      'bathrooms': bathrooms,
+      'built_up_sqft': builtUpSqft,
+      'photo_urls': photoUrls,
+      'status': status,
+      'created_at': createdAt.toIso8601String(),
+      'bumped_at': bumpedAt?.toIso8601String(),
+      'commission_split_percent': commissionSplitPercent,
+      'title_verified': titleVerified,
+      'exclusive_mandate': exclusiveMandate,
+      'maintenance_fee_myr': maintenanceFeeMyr,
+      'tenure': tenure,
+      'parking_bays': parkingBays,
+      'floor_level': floorLevel,
+      'furnishing_status': furnishingStatus,
+      'keys_on_hand': keysOnHand,
+      'protected_co_broke_reg': protectedCoBrokeReg,
+      'total_agency_commission_percent': totalAgencyCommissionPercent,
+      'latitude': latitude,
+      'longitude': longitude,
+    };
   }
 }

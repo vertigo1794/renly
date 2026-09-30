@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/r_star_badge.dart';
@@ -57,24 +58,51 @@ class _RegistrationPersonalScreenState extends ConsumerState<RegistrationPersona
     });
 
     final repository = ref.read(authRepositoryProvider);
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
     try {
-      final user = await repository.signUp(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-      );
+      String userId;
+      try {
+        final user = await repository.signUp(email: email, password: password);
+        userId = user.id;
+      } on AuthException catch (e) {
+        // "Already registered" can mean either a genuinely different,
+        // already-fully-registered account, OR this user's own account left
+        // stranded by a signUp() that succeeded but never got its negotiator
+        // row (see auth_repository.dart's insertNegotiator doc comment).
+        // Signing in with what they just typed distinguishes the two
+        // WITHOUT leaking which case it was: if it's really their own
+        // account, the password matches and this recovers it; otherwise
+        // signIn() also fails and falls through to the same generic error
+        // below as any other failure.
+        if (e.code != 'user_already_exists') {
+          // Timing side-channel mitigation: the "already registered" branch
+          // below costs an extra signIn() round-trip, so match that delay
+          // here too -- otherwise wall-clock time alone leaks whether the
+          // email was already registered, even though both paths end in the
+          // same generic error.
+          await Future.delayed(const Duration(milliseconds: 400));
+          rethrow;
+        }
+        final response = await repository.signIn(email: email, password: password);
+        final recoveredId = response.user?.id;
+        if (recoveredId == null) rethrow;
+        userId = recoveredId;
+      }
       await repository.insertNegotiator(
-        negotiatorId: user.id,
+        negotiatorId: userId,
         fullName: _fullNameController.text.trim(),
         icNumber: _icNumberController.text.trim(),
         phoneNumber: _phoneNumberController.text.trim(),
       );
       if (!mounted) return;
-      context.push('/register/professional', extra: user.id);
-    } catch (_) {
-      // Never surface the raw exception: PostgrestException.toString() echoes
-      // constraint-violation details (the offending IC/phone number) and
+      context.push('/register/professional', extra: userId);
+    } catch (e) {
+      // Never surface the raw exception to the USER: PostgrestException.toString()
+      // echoes constraint-violation details (the offending IC/phone number) and
       // AuthException leaks account-enumeration info ("User already
-      // registered").
+      // registered"). debugPrint keeps it visible in test/debug output only.
+      debugPrint('Registration step 1 failed: $e');
       if (mounted) setState(() => _submitError = 'registration_error_generic'.tr());
     } finally {
       if (mounted) setState(() => _submitting = false);

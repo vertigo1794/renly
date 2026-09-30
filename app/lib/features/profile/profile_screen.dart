@@ -78,6 +78,7 @@ class ProfileScreen extends ConsumerWidget {
                   const Spacer(),
                   IconButton(
                     icon: Icon(PhosphorIcons.shareNetwork(PhosphorIconsStyle.bold)),
+                    tooltip: 'a11y_share'.tr(),
                     onPressed: ownProfile == null
                         ? null
                         : () => SharePlus.instance.share(
@@ -88,6 +89,7 @@ class ProfileScreen extends ConsumerWidget {
                     children: [
                       IconButton(
                         icon: Icon(PhosphorIcons.bellSimple(PhosphorIconsStyle.bold)),
+                        tooltip: 'notification_center_title'.tr(),
                         onPressed: () => context.push('/notifications'),
                       ),
                       if (unreadCount > 0)
@@ -268,6 +270,13 @@ class ProfileScreen extends ConsumerWidget {
                             subtitle: Text('settings_privacy_row_subtitle'.tr()),
                             trailing: const Icon(Icons.chevron_right),
                             onTap: () => context.push('/settings/privacy'),
+                          ),
+                          const Divider(height: 1),
+                          ListTile(
+                            leading: const Icon(Icons.calculate_outlined),
+                            title: Text('commission_calculator_title'.tr()),
+                            trailing: const Icon(Icons.chevron_right),
+                            onTap: () => context.push('/tools/commission-calculator'),
                           ),
                         ],
                       ),

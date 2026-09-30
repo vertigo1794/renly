@@ -4,15 +4,22 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:webview_flutter_platform_interface/webview_flutter_platform_interface.dart';
 
 import 'package:renly/core/theme/app_theme.dart';
 import 'package:renly/features/settings/privacy_screen.dart';
+
+import '../../test_helpers/fake_webview_platform.dart';
 
 void main() {
   setUpAll(() async {
     SharedPreferences.setMockInitialValues({});
     GoogleFonts.config.allowRuntimeFetching = false;
     await EasyLocalization.ensureInitialized();
+    // PrivacyScreen now embeds a real WebView (AssetWebViewScreen) -- no
+    // platform implementation exists in the widget-test host process, so
+    // WebViewController's constructor throws without this.
+    WebViewPlatform.instance = FakeWebViewPlatform();
   });
 
   setUp(() {

@@ -27,6 +27,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   bool _submitting = false;
   bool _obscurePassword = true;
   String? _errorMessage;
+  bool _showCompleteRegistrationAction = false;
 
   @override
   void dispose() {
@@ -38,20 +39,41 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   /// Shared by both the normal email/password path and the biometric path
   /// -- the negotiator-status branch (pending/approved/rejected) must never
   /// drift between the two ways of arriving at a valid session.
-  Future<void> _handlePostSignIn(String userId) async {
+  ///
+  /// Returns true only once 'approved' status is confirmed, WITHOUT
+  /// navigating to '/home' itself -- `_submit` navigates only after also
+  /// offering biometric enrollment (see its own comment for why that must
+  /// happen before navigation, and only once approved is confirmed).
+  Future<bool> _handlePostSignIn(String userId) async {
     final repository = ref.read(authRepositoryProvider);
     final negotiator = await repository.fetchOwnNegotiator(userId);
-    if (!mounted) return;
+    if (!mounted) return false;
     if (negotiator == null) {
-      setState(() => _errorMessage = 'auth_login_error_no_profile'.tr());
-      return;
+      // No negotiator row for this session -- e.g. signUp() succeeded but
+      // insertNegotiator() never ran (see auth_repository.dart). Sending
+      // the user back through registration recovers this: Step 1's submit
+      // handler now signs in with the same email/password on an
+      // "already registered" error and upserts the missing row.
+      setState(() {
+        _errorMessage = 'auth_login_error_no_profile'.tr();
+        _showCompleteRegistrationAction = true;
+      });
+      return false;
     }
     if (negotiator.verificationStatus == 'pending') {
       context.go('/verification-pending');
+      return false;
     } else if (negotiator.verificationStatus == 'approved') {
-      context.go('/home');
+      return true;
     } else {
+      // No live session may survive a rejected login attempt.
+      await repository.signOut();
+      if (!mounted) return false;
+      // signOut() clears the underlying biometric token, so the UI's stale
+      // "Biometric login enabled" state must be invalidated too.
+      ref.invalidate(biometricLoginEnabledProvider);
       setState(() => _errorMessage = 'auth_login_error_rejected'.tr());
+      return false;
     }
   }
 
@@ -123,6 +145,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     setState(() {
       _submitting = true;
       _errorMessage = null;
+      _showCompleteRegistrationAction = false;
     });
 
     final repository = ref.read(authRepositoryProvider);
@@ -136,9 +159,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         setState(() => _errorMessage = 'auth_login_error_invalid'.tr());
         return;
       }
-      // Enrollment offer must come BEFORE _handlePostSignIn -- that method
-      // navigates away with context.go(), and a showDialog issued after it
-      // races this screen's disposal and can silently never appear.
+      if (!mounted) return;
+      // Status must be confirmed 'approved' BEFORE the enrollment offer --
+      // offering biometrics to a still-pending or rejected negotiator would
+      // let them enroll before their status is even known. The offer must
+      // still come before navigation to '/home' below: a showDialog issued
+      // after that navigation races this screen's disposal and can
+      // silently never appear.
+      final approved = await _handlePostSignIn(userId);
+      if (!approved) return;
       try {
         await _maybeOfferBiometricEnrollment();
       } catch (_) {
@@ -147,7 +176,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         // already-successful sign-in.
       }
       if (!mounted) return;
-      await _handlePostSignIn(userId);
+      context.go('/home');
     } catch (_) {
       if (mounted) setState(() => _errorMessage = 'auth_login_error_invalid'.tr());
     } finally {
@@ -159,6 +188,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     setState(() {
       _submitting = true;
       _errorMessage = null;
+      _showCompleteRegistrationAction = false;
     });
     final repository = ref.read(authRepositoryProvider);
     try {
@@ -170,7 +200,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         setState(() => _errorMessage = 'auth_login_error_invalid'.tr());
         return;
       }
-      await _handlePostSignIn(userId);
+      if (!mounted) return;
+      final approved = await _handlePostSignIn(userId);
+      if (approved && mounted) context.go('/home');
     } catch (_) {
       if (mounted) {
         // The stored token is gone (signInWithBiometrics clears it on
@@ -247,6 +279,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ? PhosphorIcons.eye(PhosphorIconsStyle.bold)
                             : PhosphorIcons.eyeSlash(PhosphorIconsStyle.bold),
                       ),
+                      tooltip: _obscurePassword ? 'a11y_show_password'.tr() : 'a11y_hide_password'.tr(),
                       onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                     ),
                   ),
@@ -274,6 +307,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   const SizedBox(height: 4),
                   Text(_errorMessage!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
                 ],
+                if (_showCompleteRegistrationAction)
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton(
+                      onPressed: () => context.push('/register/personal'),
+                      child: Text('auth_complete_registration_action'.tr()),
+                    ),
+                  ),
                 const SizedBox(height: 12),
                 BrutalistButton(
                   label: 'auth_log_in'.tr(),

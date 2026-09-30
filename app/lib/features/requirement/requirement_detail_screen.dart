@@ -10,7 +10,10 @@ import '../../core/widgets/negotiator_avatar.dart';
 import '../../core/widgets/r_star_badge.dart';
 import '../../core/widgets/signed_photo.dart';
 import '../collaboration/cobroke_request_providers.dart' hide currentNegotiatorIdProvider;
+import '../collaboration/send_cobroke_request_action.dart';
 import '../listing/listing_formatting.dart';
+import '../matching/matching_providers.dart' hide currentNegotiatorIdProvider;
+import '../matching/models/match_candidate.dart';
 import '../profile/profile_providers.dart' hide currentNegotiatorIdProvider;
 import 'models/requirement.dart';
 import 'requirement_formatting.dart';
@@ -275,12 +278,47 @@ class _RequirementDetailScreenState extends ConsumerState<RequirementDetailScree
                           ),
                         ],
                       ],
-                    ),
+                    )
+                  else if (currentNegotiatorId != null)
+                    _NonOwnerActionBar(requirement: requirement, viewerId: currentNegotiatorId),
                 ],
               ),
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+/// Mirrors PropertyDetailScreen's own non-owner action bar: "Request
+/// Co-Broke" is only enabled once the matching engine has already scored a
+/// real Match between this requirement and one of the viewer's own
+/// listings -- see MatchingEngine.score's mandatory filters and >=40
+/// qualifying threshold. Previously this screen showed no action bar at
+/// all for non-owners, unlike its listing-side mirror.
+class _NonOwnerActionBar extends ConsumerWidget {
+  const _NonOwnerActionBar({required this.requirement, required this.viewerId});
+
+  final Requirement requirement;
+  final String viewerId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final matchesAsync = ref.watch(matchesForRequirementProvider(requirement.requirementId));
+    MatchCandidate? ownMatch;
+    for (final candidate in matchesAsync.valueOrNull ?? const <MatchCandidate>[]) {
+      if (candidate.listing.negotiatorId == viewerId) {
+        ownMatch = candidate;
+        break;
+      }
+    }
+
+    return Tooltip(
+      message: ownMatch == null ? 'property_request_co_broke_disabled_reason'.tr() : '',
+      child: BrutalistButton(
+        label: 'cobroke_request_send'.tr(),
+        onPressed: ownMatch == null ? null : () => sendCobrokeRequest(context, ref, ownMatch!.matchId),
       ),
     );
   }

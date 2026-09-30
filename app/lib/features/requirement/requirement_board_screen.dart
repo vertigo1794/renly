@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/brutalist_button.dart';
 import '../../core/widgets/negotiator_avatar.dart';
 import '../../core/widgets/r_star_badge.dart';
 import '../../core/widgets/signed_photo.dart';
@@ -77,6 +78,7 @@ class _RequirementBoardScreenState extends ConsumerState<RequirementBoardScreen>
                 children: [
                   IconButton(
                     icon: Icon(PhosphorIcons.arrowLeft(PhosphorIconsStyle.bold)),
+                    tooltip: 'a11y_back'.tr(),
                     onPressed: () {
                       if (context.canPop()) {
                         context.pop();
@@ -131,6 +133,7 @@ class _RequirementBoardScreenState extends ConsumerState<RequirementBoardScreen>
                     children: [
                       IconButton(
                         icon: Icon(PhosphorIcons.bellSimple(PhosphorIconsStyle.bold)),
+                        tooltip: 'notification_center_title'.tr(),
                         onPressed: () => context.push('/notifications'),
                       ),
                       if (unreadCount > 0)
@@ -277,18 +280,18 @@ class _RequirementBoardScreenState extends ConsumerState<RequirementBoardScreen>
                                   ),
                                   const SizedBox(height: 16),
                                   Text('requirement_board_empty'.tr()),
+                                  const SizedBox(height: 16),
+                                  BrutalistButton(
+                                    label: 'requirement_post_new'.tr(),
+                                    fullWidth: false,
+                                    onPressed: () => context.push('/post-requirement'),
+                                  ),
                                 ],
                               ),
                             ),
                           )
                         else
-                          for (final requirement in filtered) ...[
-                            _RequirementCard(
-                              requirement: requirement,
-                              onTap: () => context.push('/requirement-board/${requirement.requirementId}'),
-                            ),
-                            const SizedBox(height: 16),
-                          ],
+                          _buildCardsSection(context, filtered),
                       ],
                     ),
                   );
@@ -298,6 +301,33 @@ class _RequirementBoardScreenState extends ConsumerState<RequirementBoardScreen>
           ],
         ),
       ),
+    );
+  }
+
+  /// Responsive: a `Wrap` lays requirement cards out two-per-row on a wide
+  /// viewport (tablet, >=600dp) instead of one long single column -- same
+  /// pattern as MarketplaceScreen's own _buildCardsSection.
+  Widget _buildCardsSection(BuildContext context, List<Requirement> filtered) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const spacing = 16.0;
+        final isWide = constraints.maxWidth >= 600;
+        final cardWidth = isWide ? (constraints.maxWidth - spacing) / 2 : constraints.maxWidth;
+        return Wrap(
+          spacing: spacing,
+          runSpacing: spacing,
+          children: [
+            for (final requirement in filtered)
+              SizedBox(
+                width: cardWidth,
+                child: _RequirementCard(
+                  requirement: requirement,
+                  onTap: () => context.push('/requirement-board/${requirement.requirementId}'),
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 }

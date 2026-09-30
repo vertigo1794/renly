@@ -7,11 +7,41 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../core/widgets/brutalist_button.dart';
 import 'agreement_providers.dart';
 
+/// Formats a prefill split value without a trailing ".0" (e.g. 45 not
+/// 45.0), same rounding-safe intent as my_requests_screen.dart's
+/// _formatSplitPercent but kept local since these are TextField prefill
+/// strings, not display text.
+String _formatPercent(double value) {
+  if (value == value.roundToDouble()) return value.toStringAsFixed(0);
+  return value.toString();
+}
+
 class ProposeAgreementDialog extends ConsumerStatefulWidget {
-  const ProposeAgreementDialog({super.key, required this.requestId, required this.initiatorId});
+  const ProposeAgreementDialog({
+    super.key,
+    required this.requestId,
+    required this.initiatorId,
+    this.initialSplitInitiator,
+    this.initialSplitCounterparty,
+    this.initialTerms,
+    this.supersedeAgreementId,
+  });
 
   final String requestId;
   final String initiatorId;
+
+  /// Pre-fill values for a counter-offer -- the caller passes the
+  /// SWAPPED split of the agreement being countered (see
+  /// my_requests_screen.dart's "Propose New Terms" button), since the
+  /// recipient countering naturally starts from "the opposite of what
+  /// was offered to me." Null for a first-time proposal (empty fields).
+  final double? initialSplitInitiator;
+  final double? initialSplitCounterparty;
+  final String? initialTerms;
+
+  /// The pending agreement this new proposal replaces, if any -- passed
+  /// straight through to AgreementRepository.createAgreement.
+  final String? supersedeAgreementId;
 
   @override
   ConsumerState<ProposeAgreementDialog> createState() => _ProposeAgreementDialogState();
@@ -19,9 +49,11 @@ class ProposeAgreementDialog extends ConsumerStatefulWidget {
 
 class _ProposeAgreementDialogState extends ConsumerState<ProposeAgreementDialog> {
   final _formKey = GlobalKey<FormState>();
-  final _initiatorController = TextEditingController();
-  final _counterpartyController = TextEditingController();
-  final _termsController = TextEditingController();
+  late final _initiatorController = TextEditingController(
+      text: widget.initialSplitInitiator == null ? '' : _formatPercent(widget.initialSplitInitiator!));
+  late final _counterpartyController = TextEditingController(
+      text: widget.initialSplitCounterparty == null ? '' : _formatPercent(widget.initialSplitCounterparty!));
+  late final _termsController = TextEditingController(text: widget.initialTerms ?? '');
   bool _submitting = false;
   String? _submitError;
 
@@ -66,6 +98,7 @@ class _ProposeAgreementDialogState extends ConsumerState<ProposeAgreementDialog>
             splitInitiator: splitInitiator,
             splitCounterparty: splitCounterparty,
             terms: _termsController.text.trim().isEmpty ? null : _termsController.text.trim(),
+            supersedeAgreementId: widget.supersedeAgreementId,
           );
       ref.invalidate(agreementForRequestProvider(widget.requestId));
       if (mounted) Navigator.of(context).pop();

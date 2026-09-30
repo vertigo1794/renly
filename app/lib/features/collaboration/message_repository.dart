@@ -1,5 +1,6 @@
 // app/lib/features/collaboration/message_repository.dart
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -25,14 +26,37 @@ class MessageRepository {
   Future<void> sendMessage({
     required String requestId,
     required String senderId,
-    required String body,
+    String? body,
+    String? attachmentUrl,
   }) async {
     await _client.from('message').insert({
       'request_id': requestId,
       'sender_id': senderId,
       'body': body,
+      'attachment_url': attachmentUrl,
     });
     unawaited(_notifyNewMessage(requestId: requestId, senderId: senderId));
+  }
+
+  /// The `chat-attachments` bucket is private (same reasoning as
+  /// `listing-photos`), so an attachment can only be rendered through a
+  /// short-lived signed URL.
+  Future<String> createAttachmentSignedUrl(String path) {
+    return _client.storage.from('chat-attachments').createSignedUrl(path, 3600);
+  }
+
+  /// Path convention `{request_id}/{timestamp}.jpg`, mirroring
+  /// ListingRepository.uploadListingPhoto's `{negotiator_id}/{listing_id}/{n}.jpg`.
+  /// request_id (not negotiator_id) is the folder segment here since the
+  /// storage RLS policy scopes access by the conversation, not the uploader.
+  Future<String> uploadChatAttachment({required String requestId, required Uint8List bytes}) async {
+    final path = '$requestId/${DateTime.now().millisecondsSinceEpoch}.jpg';
+    await _client.storage.from('chat-attachments').uploadBinary(
+          path,
+          bytes,
+          fileOptions: const FileOptions(upsert: true),
+        );
+    return path;
   }
 
   Future<void> _notifyNewMessage({required String requestId, required String senderId}) async {
@@ -150,7 +174,9 @@ class MessageRepository {
     return ConversationSummary(
       requestId: lastMessageRow['request_id'] as String,
       senderId: lastMessageRow['sender_id'] as String,
-      body: lastMessageRow['body'] as String,
+      // An image-only message has no body -- fall back to a photo preview
+      // label so the conversation list never renders a blank last-message.
+      body: (lastMessageRow['body'] as String?) ?? 'message_photo_preview'.tr(),
       sentAt: DateTime.parse(lastMessageRow['sent_at'] as String),
       unreadCount: unreadCount.count,
       readAt: lastMessageRow['read_at'] == null ? null : DateTime.parse(lastMessageRow['read_at'] as String),

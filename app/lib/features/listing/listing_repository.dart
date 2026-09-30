@@ -109,6 +109,8 @@ class ListingRepository {
     bool keysOnHand = false,
     bool protectedCoBrokeReg = false,
     double? totalAgencyCommissionPercent,
+    double? latitude,
+    double? longitude,
   }) async {
     final row = await _client
         .from('listing')
@@ -135,6 +137,8 @@ class ListingRepository {
           'keys_on_hand': keysOnHand,
           'protected_co_broke_reg': protectedCoBrokeReg,
           'total_agency_commission_percent': totalAgencyCommissionPercent,
+          'latitude': latitude,
+          'longitude': longitude,
         })
         .select()
         .single();

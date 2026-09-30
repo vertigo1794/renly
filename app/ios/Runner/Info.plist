@@ -60,6 +60,8 @@
 				</array>
 			</dict>
 		</dict>
+		<key>NSLocationWhenInUseUsageDescription</key>
+		<string>Renly uses your location to auto-fill the area/state when posting a listing or requirement.</string>
 		<key>UIApplicationSupportsIndirectInputEvents</key>
 		<true/>
 		<key>UILaunchStoryboardName</key>

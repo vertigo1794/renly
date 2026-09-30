@@ -51,6 +51,7 @@ class _MyRequirementsScreenState extends ConsumerState<MyRequirementsScreen> {
                 children: [
                   IconButton(
                     icon: Icon(PhosphorIcons.arrowLeft(PhosphorIconsStyle.bold)),
+                    tooltip: 'a11y_back'.tr(),
                     onPressed: () {
                       if (context.canPop()) {
                         context.pop();
@@ -105,6 +106,7 @@ class _MyRequirementsScreenState extends ConsumerState<MyRequirementsScreen> {
                     children: [
                       IconButton(
                         icon: Icon(PhosphorIcons.bellSimple(PhosphorIconsStyle.bold)),
+                        tooltip: 'notification_center_title'.tr(),
                         onPressed: () => context.push('/notifications'),
                       ),
                       if (unreadCount > 0)

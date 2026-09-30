@@ -8,6 +8,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/widgets/brutalist_button.dart';
 import '../../core/widgets/negotiator_avatar.dart';
 import '../../core/widgets/r_star_badge.dart';
+import '../collaboration/cobroke_request_providers.dart' hide currentNegotiatorIdProvider;
 import '../collaboration/send_cobroke_request_action.dart';
 import '../listing/listing_formatting.dart';
 import '../notifications/notification_providers.dart';
@@ -44,6 +45,7 @@ class MyMatchesScreen extends ConsumerWidget {
                 children: [
                   IconButton(
                     icon: Icon(PhosphorIcons.arrowLeft(PhosphorIconsStyle.bold)),
+                    tooltip: 'a11y_back'.tr(),
                     onPressed: () {
                       if (context.canPop()) {
                         context.pop();
@@ -98,6 +100,7 @@ class MyMatchesScreen extends ConsumerWidget {
                     children: [
                       IconButton(
                         icon: Icon(PhosphorIcons.bellSimple(PhosphorIconsStyle.bold)),
+                        tooltip: 'notification_center_title'.tr(),
                         onPressed: () => context.push('/notifications'),
                       ),
                       if (unreadCount > 0)
@@ -120,7 +123,20 @@ class MyMatchesScreen extends ConsumerWidget {
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (error, stack) => Center(child: Text('listing_error_generic'.tr())),
                 data: (matches) {
-                  return ListView(
+                  return RefreshIndicator(
+                    // Screen is a plain pushed route (not a StatefulShellRoute
+                    // branch), so it can stay mounted underneath something the
+                    // user navigates to next and never get the "refetch on
+                    // screen entry" that sentRequestsProvider/
+                    // receivedRequestsProvider rely on for staleness. Pull-to-
+                    // refresh is the manual escape hatch.
+                    onRefresh: () async {
+                      ref.invalidate(myMatchesProvider);
+                      ref.invalidate(sentRequestsProvider);
+                      ref.invalidate(receivedRequestsProvider);
+                    },
+                    child: ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
                     padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
                     children: [
                       Row(
@@ -200,6 +216,12 @@ class MyMatchesScreen extends ConsumerWidget {
                                 ),
                                 const SizedBox(height: 16),
                                 Text('matching_empty'.tr()),
+                                const SizedBox(height: 6),
+                                Text(
+                                  'matching_empty_hint'.tr(),
+                                  textAlign: TextAlign.center,
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: const Color(0xFF64748B)),
+                                ),
                               ],
                             ),
                           ),
@@ -216,6 +238,7 @@ class MyMatchesScreen extends ConsumerWidget {
                           const SizedBox(height: 16),
                         ],
                     ],
+                    ),
                   );
                 },
               ),
@@ -351,11 +374,17 @@ class _MatchCard extends StatelessWidget {
                 const Divider(height: 1, color: Color(0xFFF3F4F6)),
                 const SizedBox(height: 12),
                 Consumer(
-                  builder: (context, ref, _) => BrutalistButton(
-                    label: 'cobroke_request_send'.tr(),
-                    onPressed: () => sendCobrokeRequest(context, ref, candidate.matchId),
-                    icon: PhosphorIcons.handshake(PhosphorIconsStyle.bold),
-                  ),
+                  builder: (context, ref, _) {
+                    final alreadyRequested = hasOpenCobrokeRequest(ref, candidate.matchId);
+                    return Tooltip(
+                      message: alreadyRequested ? 'cobroke_request_already_pending'.tr() : '',
+                      child: BrutalistButton(
+                        label: 'cobroke_request_send'.tr(),
+                        onPressed: alreadyRequested ? null : () => sendCobrokeRequest(context, ref, candidate.matchId),
+                        icon: PhosphorIcons.handshake(PhosphorIconsStyle.bold),
+                      ),
+                    );
+                  },
                 ),
               ],
             ),

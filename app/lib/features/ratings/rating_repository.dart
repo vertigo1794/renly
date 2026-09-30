@@ -76,14 +76,14 @@ class RatingRepository {
         .order('created_at', ascending: false);
     final ratings = (rows as List).map((row) => Rating.fromJson(row as Map<String, dynamic>)).toList();
 
-    final raterIds = ratings.map((r) => r.raterId).toSet();
+    final raterIds = ratings.map((r) => r.raterId).whereType<String>().toSet();
     final ownersById = Map<String, ListingOwner>.fromIterables(
       raterIds,
       await Future.wait(raterIds.map(_listingRepository.fetchListingOwner)),
     );
 
     return ratings
-        .map((rating) => RatingCandidate(rating: rating, rater: ownersById[rating.raterId]!))
+        .map((rating) => RatingCandidate(rating: rating, rater: ownersById[rating.raterId]))
         .toList();
   }
 }

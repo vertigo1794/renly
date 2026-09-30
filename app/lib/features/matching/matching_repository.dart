@@ -2,6 +2,7 @@
 import 'dart:async';
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/foundation.dart' show compute;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../listing/listing_repository.dart';
@@ -34,18 +35,20 @@ class MatchingRepository {
 
   Future<void> computeAndStoreMatchesForListing(Listing listing) async {
     final requirements = await _requirementRepository.fetchBoardRequirements();
+    // Scoring runs on a background isolate via compute() -- same
+    // "don't block the UI thread with a CPU-bound loop" reasoning HTML5's
+    // Web Worker exists for, and a real win once the requirement board
+    // has enough rows for this loop to actually cost something.
+    final scored = await compute(_scoreRequirementsAgainstListing, _ScoreForListingArgs(listing, requirements));
     final rows = <Map<String, dynamic>>[];
     final ownerByRequirementId = <String, String>{};
-    for (final requirement in requirements) {
-      if (requirement.negotiatorId == listing.negotiatorId) continue;
-      final score = MatchingEngine.score(listing, requirement);
-      if (score == null || score < MatchingEngine.qualifyingThreshold) continue;
+    for (final match in scored) {
       rows.add({
         'listing_id': listing.listingId,
-        'requirement_id': requirement.requirementId,
-        'score': score,
+        'requirement_id': match.requirementId,
+        'score': match.score,
       });
-      ownerByRequirementId[requirement.requirementId] = requirement.negotiatorId;
+      ownerByRequirementId[match.requirementId] = match.negotiatorId;
     }
     final insertedRows = await _store(rows);
     for (final row in insertedRows) {
@@ -58,18 +61,17 @@ class MatchingRepository {
 
   Future<void> computeAndStoreMatchesForRequirement(Requirement requirement) async {
     final listings = await _listingRepository.fetchMarketplaceListings();
+    // Same background-isolate reasoning as computeAndStoreMatchesForListing.
+    final scored = await compute(_scoreListingsAgainstRequirement, _ScoreForRequirementArgs(requirement, listings));
     final rows = <Map<String, dynamic>>[];
     final ownerByListingId = <String, String>{};
-    for (final listing in listings) {
-      if (listing.negotiatorId == requirement.negotiatorId) continue;
-      final score = MatchingEngine.score(listing, requirement);
-      if (score == null || score < MatchingEngine.qualifyingThreshold) continue;
+    for (final match in scored) {
       rows.add({
-        'listing_id': listing.listingId,
+        'listing_id': match.listingId,
         'requirement_id': requirement.requirementId,
-        'score': score,
+        'score': match.score,
       });
-      ownerByListingId[listing.listingId] = listing.negotiatorId;
+      ownerByListingId[match.listingId] = match.negotiatorId;
     }
     final insertedRows = await _store(rows);
     for (final row in insertedRows) {
@@ -216,4 +218,64 @@ class MatchingRepository {
     }
     return candidates;
   }
+}
+
+/// Argument bundle for [_scoreRequirementsAgainstListing] -- compute()
+/// passes exactly one argument to the isolate, so the listing and the
+/// full requirement list travel together. Listing/Requirement are plain
+/// data classes (String/int/double/DateTime/`List<String>` fields only),
+/// which Dart's isolate messaging can send without extra serialization.
+class _ScoreForListingArgs {
+  const _ScoreForListingArgs(this.listing, this.requirements);
+  final Listing listing;
+  final List<Requirement> requirements;
+}
+
+class _ScoreForRequirementArgs {
+  const _ScoreForRequirementArgs(this.requirement, this.listings);
+  final Requirement requirement;
+  final List<Listing> listings;
+}
+
+/// One qualifying match found by the background isolate -- carries just
+/// enough to build the `match` table row and resolve the push-notification
+/// recipient back on the main isolate, not the full Requirement/Listing.
+class _ScoredRequirementMatch {
+  const _ScoredRequirementMatch(this.requirementId, this.negotiatorId, this.score);
+  final String requirementId;
+  final String negotiatorId;
+  final int score;
+}
+
+class _ScoredListingMatch {
+  const _ScoredListingMatch(this.listingId, this.negotiatorId, this.score);
+  final String listingId;
+  final String negotiatorId;
+  final int score;
+}
+
+/// Runs on a background isolate via compute() -- must be a top-level (or
+/// static) function, not a closure, and must not touch `this`/instance
+/// state, which is exactly why this scoring loop was already a pure
+/// function of its inputs (MatchingEngine.score) before this change.
+List<_ScoredRequirementMatch> _scoreRequirementsAgainstListing(_ScoreForListingArgs args) {
+  final results = <_ScoredRequirementMatch>[];
+  for (final requirement in args.requirements) {
+    if (requirement.negotiatorId == args.listing.negotiatorId) continue;
+    final score = MatchingEngine.score(args.listing, requirement);
+    if (score == null || score < MatchingEngine.qualifyingThreshold) continue;
+    results.add(_ScoredRequirementMatch(requirement.requirementId, requirement.negotiatorId, score));
+  }
+  return results;
+}
+
+List<_ScoredListingMatch> _scoreListingsAgainstRequirement(_ScoreForRequirementArgs args) {
+  final results = <_ScoredListingMatch>[];
+  for (final listing in args.listings) {
+    if (listing.negotiatorId == args.requirement.negotiatorId) continue;
+    final score = MatchingEngine.score(listing, args.requirement);
+    if (score == null || score < MatchingEngine.qualifyingThreshold) continue;
+    results.add(_ScoredListingMatch(listing.listingId, listing.negotiatorId, score));
+  }
+  return results;
 }

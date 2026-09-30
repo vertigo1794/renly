@@ -2,7 +2,7 @@
 class Rating {
   final String ratingId;
   final String agreementId;
-  final String raterId;
+  final String? raterId;
   final String ratedId;
   final int stars;
   final String? reviewText;
@@ -24,7 +24,7 @@ class Rating {
     return Rating(
       ratingId: json['rating_id'] as String,
       agreementId: json['agreement_id'] as String,
-      raterId: json['rater_id'] as String,
+      raterId: json['rater_id'] as String?,
       ratedId: json['rated_id'] as String,
       stars: json['stars'] as int,
       reviewText: json['review_text'] as String?,
