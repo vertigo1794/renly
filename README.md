@@ -76,6 +76,23 @@ flutter run
 
 Requires a `.env` with Supabase project credentials (see `flutter_dotenv` config in `main.dart`).
 
+## Install the APK (Android)
+
+1. Download the latest APK from the [Releases page](https://github.com/vertigo1794/renly/releases/latest).
+2. On your Android phone, open the downloaded `app-release.apk` file.
+3. If prompted "install unknown apps", tap **Settings** → allow installs from that source (browser / file manager), then go back and tap **Install**.
+4. Open **Renly** once installed.
+
+## How to use the app
+
+1. **Register** — sign up with your personal + professional details (REN/REA tag). Verify your account via email, then wait for tag verification (camera scan or manual entry).
+2. **Post a listing** — go to My Inventory → Post Listing to add a property you're selling/renting out.
+3. **Post a requirement** — go to Requirement Board → Post Requirement to describe what your client is looking for.
+4. **Check matches** — the app automatically scores your listings/requirements against everyone else's; view matches from the listing/requirement detail screen.
+5. **Collaborate** — send a co-broke request to a matched negotiator, chat in real time once accepted, then formalize the deal with a digital agreement.
+6. **Manage subscription** — Free tier has posting limits and delayed notifications; upgrade to Professional in Settings → Subscription for full access.
+7. **Switch language** — toggle Bahasa Melayu / English in Settings.
+
 ## Status
 
 Actively developed. Design and feature set are expected to evolve — this README reflects the current state, not a frozen spec.
